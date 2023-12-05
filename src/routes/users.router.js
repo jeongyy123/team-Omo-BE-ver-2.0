@@ -93,10 +93,9 @@ router.post("/login", async (req, res, next) => {
     );
 
     res.cookie("accessToken", accessToken, {
-      // 웹 브라우저의 자바스크립트는 document.cookie를 통해 쿠키에 접근하고 조작할 수 있다
-      httpOnly: true, // 클라이언트에서 JavaScript로 접근하지 못하도록 설정
-      secure: true, // HTTPS에서만 쿠키 전송을 허용
-      sameSite: "strict", // 동일한 사이트에서만 쿠키 전송을 허용
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
     });
 
     // 클라이언트에서 토큰을 사용할 때 매번 "Bearer "를 제거해야 하는 번거로움이 있을 수 있어서 지웠음
@@ -184,10 +183,23 @@ router.post("/tokens/refresh", async (req, res, next) => {
     .json({ message: "Access Token을 정상적으로 새롭게 발급했습니다." });
 });
 
+// 제공된 토큰이 유효한지 여부를 검증하는
+function validateToken(token, secretKey) {
+  try {
+    // 인증에 성공했을 때 해당하는 정보, 즉 페이로드가 반환이 된다
+    // 인증에 실패했을 때에는 에러가 발생하는 메서드이다.
+    // 토큰의 유효기간이 만료되었을 때에 페이로드가 반환되지 않고 null이 반환된다
+    return jwt.verify(token, secretKey);
+  } catch (error) {
+    // 인증에 실패하거나 페이로드가 없을 경우에는 null을 반환한다
+    return null;
+  }
+}
+
 /** Logout API
  * 현재의 인증 상태를 해제하는 작업
  */
-router.post("/logout", authMiddleware, async (res, req, next) => {
+router.post("/logout", authMiddleware, async (req, res, next) => {
   try {
     const { accessToken, refreshToken } = req.cookies;
     // const accessToken = req.headers.authorization;

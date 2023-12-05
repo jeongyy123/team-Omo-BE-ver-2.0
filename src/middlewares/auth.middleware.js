@@ -9,22 +9,24 @@ export default async function (req, res, next) {
     const { accessToken, refreshToken } = req.cookies;
     // const accessToken = req.headers.authorization;
     // const refreshToken = req.headers.authorization;
-
     const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
     const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
 
+    // 위 토큰이 실제로 존재하는지 확인한다.
     if (!accessToken || !refreshToken) {
       return res
         .status(400)
         .json({ errorMessage: "토큰이 존재하지 않습니다." });
     }
 
+    // Refresh Token이 블랙리스트에 있는지 확인
     const blockUserRefresh = await prisma.tokenBlacklist.findFirst({
       where: {
         token: refreshToken,
       },
     });
 
+    // Access Token이 블랙리스트에 있는지 확인
     const blockUserAccess = await prisma.tokenBlacklist.findFirst({
       where: {
         token: accessToken,
@@ -62,8 +64,6 @@ export default async function (req, res, next) {
 
     req.user = user;
 
-    console.log("req.user >>>>>", req.user);
-
     next();
   } catch (error) {
     console.error(error);
@@ -77,10 +77,11 @@ export default async function (req, res, next) {
 // Token을 검증하고 토큰 안에 있는 정보를 확인하기 위한 함수
 function validateToken(token, secretKey) {
   try {
-    // 인증에 성공했을 때 해당하는 정보, 즉 페이로드가 반환
+    // 인증에 성공했을 때 해당하는 정보, 즉 페이로드가 반환이 된다
+    // 인증에 실패했을 때에는 에러가 발생하는 메서드이다.
     return jwt.verify(token, secretKey);
   } catch (error) {
-    // 인증에 실패하거나 페이로드가 없을 경우에는 null을 반환
+    // 인증에 실패하거나 페이로드가 없을 경우에는 null을 반환한다
     return null;
   }
 }
