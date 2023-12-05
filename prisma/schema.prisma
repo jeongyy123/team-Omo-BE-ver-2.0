@@ -6,3 +6,155 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+model Users {
+  userId    Int       @id @default(autoincrement()) @map("userId")
+  email     String    @map("email")
+  password  String    @map("password")
+  nickname  String    @map("nickname")
+  imgUrl    String    @map("imgUrl")
+  createdAt DateTime  @default(now()) @map("createdAt")
+  updatedAt DateTime? @updatedAt @map("updatedAt")
+
+  Posts         Posts[]
+  Comments      Comments[]
+  Likes         Likes[]
+  Bookmark      Bookmark[]
+  RefreshTokens RefreshTokens[]
+  Stars         Stars[]
+  Location      Locations[]
+
+  @@map("Users" )
+}
+
+model RefreshTokens {
+  tokenId       Int      @id @default(autoincrement()) @map("tokenId")
+  UserId        Int      @map("UserId")
+  ip            String   @map("ip")
+  userAgent     String   @map("userAgent")
+  refreshToken  String   @map("refreshToken")
+  expiresAt     DateTime @map("expiresAt")
+  createdAt     DateTime @default(now()) @map("createdAt")
+
+  User Users @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+
+  @@map("RefreshTokens")
+}
+
+model Posts {
+  postId     Int       @id @default(autoincrement()) @map("postId")
+  UserId     Int       @map("UserId")
+  CategoryId Int       @map("CategoryId")
+  LocationId Int       @map("LocationId")
+  content    String    @map("content")
+  imgUrl     String    @map("imgUrl")
+  likeCount  Int       @map("likeCount")
+  createdAt  DateTime  @default(now()) @map("createdAt")
+  updatedAt  DateTime? @map("updatedAt")
+
+  User     Users      @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+  Category Categories @relation(fields: [CategoryId], references: [categoryId], onDelete: Cascade)
+  Location Locations  @relation(fields: [LocationId], references: [locationId], onDelete: Cascade)
+  Comments Comments[]
+  Likes Likes[]
+
+  @@map("Posts")
+}
+
+model Comments {
+  commentId   Int       @id @default(autoincrement()) @map("commentId")
+  UserId      Int       @map("UserId")
+  PostId      Int       @map("PostId")
+  content     String    @map("content")
+  createdAt   DateTime  @default(now()) @map("createdAt")
+  updatedAt   DateTime? @map("updatedAt")
+
+  Post Posts @relation(fields: [PostId], references: [postId], onDelete: Cascade)
+  User Users @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+
+  @@map("Comments")
+}
+
+model Bookmark {
+  bookmarkId  Int @id @default(autoincrement()) @map("bookmarkId")
+  UserId      Int @map("UserId")
+  LocationId  Int @map("LocationId")
+
+  User     Users     @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+  Location Locations @relation(fields: [LocationId], references: [locationId], onDelete: Cascade)
+
+  @@map("Bookmark")
+}
+
+model Categories {
+  categoryId   Int    @id @default(autoincrement()) @map("categoryId")
+  categoryName String @map("categoryName")
+
+  Posts Posts[]
+  Locations Locations[]
+
+  @@map("Categories")
+}
+
+model Locations {
+  locationId  Int    @id @default(autoincrement()) @map("locationId")
+  CategoryId  Int    @map("CategoryId")
+  UserId      Int    @map("UserId")
+  DistrictId Int    @map("DistrictId")
+  storeName   String @map("storeName")
+  address     String @map("address")
+  latitude    String @map("latitude")
+  longitude   String @map("longitude")
+  starAvg     Int    @map("starAvg")
+
+  Category Categories @relation(fields: [CategoryId], references: [categoryId], onDelete: Cascade)
+  User     Users      @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+  District Districts  @relation(fields: [DistrictId], references: [districtId], onDelete: Cascade)
+
+  Posts Posts[]
+  Stars Stars[]
+  Bookmark Bookmark[]
+
+  @@map("Locations")
+}
+
+model Likes {
+
+  likeId Int @id @default(autoincrement()) @map("likeId")
+  UserId Int @map("UserId")
+  PostId Int @map("PostId")
+
+  User Users @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+  Post Posts @relation(fields: [PostId], references: [postId], onDelete: Cascade)
+
+  @@map("Likes")
+}
+
+model Stars {
+  starId     Int @id @default(autoincrement()) @map("starId")
+  LocationId Int @map("LocationId")
+  UserId     Int @map("UserId")
+  star       Int @map("star")
+
+  Location Locations @relation(fields: [LocationId], references: [locationId], onDelete: Cascade)
+  User     Users     @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+
+  @@map("Stars")
+}
+
+model Districts {
+  districtId     Int @id @default(autoincrement()) @map("districtId")
+  districtName String @map("districtName")
+
+  Location Locations[]
+
+  @@map("Districts")
+}
+
+model TokenBlacklist {
+  id            Int      @id @default(autoincrement()) @map("id")
+  token         String   @map("token")
+  invalidatedAt DateTime @default(now()) @map("invalidatedAt")
+
+  @@map("TokenBlacklist")
+}

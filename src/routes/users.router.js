@@ -80,7 +80,7 @@ router.post("/login", async (req, res, next) => {
         userId: findUser.userId,
       },
       accessKey,
-      { expiresIn: "10s" },
+      { expiresIn: "1h" },
     );
 
     // Issue refresh token
@@ -173,7 +173,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
       userId: userInfo.userId,
     },
     accessKey,
-    { expiresIn: "10s" },
+    { expiresIn: "1h" },
   );
 
   res.cookie("accessToken", newAccessToken);
@@ -183,15 +183,11 @@ router.post("/tokens/refresh", async (req, res, next) => {
     .json({ message: "Access Token을 정상적으로 새롭게 발급했습니다." });
 });
 
-// 제공된 토큰이 유효한지 여부를 검증하는
+// 제공된 토큰이 유효한지 여부를 검증하는 함수
 function validateToken(token, secretKey) {
   try {
-    // 인증에 성공했을 때 해당하는 정보, 즉 페이로드가 반환이 된다
-    // 인증에 실패했을 때에는 에러가 발생하는 메서드이다.
-    // 토큰의 유효기간이 만료되었을 때에 페이로드가 반환되지 않고 null이 반환된다
     return jwt.verify(token, secretKey);
   } catch (error) {
-    // 인증에 실패하거나 페이로드가 없을 경우에는 null을 반환한다
     return null;
   }
 }
@@ -215,7 +211,7 @@ router.post("/logout", authMiddleware, async (req, res, next) => {
     res.clearCookie(accessToken);
     res.clearCookie(refreshToken);
 
-    // 나중에 클라이언트 측에서 로컬 스토리지나 쿠키 등에 저장된 토큰을 삭제하라고 요청하기! ************
+    // 나중에 클라이언트 측에서 로컬 스토리지나 쿠키 등에 저장된 토큰을 삭제하라고 요청하기!
     return res.status(200).json({
       message: "로그아웃 되었습니다.",
     });
@@ -229,7 +225,6 @@ router.post("/logout", authMiddleware, async (req, res, next) => {
 });
 
 /** 회원탈퇴 API
- * 해당 사용자의 데이터를 삭제
  * 해당 사용자의 리프레시 토큰을 무효화
  */
 router.delete("/withdraw", authMiddleware, async (req, res, next) => {
@@ -237,8 +232,6 @@ router.delete("/withdraw", authMiddleware, async (req, res, next) => {
     const { userId } = req.user;
     const { refreshToken } = req.cookies;
     // const refreshToken = req.headers.authorization;
-
-    console.log("refreshToken >>>>>>", refreshToken);
 
     // 블랙리스트에 해당 토큰을 추가
     await prisma.tokenBlacklist.create({
@@ -254,7 +247,7 @@ router.delete("/withdraw", authMiddleware, async (req, res, next) => {
       },
     });
 
-    // 나중에 클라이언트 측에서 로컬 스토리지나 쿠키 등에 저장된 토큰을 삭제하라고 요청하기! ************
+    // 나중에 클라이언트 측에서 로컬 스토리지나 쿠키 등에 저장된 토큰을 삭제하라고 요청하기!
     return res.status(200).json({
       message:
         "회원탈퇴가 성공적으로 처리되었습니다. 이용해 주셔서 감사합니다.",
