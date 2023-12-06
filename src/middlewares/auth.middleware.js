@@ -77,11 +77,10 @@ export default async function (req, res, next) {
 // Token을 검증하고 토큰 안에 있는 정보를 확인하기 위한 함수
 function validateToken(token, secretKey) {
   try {
-    // 인증에 성공했을 때 해당하는 정보, 즉 페이로드가 반환이 된다
-    // 인증에 실패했을 때에는 에러가 발생하는 메서드이다.
+    // 인증에 성공했을 때 해당하는 정보, 즉 페이로드가 반환
     return jwt.verify(token, secretKey);
   } catch (error) {
-    // 인증에 실패하거나 페이로드가 없을 경우에는 null을 반환한다
+    // 인증에 실패하거나 페이로드가 없을 경우에는 null을 반환
     return null;
   }
 }
