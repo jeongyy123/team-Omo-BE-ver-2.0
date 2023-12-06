@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
 import { prisma } from "../../utils/prisma/index.js";
+import { createPosts } from '../../validation/joi.error.handler.js';
 
 import {
   S3Client,
@@ -61,6 +62,10 @@ router.get("/posts", async (req, res, next) => {
       take: 5
     });
 
+    if (!posts) { //추가
+      return res.status(400).json({ message: "존재하지 않는 게시글입니다." })
+    }
+
     const imgUrlsArray = posts.map(post => post.imgUrl.split(','));
     const paramsArray = imgUrlsArray.map(urls => {
       return urls.map(url => ({
@@ -83,13 +88,14 @@ router.get("/posts", async (req, res, next) => {
 
     return res.status(200).json(posts);
   } catch (error) {
-    console.log("error", error);
+    next(error); //추가
   }
 });
 
 /* 게시물 작성 */
 router.post("/posts", upload.array("imgUrl", 5), async (req, res, next) => {
   try {
+    const validation = await createPosts.validateAsync(req.body);
     const {
       content,
       likeCount,
@@ -98,7 +104,7 @@ router.post("/posts", upload.array("imgUrl", 5), async (req, res, next) => {
       address,
       latitude,
       longitude,
-    } = req.body;
+    } = validation;
     const nickname = "김아무개";
 
     const user = await prisma.users.findFirst({
@@ -116,9 +122,6 @@ router.post("/posts", upload.array("imgUrl", 5), async (req, res, next) => {
     if (!category) {
       return res.status(400).json({ message: "카테고리가 존재하지 않습니다." });
     }
-
-    console.log("req.body", req.body);
-    console.log("req.files", req.files);
 
     const imgPromises = req.files.map(async (file) => {
       const imgName = randomImgName();
@@ -155,12 +158,13 @@ router.post("/posts", upload.array("imgUrl", 5), async (req, res, next) => {
         address,
         latitude,
         longitude,
-        starAvg: 1,
+        // starAvg: 1, // 추가 수정
         Category: { connect: { categoryId: +category.categoryId } },
-        User: { connect: { userId: +user.userId } },
+        // User: { connect: { userId: +user.userId } }, // 추가 수정
         District: { connect: { districtId: +district.districtId } },
       },
     });
+
 
     const posts = await prisma.posts.create({
       data: {
@@ -169,13 +173,14 @@ router.post("/posts", upload.array("imgUrl", 5), async (req, res, next) => {
         User: { connect: { userId: +user.userId } },
         Category: { connect: { categoryId: +category.categoryId } },
         Location: { connect: { locationId: +location.locationId } },
-        imgUrl: imgNames.join(","), // imgUrl을 배열로 저장
+        imgUrl: imgNames.join(","),
       },
     });
 
     return res.status(200).json({ posts });
   } catch (error) {
-    console.log("error", error);
+    console.log(error)
+    next(error);
   }
 });
 
