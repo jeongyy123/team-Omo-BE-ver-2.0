@@ -133,7 +133,7 @@ router.post("/login", async (req, res, next) => {
 /** 리프레시 토큰을 이용해서 엑세스 토큰을 재발급하는 API
  * Access Token의 만료를 감지하고, Refresh Token을 사용하여 새로운 Access Token을 발급하는 API
  */
-router.post("/tokens/refresh", async (req, res, next) => {
+router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
   const { refreshToken } = req.cookies;
   const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
   const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
@@ -207,7 +207,6 @@ router.post("/logout", authMiddleware, async (req, res, next) => {
     });
 
     // 쿠키를 삭제하여 클라이언트에 저장된 토큰을 제거!!
-    // 나중에 지우기
     res.clearCookie(accessToken);
     res.clearCookie(refreshToken);
 
