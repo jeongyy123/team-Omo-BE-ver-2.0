@@ -47,7 +47,7 @@ model Posts {
   CategoryId Int       @map("CategoryId")
   LocationId Int       @map("LocationId")
   content    String    @map("content") @db.Text
-  imgUrl     String    @map("imgUrl") @db.Text
+  imgUrl     Json      @map("imgUrl")
   likeCount  Int       @map("likeCount")
   createdAt  DateTime  @default(now()) @map("createdAt")
   updatedAt  DateTime? @map("updatedAt")

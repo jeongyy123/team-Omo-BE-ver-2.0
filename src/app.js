@@ -1,6 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
-import PostRouter from "./routes/posts.router.js";
+import PostRouter from "./routes/posts/posts.router.js";
 
 const app = express();
 const PORT = 5000;
