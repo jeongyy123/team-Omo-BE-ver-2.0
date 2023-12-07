@@ -104,6 +104,7 @@ router.post("/posts", upload.array("imgUrl", 5), async (req, res, next) => {
       address,
       latitude,
       longitude,
+      star
     } = validation;
     const nickname = "김아무개";
 
@@ -151,14 +152,14 @@ router.post("/posts", upload.array("imgUrl", 5), async (req, res, next) => {
     if (!district) {
       return res.status(400).json({ message: "지역이 존재하지 않습니다." });
     }
-
+    //starAvg 계산해서 locations 테이블에 넣기
     const location = await prisma.locations.create({
       data: {
         storeName,
         address,
         latitude,
         longitude,
-        // starAvg: 1, // 추가 수정
+        // starAvg: 1,//저장할 때 
         Category: { connect: { categoryId: +category.categoryId } },
         // User: { connect: { userId: +user.userId } }, // 추가 수정
         District: { connect: { districtId: +district.districtId } },
