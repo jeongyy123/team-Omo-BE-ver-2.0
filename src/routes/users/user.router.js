@@ -102,7 +102,7 @@ router.post("/login", async (req, res, next) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: true,
+      sameSite: "strict",
     });
 
     const sevenDaysLater = new Date(); // 현재 시간
@@ -113,8 +113,6 @@ router.post("/login", async (req, res, next) => {
       data: {
         refreshToken: refreshToken,
         UserId: findUser.userId,
-        ip: req.ip,
-        userAgent: req.headers["user-agent"],
         expiresAt: sevenDaysLater,
         // createdAt 필드는 기본값이 있으므로 따로 설정할 필요 없음
       },
