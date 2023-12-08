@@ -23,11 +23,12 @@ const createPosts = joi.object({
   }),
   latitude: joi.string().messages({
     'any.only': '위도를 입력해주세요.',
-    'string.trim': '빈 칸 없이 작성해주세요'
   }),
   longitude: joi.string().messages({
     'any.only': '경도를 입력해주세요.',
-    'string.trim': '빈 칸 없이 작성해주세요'
+  }),
+  star: joi.number().min(1).max(5).messages({
+    'any.only': '별점을 입력해주세요.',
   }),
 });
 
