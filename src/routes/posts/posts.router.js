@@ -201,10 +201,20 @@ router.post("/posts", authMiddleware, upload.array("imgUrl", 5), async (req, res
 });
 
 /* 게시글 목록 조회*/
+//
 router.get('/posts/star', async (req, res, next) => {
   try {
+    const { page, pageSize } = req.query;
+
+    const parsedPage = +page || 1;
+    const parsedPageSize = +pageSize || 10;
+    //로직은 나중에 프론트 요구사항 확인 후 조정
+    const startIndex = (parsedPage - 1) * parsedPageSize;
+    const endIndex = startIndex + parsedPageSize;
+
     const posts = await prisma.posts.findMany({
       select: {
+        postId: true,
         content: true,
         createdAt: true,
         likeCount: true,
@@ -224,10 +234,12 @@ router.get('/posts/star', async (req, res, next) => {
             content: true //이게 개수로 보여야한다.
           }
         }
-      }
+      },
+      skip: startIndex, //skip+1번째부터 take 개수만큼 조회
+      take: endIndex,
     });
 
-    return res.status(200).json({ posts })
+    return res.status(200).json(posts)
   } catch (error) {
     next(error)
   }
