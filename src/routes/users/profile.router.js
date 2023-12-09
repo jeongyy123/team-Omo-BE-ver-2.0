@@ -4,6 +4,7 @@ import { prisma } from "../../utils/prisma/index.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import sharp from "sharp"; // To adjust image size
+import { profileEditSchema } from "../../validation/joi.error.handler.js";
 
 import multer from "multer";
 import crypto from "crypto";
@@ -37,7 +38,7 @@ const s3 = new S3Client({
   region: bucketRegion,
 });
 
-// My page
+// Profile API
 router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
   try {
     const { userId, imgUrl, nickname, email } = req.user;
@@ -105,8 +106,6 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
 
       userPosts.imgUrl = defaultImageUrl;
     }
-
-    // 처음 가입한 유저가 프로필 이미지를 수정하지 않았는데, s3에서 이미지를 가져옴...왜지??
 
     console.log("userPosts >>>>>>>>>>>>>>>>>>>>>>", userPosts);
     // 하기 => 각 포스트의 댓글 갯수 계산하기
@@ -204,7 +203,9 @@ router.patch(
     try {
       const { userId } = req.user;
       // 새 비밀번호, 확인용 비밀번호
-      const { nickname, newPassword, confirmedPassword } = req.body;
+      const validation = await profileEditSchema.validateAsync(req.body);
+      const { nickname, newPassword, confirmedPassword } = validation;
+
       // console.log("req.file", req.file); // to display data about the image
       //req.file.buffer; // you want to send this data to the s3 bucket
 
@@ -307,6 +308,10 @@ router.patch(
       return res.status(201).json({ message: "회원정보가 수정되었습니다." });
     } catch (error) {
       console.error(error);
+
+      if (error.name === "ValidationError") {
+        return res.status(200).json({ errorMessage: error.message });
+      }
 
       return res
         .status(500)
