@@ -12,7 +12,7 @@ model Users {
   email     String    @map("email")
   password  String    @map("password")
   nickname  String    @map("nickname")
-  imgUrl    String    @map("imgUrl") 
+  imgUrl    String?   @map("imgUrl") 
   snsId     String?   @map("snsId")
   provider  String?   @map("provider")
   createdAt DateTime  @default(now()) @map("createdAt")

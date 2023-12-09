@@ -25,13 +25,15 @@ router.post("/register", async (req, res, next) => {
 
     const encryptPassword = await bcrypt.hash(password, 10);
 
+    const defaultImageUrl =
+      "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw";
+
     await prisma.users.create({
       data: {
         email: email,
         password: encryptPassword,
         nickname: nickname,
-        imgUrl:
-          "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw",
+        imgUrl: defaultImageUrl,
       },
     });
 
@@ -66,9 +68,9 @@ router.post("/login", async (req, res, next) => {
         .json({ errorMessage: "해당 이메일로 가입된 계정이 없습니다." });
     }
 
-    const decodedPassword = await bcrypt.compare(password, findUser.password);
+    const isMatch = await bcrypt.compare(password, findUser.password);
 
-    if (!decodedPassword) {
+    if (!isMatch) {
       return res
         .status(401)
         .json({ errorMessage: "비밀번호가 일치하지 않습니다." });

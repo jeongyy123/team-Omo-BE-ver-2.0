@@ -56,14 +56,14 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
       select: {
         email: true,
         nickname: true,
-        imgUrl: true, 
+        imgUrl: true,
         Posts: {
           select: {
             postId: true,
             UserId: true,
-            imgUrl: true, 
+            imgUrl: true,
             content: true,
-            likeCount: true, 
+            likeCount: true,
             createdAt: true,
             updatedAt: true,
             Comments: {
@@ -84,19 +84,29 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
         },
       },
       orderBy: {
-        updatedAt: "desc", 
+        updatedAt: "desc",
       },
     });
 
-    const getObjectParams = {
-      Bucket: bucketName,
-      Key: userPosts.imgUrl, // 단일 사용자의 이미지 이름 사용
-    };
+    // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
+    if (userPosts.imgUrl && userPosts.imgUrl.length === 64) {
+      const getObjectParams = {
+        Bucket: bucketName, // 버킷 이름
+        Key: userPosts.imgUrl, // 이미지 키
+      };
 
-    // User GetObjectCommand to create the url
-    const command = new GetObjectCommand(getObjectParams);
-    const url = await getSignedUrl(s3, command);
-    userPosts.imgUrl = url;
+      // User GetObjectCommand to create the url
+      const command = new GetObjectCommand(getObjectParams);
+      const url = await getSignedUrl(s3, command);
+      userPosts.imgUrl = url;
+    } else {
+      const defaultImageUrl =
+        "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw";
+
+      userPosts.imgUrl = defaultImageUrl;
+    }
+
+    // 처음 가입한 유저가 프로필 이미지를 수정하지 않았는데, s3에서 이미지를 가져옴...왜지??
 
     console.log("userPosts >>>>>>>>>>>>>>>>>>>>>>", userPosts);
     // 하기 => 각 포스트의 댓글 갯수 계산하기
@@ -131,8 +141,8 @@ router.get(
           UserId: +userId,
         },
         select: {
-          UserId: true,
-          LocationId: true,
+          // UserId: true,
+          // LocationId: true,
           Location: {
             select: {
               locationId: true,
@@ -218,10 +228,37 @@ router.patch(
       // send the command to the S3 bucket
       await s3.send(command);
 
-      const { nickname } = req.body;
+      // 새 비밀번호, 확인용 비밀번호
+      const { nickname, newPassword, confirmedPassword } = req.body;
       const { userId } = req.user;
 
-      //const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await prisma.users.findFirst({
+        where: {
+          userId: +userId,
+        },
+      });
+
+      console.log("newPassword", newPassword);
+      console.log("confirmedPassword", confirmedPassword);
+
+      if (newPassword !== confirmedPassword) {
+        return res
+          .status(400)
+          .json({ errorMessage: "두개의 비밀번호가 일치하지 않습니다." });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // 이전의 비밀번호와 같은 비밀번호를 입력했을 때
+      // 이전의 비밀번호와 새로운 비밀번호가 같은지를 확인하기 위해 해시된 값이 아닌,
+      // 해시화되지 않은 원본 비밀번호를 비교해야 한다.
+      const isSamePassword = await bcrypt.compare(newPassword, user.password);
+
+      if (isSamePassword) {
+        return res
+          .status(401)
+          .json({ errorMessage: "이미 이전의 비밀번호와 일치합니다." });
+      }
 
       const newUserInfo = await prisma.users.update({
         where: {
@@ -230,7 +267,7 @@ router.patch(
         data: {
           imgUrl: imageName,
           nickname: nickname,
-          //password: hashedPassword,
+          password: hashedPassword,
         },
       });
 
@@ -239,6 +276,10 @@ router.patch(
       return res.status(201).json({ message: "회원정보가 수정되었습니다." });
     } catch (error) {
       console.error(error);
+
+      return res
+        .status(500)
+        .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
     }
   },
 );
