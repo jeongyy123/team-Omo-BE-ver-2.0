@@ -202,76 +202,107 @@ router.patch(
   authMiddleware,
   async (req, res, next) => {
     try {
-      console.log("req.body", req.body);
-      console.log("req.file", req.file); // to display data about the image
-
-      //req.file.buffer; // you want to send this data to the s3 bucket
-
-      // resize image
-      // So get the file from the post request, pass that into sharp, do some things with it,
-      // get a new buffer of the modified image data and send that to S3
-      const buffer = await sharp(req.file.buffer)
-        .resize({ height: 1920, width: 1080, fit: "contain" })
-        .toBuffer();
-
-      const params = {
-        Bucket: bucketName,
-        // Key: req.file.originalname, // image files with the same name will overlap
-        Key: imageName,
-        // Body: req.file.buffer,
-        Body: buffer,
-        ContentType: req.file.mimetype,
-      };
-
-      // Specify all the information about the file here
-      const command = new PutObjectCommand(params);
-      // send the command to the S3 bucket
-      await s3.send(command);
-
+      const { userId } = req.user;
       // 새 비밀번호, 확인용 비밀번호
       const { nickname, newPassword, confirmedPassword } = req.body;
-      const { userId } = req.user;
+      // console.log("req.file", req.file); // to display data about the image
+      //req.file.buffer; // you want to send this data to the s3 bucket
 
-      const user = await prisma.users.findFirst({
-        where: {
-          userId: +userId,
-        },
-      });
+      // ** 이미지가 수정되었는지 확인 **
+      if (req.file) {
+        // resize image
+        // So get the file from the post request, pass that into sharp, do some things with it,
+        // get a new buffer of the modified image data and send that to S3
+        const buffer = await sharp(req.file.buffer)
+          .resize({ height: 1920, width: 1080, fit: "contain" })
+          .toBuffer();
 
-      console.log("newPassword", newPassword);
-      console.log("confirmedPassword", confirmedPassword);
+        const params = {
+          Bucket: bucketName,
+          // Key: req.file.originalname, // image files with the same name will overlap
+          Key: imageName,
+          // Body: req.file.buffer,
+          Body: buffer,
+          ContentType: req.file.mimetype,
+        };
 
-      if (newPassword !== confirmedPassword) {
-        return res
-          .status(400)
-          .json({ errorMessage: "두개의 비밀번호가 일치하지 않습니다." });
+        // Specify all the information about the file here
+        const command = new PutObjectCommand(params);
+        // send the command to the S3 bucket
+        await s3.send(command);
+
+        await prisma.users.update({
+          where: {
+            userId: +userId,
+          },
+          data: {
+            imgUrl: imageName,
+          },
+        });
       }
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-      // 이전의 비밀번호와 같은 비밀번호를 입력했을 때
-      // 이전의 비밀번호와 새로운 비밀번호가 같은지를 확인하기 위해 해시된 값이 아닌,
-      // 해시화되지 않은 원본 비밀번호를 비교해야 한다.
-      const isSamePassword = await bcrypt.compare(newPassword, user.password);
-
-      if (isSamePassword) {
-        return res
-          .status(401)
-          .json({ errorMessage: "이미 이전의 비밀번호와 일치합니다." });
+      // 새 비밀번호만 입력하고 확인용 비밀번호를 입력하지 않은 경우
+      if (newPassword !== undefined && confirmedPassword === undefined) {
+        return res.status(400).json({
+          errorMessage: "새 비밀번호를 입력해 주세요",
+        });
       }
 
-      const newUserInfo = await prisma.users.update({
-        where: {
-          userId: +userId,
-        },
-        data: {
-          imgUrl: imageName,
-          nickname: nickname,
-          password: hashedPassword,
-        },
-      });
+      // 새 비밀번호를 입력하지 않고 확인용 비밀번호만 입력한 경우
+      if (newPassword === undefined && confirmedPassword !== undefined) {
+        return res.status(400).json({
+          errorMessage: "새 비밀번호를 입력해 주세요",
+        });
+      }
 
-      console.log("New User Info >>>", newUserInfo);
+      // ** 비밀번호가 변경되었는지 확인 **
+      if (newPassword !== undefined && confirmedPassword !== undefined) {
+        const user = await prisma.users.findFirst({
+          where: {
+            userId: +userId,
+          },
+        });
+
+        if (newPassword !== confirmedPassword) {
+          return res.status(400).json({
+            errorMessage: "비밀번호가 일치하지 않습니다. 다시 확인해주세요.",
+          });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // 이전의 비밀번호와 같은 비밀번호를 입력했을 때
+        // 이전의 비밀번호와 새로운 비밀번호가 같은지를 확인하기 위해 해시된 값이 아닌,
+        // 해시화되지 않은 원본 비밀번호를 비교해야 한다.
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+
+        if (isSamePassword) {
+          return res
+            .status(401)
+            .json({ errorMessage: "이미 이전의 비밀번호와 일치합니다." });
+        }
+
+        await prisma.users.update({
+          where: {
+            userId: +userId,
+          },
+          data: {
+            password: hashedPassword,
+          },
+        });
+      }
+
+      // ** 닉네임이 변경되었는지 확인 **
+      if (nickname !== undefined) {
+        await prisma.users.update({
+          where: {
+            userId: +userId,
+          },
+          data: {
+            nickname: nickname,
+          },
+        });
+      }
 
       return res.status(201).json({ message: "회원정보가 수정되었습니다." });
     } catch (error) {
