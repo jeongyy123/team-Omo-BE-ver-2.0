@@ -1,8 +1,12 @@
 import express from "express";
 import UsersRouter from "./routes/users/user.router.js";
 import AuthRouter from "./routes/users/auth.router.js";
+<<<<<<< HEAD
 // import ProfileRouter from "./routes/users/profile.router.js";
 import PostsRouter from './routes/posts/posts.router.js'
+=======
+import ProfileRouter from "./routes/users/profile.router.js";
+>>>>>>> e61fa63ff6fca24d48064f920ade2ba9a68c6c97
 import cookieParser from "cookie-parser";
 import ErrorMiddleware from './middlewares/error.middleware.js'
 import session from "express-session";
@@ -55,6 +59,7 @@ redisClient.on('connect', () => {
   console.info('Redis connected!');
 });
 
+<<<<<<< HEAD
 redisClient.on('error', (err) => {
   console.error('Redis Client Error', err);
 });
@@ -63,6 +68,10 @@ redisClient.connect().then(); // redis v4 연결 (비동기)
 const redisCli = redisClient.v4; // 기본 redisClient 객체는 콜백기반인데 v4버젼은 프로미스 기반이라 사용
 
 app.use(ErrorMiddleware)
+=======
+app.use("/api", [ProfileRouter]);
+app.use("/auth", [UsersRouter, AuthRouter]);
+>>>>>>> e61fa63ff6fca24d48064f920ade2ba9a68c6c97
 
 app.listen(PORT, (req, res) => {
   console.log(PORT, `포트 ${PORT}번이 열렸습니다.`);

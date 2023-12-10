@@ -5,29 +5,45 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
+<<<<<<< HEAD
     "@aws-sdk/client-s3": "^3.465.0",
     "@aws-sdk/s3-request-presigner": "^3.465.0",
+=======
+    "@aws-sdk/client-s3": "^3.468.0",
+    "@aws-sdk/s3-request-presigner": "^3.468.0",
+    "@img/sharp-win32-x64": "^0.33.0",
+>>>>>>> e61fa63ff6fca24d48064f920ade2ba9a68c6c97
     "@prisma/client": "^5.6.0",
     "aws-sdk": "^2.1510.0",
     "axios": "^1.6.2",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.3.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.0.1",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
+    "file-type": "^18.7.0",
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+<<<<<<< HEAD
     "multer-s3": "^3.0.1",
+=======
+>>>>>>> e61fa63ff6fca24d48064f920ade2ba9a68c6c97
     "passport": "^0.7.0",
     "passport-kakao": "^1.0.1",
     "passport-local": "^1.0.0",
     "prettier": "^3.1.0",
     "prisma": "^5.6.0",
+<<<<<<< HEAD
     "redis": "^4.6.11"
+=======
+    "sharp": "^0.33.0",
+    "yarn": "^1.22.21"
+>>>>>>> e61fa63ff6fca24d48064f920ade2ba9a68c6c97
   },
   "devDependencies": {
     "eslint": "^8.55.0",
@@ -38,7 +54,7 @@
     "nodemon": "^3.0.2"
   },
   "scripts": {
-    "start": "nodemon ./src/app.js",
+    "start": "nodemon src/app.js",
     "format": "prettier --write *.js **/*.js"
   }
 }

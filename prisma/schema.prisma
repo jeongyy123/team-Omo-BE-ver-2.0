@@ -16,7 +16,7 @@ model Users {
   snsId     String?   @map("snsId")
   provider  String?   @map("provider")
   createdAt DateTime  @default(now()) @map("createdAt")
-  updatedAt DateTime? @updatedAt @map("updatedAt")
+  updatedAt DateTime  @updatedAt @map("updatedAt")
 
   Posts         Posts[]
   Comments      Comments[]
@@ -68,7 +68,7 @@ model Comments {
   PostId      Int       @map("PostId")
   content     String    @map("content")
   createdAt   DateTime  @default(now()) @map("createdAt")
-  updatedAt   DateTime? @updatedAt @map("updatedAt")
+  updatedAt   DateTime @updatedAt @map("updatedAt")
 
   Post Posts @relation(fields: [PostId], references: [postId], onDelete: Cascade)
   User Users @relation(fields: [UserId], references: [userId], onDelete: Cascade)
@@ -80,6 +80,7 @@ model Bookmark {
   bookmarkId  Int @id @default(autoincrement()) @map("bookmarkId")
   UserId      Int @map("UserId")
   LocationId  Int @map("LocationId")
+  createdAt   DateTime @default(now()) @map("createdAt")
 
   User     Users     @relation(fields: [UserId], references: [userId], onDelete: Cascade)
   Location Locations @relation(fields: [LocationId], references: [locationId], onDelete: Cascade)
