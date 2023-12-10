@@ -51,7 +51,7 @@ model Posts {
   likeCount  Int       @map("likeCount") // 널 값일 수 있다.
   star       Int       @map("star")
   createdAt  DateTime  @default(now()) @map("createdAt")
-  updatedAt  DateTime? @updatedAt @map("updatedAt")
+  updatedAt  DateTime  @updatedAt @map("updatedAt")
 
   User     Users      @relation(fields: [UserId], references: [userId], onDelete: Cascade)
   Category Categories @relation(fields: [CategoryId], references: [categoryId], onDelete: Cascade)

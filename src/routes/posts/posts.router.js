@@ -8,14 +8,16 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
-  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+
 import dotenv from "dotenv";
 import crypto from "crypto";
+import redis from 'redis';
 
 const router = express.Router();
+const client = redis.createClient();
 
 dotenv.config();
 
@@ -37,16 +39,24 @@ const upload = multer({ storage: storage });
 
 const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
 
-/* 게시물 상세 조회 */
+/* 게시물 목록 조회 */
 router.get("/posts", async (req, res, next) => {
   try {
+    const { page, pageSize, lastSeenPage } = req.query;
+    const findNowTime = new Date();
+
+    const parsedPage = +page;
+    const parsedPageSize = +pageSize;
+    const startIndex = (parsedPage - 1) * parsedPageSize;
+    const endIndex = startIndex + parsedPageSize;
+
     const posts = await prisma.posts.findMany({
       select: {
         User: {
           select: {
             nickname: true,
-            imgUrl: true
-          }
+            imgUrl: true,
+          },
         },
         Location: {
           select: {
@@ -54,33 +64,76 @@ router.get("/posts", async (req, res, next) => {
             address: true,
           },
         },
+        postId: true,
         imgUrl: true,
         content: true,
         likeCount: true,
         createdAt: true,
-        star: true
+        star: true,
       },
-      orderBy: { createdAt: 'desc' },
-      take: 5
+      orderBy: { postId: 'desc' },
+      skip: parsedPage,
+      take: parsedPageSize,
+      where: {
+        updatedAt: {
+          lt: findNowTime
+        }
+      },
     });
 
     if (!posts) {
-      return res.status(400).json({ message: "존재하지 않는 게시글입니다." })
+      return res.status(400).json({ message: '존재하지 않는 게시글입니다.' });
     }
 
-    //이미지 배열로 반환하는 로직
-    const imgUrlsArray = posts.map(post => post.imgUrl.split(','));
-    const paramsArray = imgUrlsArray.map(urls => {
-      return urls.map(url => ({
+    function latestPostsPage(page, pageSize) {
+      const posts = prisma.posts.findMany({
+        select: {
+          User: {
+            select: {
+              nickname: true,
+              imgUrl: true,
+            },
+          },
+          Location: {
+            select: {
+              storeName: true,
+              address: true,
+            },
+          },
+          postId: true,
+          imgUrl: true,
+          content: true,
+          likeCount: true,
+          createdAt: true,
+          star: true,
+        },
+        orderBy: { postId: 'desc' },
+        where: {
+          updatedAt: {
+            lt: findNowTime
+          },
+          postId: {
+            lt: (page - 1) * pageSize
+          }
+        },
+      });
+      return posts.postId
+    }
+
+    const data = latestPostsPage(page, pageSize)
+    // 이미지 배열로 반환하는 로직
+    const imgUrlsArray = posts.map((post) => post.imgUrl.split(','));
+    const paramsArray = imgUrlsArray.map((urls) =>
+      urls.map((url) => ({
         Bucket: bucketName,
-        Key: url
-      }));
-    });
+        Key: url,
+      }))
+    );
 
     const signedUrlsArray = await Promise.all(
       paramsArray.map(async (params) => {
-        const commands = params.map(param => new GetObjectCommand(param));
-        const urls = await Promise.all(commands.map(command => getSignedUrl(s3, command, { expiresIn: 3600 })));
+        const commands = params.map((param) => new GetObjectCommand(param));
+        const urls = await Promise.all(commands.map((command) => getSignedUrl(s3, command, { expiresIn: 3600 })));
         return urls;
       })
     );
@@ -89,11 +142,58 @@ router.get("/posts", async (req, res, next) => {
       posts[i].imgUrl = signedUrlsArray[i];
     }
 
-    return res.status(200).json(posts);
+    const responseData = { data: posts, data2: data, pagination: { page: parsedPage, pageSize: parsedPageSize } };
+
+    return res.status(200).json(responseData);
+    // });
   } catch (error) {
-    next(error);
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+
+/* 게시글 상세 조회 - 1개 */
+router.get('/posts/:postId', async (req, res, next) => {
+  try {
+    const { postId } = req.params;
+
+    const posts = await prisma.posts.findFirst({
+      where: { postId: +postId },
+      select: {
+        postId: true,
+        content: true,
+        createdAt: true,
+        likeCount: true,
+        imgUrl: false,
+        User: {
+          select: {
+            nickname: true,
+          }
+        },
+        Location: {
+          select: {
+            address: true
+          }
+        },
+        Comments: {
+          select: {
+            content: true
+          }
+        }
+      }
+    });
+
+    if (!posts) {
+      return res.status(400).json({ message: "존재하지않는 게시물입니다." })
+    }
+
+    return res.status(200).json(posts)
+  } catch (error) {
+    next(error)
+  }
+})
+
 
 /* 게시물 작성 */
 router.post("/posts", authMiddleware, upload.array("imgUrl", 5), async (req, res, next) => {
@@ -200,50 +300,7 @@ router.post("/posts", authMiddleware, upload.array("imgUrl", 5), async (req, res
   }
 });
 
-/* 게시글 목록 조회*/
-//
-router.get('/posts/star', async (req, res, next) => {
-  try {
-    const { page, pageSize } = req.query;
 
-    const parsedPage = +page || 1;
-    const parsedPageSize = +pageSize || 10;
-    //로직은 나중에 프론트 요구사항 확인 후 조정
-    const startIndex = (parsedPage - 1) * parsedPageSize;
-    const endIndex = startIndex + parsedPageSize;
-
-    const posts = await prisma.posts.findMany({
-      select: {
-        postId: true,
-        content: true,
-        createdAt: true,
-        likeCount: true,
-        imgUrl: false,
-        User: {
-          select: {
-            nickname: true,
-          }
-        },
-        Location: {
-          select: {
-            address: true
-          }
-        },
-        Comments: {
-          select: {
-            content: true //이게 개수로 보여야한다.
-          }
-        }
-      },
-      skip: startIndex, //skip+1번째부터 take 개수만큼 조회
-      take: endIndex,
-    });
-
-    return res.status(200).json(posts)
-  } catch (error) {
-    next(error)
-  }
-})
 
 
 export default router;
