@@ -2,7 +2,7 @@ import express from "express";
 import UsersRouter from "./routes/users/user.router.js";
 import AuthRouter from "./routes/users/auth.router.js";
 // import ProfileRouter from "./routes/users/profile.router.js";
-import MainRouter from './routes/main/main.router.js'
+import MainRouter from "./routes/main/main.router.js";
 import session from "express-session";
 import configurePassport from "./passport/index.js";
 import passport from "passport";
@@ -42,7 +42,6 @@ app.use("/api", [MainRouter, UsersRouter]);
 app.get("/", (req, res) => {
   return res.status(200).json({ message: "success" });
 });
-
 
 app.listen(PORT, (req, res) => {
   console.log(PORT, `포트 ${PORT}번이 열렸습니다.`);
