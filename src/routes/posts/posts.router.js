@@ -133,7 +133,7 @@ router.get("/posts", async (req, res, next) => {
     const signedUrlsArray = await Promise.all(
       paramsArray.map(async (params) => {
         const commands = params.map((param) => new GetObjectCommand(param));
-        const urls = await Promise.all(commands.map((command) => getSignedUrl(s3, command, { expiresIn: 3600 })));
+        const urls = await Promise.all(commands.map((command) => getSignedUrl(s3, command)));
         return urls;
       })
     );
