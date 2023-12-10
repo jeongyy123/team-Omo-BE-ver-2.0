@@ -42,9 +42,12 @@ export default async function (req, res, next) {
     const decodedRefreshToken = validateToken(refreshToken, refreshKey);
 
     if (!decodedAccessToken || !decodedRefreshToken) {
-      return res
-        .status(401)
-        .json({ errorMessage: "토큰이 유효하지 않습니다." });
+      return (
+        res
+          // 401 Unauthorized
+          .status(401)
+          .json({ errorMessage: "토큰이 만료되었습니다" })
+      );
     }
 
     //
@@ -70,7 +73,7 @@ export default async function (req, res, next) {
 
     return res
       .status(500)
-      .json({ errorMessage: "서버에서 오류가 발생하였습니다." });
+      .json({ errorMessage: "전달된 쿠키에서 오류가 발생했습니다." });
   }
 }
 

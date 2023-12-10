@@ -7,7 +7,7 @@ import authMiddleware from "../../middlewares/auth.middleware.js";
 import {
   registerSchema,
   loginSchema,
-} from "../../validation/joi.error.handler.js";
+} from "../../validations/auth.validation.js";
 
 dotenv.config();
 const router = express.Router();

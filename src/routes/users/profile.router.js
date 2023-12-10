@@ -4,7 +4,7 @@ import { prisma } from "../../utils/prisma/index.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import sharp from "sharp"; // To adjust image size
-import { profileEditSchema } from "../../validation/joi.error.handler.js";
+import { profileEditSchema } from "../../validations/auth.validation.js";
 
 import multer from "multer";
 import crypto from "crypto";
@@ -89,6 +89,15 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
       },
     });
 
+    // 각 포스트의 댓글 갯수
+    // const numOfCommentsForEachPost = await prisma.comments.count({
+    //   where: {
+    //     postId: userPosts.Posts.Comments,
+    //   },
+    // });
+
+    // console.log("numOfCommentsForEachPost >>>>>>>", numOfCommentsForEachPost);
+
     // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
     if (userPosts.imgUrl && userPosts.imgUrl.length === 64) {
       const getObjectParams = {
@@ -107,10 +116,10 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
       userPosts.imgUrl = defaultImageUrl;
     }
 
-    console.log("userPosts >>>>>>>>>>>>>>>>>>>>>>", userPosts);
-    // 하기 => 각 포스트의 댓글 갯수 계산하기
-
-    return res.status(200).json({ postsCount: myPostsCount, data: userPosts });
+    return res.status(200).json({
+      postsCount: myPostsCount,
+      data: userPosts,
+    });
   } catch (error) {
     console.error(error);
 
@@ -321,9 +330,3 @@ router.patch(
 );
 
 export default router;
-
-// References
-// https://www.npmjs.com/package/multer
-// https://www.youtube.com/watch?v=eQAIojcArRY
-// https://www.npmjs.com/package//sharp
-// https://www.npmjs.com/package/@aws-sdk/s3-request-presigner
