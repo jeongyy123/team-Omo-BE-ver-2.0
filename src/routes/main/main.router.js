@@ -213,7 +213,7 @@ router.get("/main/recent", async (req, res, next) => {
         const commands = params.map((param) => new GetObjectCommand(param));
         const urls = await Promise.all(
           commands.map((command) =>
-            getSignedUrl(s3, command, { expiresIn: 3600 }),
+            getSignedUrl(s3, command),
           ),
         );
         return urls;
