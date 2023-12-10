@@ -1,6 +1,6 @@
 import express from "express";
 import { prisma } from "../../utils/prisma/index.js";
-
+// import authMiddleware from "../../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ router.get("/locations", async (req, res) => {
 })
 
 //특정 위치 조회
-router.get("/location/:locationId", async (req, res, next) => {
+router.get("/locations/:locationId", async (req, res) => {
     const { locationId } = req.params
     const { address, latitude, longitude } = req.body
     const location = await prisma.locations.findMany({
@@ -29,7 +29,7 @@ router.get("/location/:locationId", async (req, res, next) => {
                     content: true,
                     imgUrl: true,
                     likeCount: true,
-                    star: true,
+                    starAvg: true,
                     creatredAt: true
                 }
             },

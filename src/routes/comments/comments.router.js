@@ -37,7 +37,7 @@ router.post("/posts/:postId/comments", authMiddleware, async (req, res, next) =>
 
 
 // comment GET API
-router.get("/posts/:postId/comments/:commentId", async (req, res, next) => {
+router.get("/posts/:postId/comments", async (req, res, next) => {
     try {
     const { postId } = req.params
 
