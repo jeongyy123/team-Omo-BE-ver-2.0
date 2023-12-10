@@ -5,6 +5,7 @@ import AuthRouter from "./routes/users/auth.router.js";
 import MainRouter from "./routes/main/main.router.js";
 import PostsRouter from './routes/posts/posts.router.js'
 import ProfileRouter from "./routes/users/profile.router.js";
+import PostsRouter from './routes/posts/posts.router.js'
 import cookieParser from "cookie-parser";
 import ErrorMiddleware from './middlewares/error.middleware.js'
 import session from "express-session";
