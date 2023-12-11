@@ -42,16 +42,17 @@ model RefreshTokens {
 }
 
 model Posts {
-  postId     Int       @id @default(autoincrement()) @map("postId")
-  UserId     Int       @map("UserId")
-  CategoryId Int       @map("CategoryId")
-  LocationId Int       @map("LocationId")
-  content    String    @map("content") @db.Text
-  imgUrl     String    @map("imgUrl") @db.Text
-  likeCount  Int       @map("likeCount")
-  star       Int       @map("star")
-  createdAt  DateTime  @default(now()) @map("createdAt")
-  updatedAt  DateTime  @updatedAt @map("updatedAt")
+  postId       Int       @id @default(autoincrement()) @map("postId")
+  UserId       Int       @map("UserId")
+  CategoryId   Int       @map("CategoryId")
+  LocationId   Int       @map("LocationId")
+  content      String    @map("content") @db.Text
+  imgUrl       String    @map("imgUrl") @db.Text
+  likeCount    Int       @map("likeCount")
+  commentCount Int       @map("commentCount")
+  star         Int       @map("star")
+  createdAt    DateTime  @default(now()) @map("createdAt")
+  updatedAt    DateTime  @updatedAt @map("updatedAt")
 
   User     Users      @relation(fields: [UserId], references: [userId], onDelete: Cascade)
   Category Categories @relation(fields: [CategoryId], references: [categoryId], onDelete: Cascade)

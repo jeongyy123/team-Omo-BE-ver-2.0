@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import { prisma } from "../../utils/prisma/index.js";
-import { createPosts } from "../../validation/joi.error.handler.js";
+import { createPosts } from "../../validations/posts.validation.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 
 import {
@@ -199,9 +199,9 @@ router.get("/posts/:postId", async (req, res, next) => {
 });
 
 /* 게시물 작성 */
+//auth.middleware 추가로 넣기
 router.post(
   "/posts",
-  authMiddleware,
   upload.array("imgUrl", 5),
   async (req, res, next) => {
     try {
@@ -216,7 +216,8 @@ router.post(
         longitude,
         star,
       } = validation;
-      const { userId } = req.user;
+      // const { userId } = req.user; //auth.middleware 넣으면 주석 해제하기
+      const userId = 3;
 
       const user = await prisma.users.findFirst({
         where: { userId },

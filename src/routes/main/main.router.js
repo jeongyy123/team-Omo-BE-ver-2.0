@@ -76,6 +76,7 @@ router.get("/main/popular", async (req, res, next) => {
       select: {
         imgUrl: true,
         content: true,
+        commentCount: true,
         Location: {
           select: {
             storeName: true,
