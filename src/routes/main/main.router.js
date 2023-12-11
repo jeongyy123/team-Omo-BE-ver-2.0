@@ -58,11 +58,17 @@ router.get("/main/popular", async (req, res, next) => {
   try {
     const { address, limit } = req.query;
 
-    const findLocations = await checkAddress(address);
+    const districtName = address.split(" ")[1];
+
+    const findDistrict = await prisma.districts.findFirst({
+      where: { districtName },
+    });
 
     const findPosts = await prisma.posts.findMany({
       where: {
-        LocationId: findLocations.LocationId,
+        Location: {
+          DistrictId: findDistrict.districtId
+        },
         likeCount: {
           gte: 20,
         },
@@ -70,7 +76,6 @@ router.get("/main/popular", async (req, res, next) => {
       select: {
         imgUrl: true,
         content: true,
-        commentCount: true,
         Location: {
           select: {
             storeName: true,
@@ -210,8 +215,22 @@ router.get("/main/comments", async (req, res, next) => {
       where: { LocationId: findLocations.locationId },
     });
 
+    const districtName = address.split(" ")[1];
+
+    const findDistrict = await prisma.districts.findFirst({
+      where: { districtName },
+    });
+
     const findComments = await prisma.comments.findMany({
-      where: { PostsId: findPosts.postsId },
+      where: {
+        Post: {
+          Location: {
+            is: {
+              DistrictId: findDistrict.districtId
+            }
+          }
+        }
+      },
       select: {
         content: true,
         createdAt: true,

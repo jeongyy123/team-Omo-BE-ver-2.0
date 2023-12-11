@@ -61,14 +61,15 @@ router.get("/posts", async (req, res, next) => {
           select: {
             storeName: true,
             address: true,
+            starAvg: true,
           },
         },
         postId: true,
         imgUrl: true,
         content: true,
         likeCount: true,
+        commentCount: true,
         createdAt: true,
-        star: true,
       },
       orderBy: { postId: "desc" },
       skip: parsedPage,
@@ -178,6 +179,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         Location: {
           select: {
             address: true,
+            starAvg: true
           },
         },
         Comments: {
@@ -202,6 +204,7 @@ router.get("/posts/:postId", async (req, res, next) => {
 //auth.middleware 추가로 넣기
 router.post(
   "/posts",
+  // authMiddleware,
   upload.array("imgUrl", 5),
   async (req, res, next) => {
     try {
@@ -217,7 +220,7 @@ router.post(
         star,
       } = validation;
       // const { userId } = req.user; //auth.middleware 넣으면 주석 해제하기
-      const userId = 4;
+      const userId = 5;
 
       const user = await prisma.users.findFirst({
         where: { userId },
@@ -283,37 +286,88 @@ router.post(
 
       const imgNames = await Promise.all(imgPromises);
 
+      //⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
+      //address값으로 찾아야한다. -> locationId
       const location = await prisma.locations.findFirst({
-        where: { address },
+        where: { address }
       });
 
-      //트랜잭션 일괄처리 필요
-      const createLocation = await prisma.locations.create({
-        data: {
-          storeName,
-          address,
-          latitude,
-          longitude,
-          starAvg: 1,
-          Category: { connect: { categoryId: +category.categoryId } },
-          District: { connect: { districtId: +district.districtId } },
-          User: { connect: { userId: +user.userId } },
-        },
-      });
+      //location 정보가 기존 X => location랑 posts 생성.
+      //starAvg 계산 X. posts의 star만 입력
+      if (!location) {
+        //only locations, posts 갱신
+        //장소가 존재한다면 posts의 location.locationId 등록
+        const createLocation = await prisma.locations.create({
+          data: {
+            storeName,
+            address,
+            latitude,
+            longitude,
+            starAvg: 1,
+            Category: { categoryId: +category.categoryId },
+            District: { districtId: +district.districtId },
+            User: { connect: { userId: +user.userId } },
+          },
+        });
 
-      const posts = await prisma.posts.create({
-        data: {
-          content,
-          likeCount: +likeCount,
-          star,
-          User: { connect: { userId: +user.userId } },
-          Category: { connect: { categoryId: +category.categoryId } },
-          Location: { connect: { locationId: +createLocation.locationId } },
-          imgUrl: imgNames.join(","),
-        },
-      });
+        const posts = await prisma.posts.create({
+          data: {
+            content,
+            likeCount: +likeCount,
+            star,
+            User: { userId: +user.userId },
+            Category: { categoryId: +category.categoryId },
+            Location: { locationId: +createLocation.locationId },
+            imgUrl: imgNames.join(","),
+          },
+        });
 
-      return res.status(200).json({ posts });
+      } else {
+        //location 정보가 기존 O => location, posts 생성
+        const posts = await prisma.posts.create({
+          data: {
+            content,
+            likeCount: +likeCount,
+            star,
+            User: { connect: { userId: +user.userId } },
+            Category: { connect: { categoryId: +category.categoryId } },
+            Location: { connect: { locationId: +location.locationId } },
+            imgUrl: imgNames.join(","),
+          },
+        });
+
+        //1. posts에서 address와 locaionId기준 여러 개의 게시글을 찾아서 avg 계산
+        // 1) 총 해당 posts sum과 count를 구해서 + 사용자 입력값 = 평균 계산
+        // 해당 주소의 개수
+        const starsCount = await prisma.posts.count({
+          where: { LocationId: location.locationId },
+          select: {
+            star: true
+          }
+        });
+
+        const starsAvg = await prisma.posts.aggregate({
+          where: { LocationId: location.locationId },
+          _avg: {
+            star: true
+          }
+        });
+        //대신 starAvg는 posts 5개 모였을 때 갱신해줄거임
+        //starAvg 계산하기
+        console.log("별들의 개수", starsCount)
+        console.log("별들의 평균", starsAvg)
+
+        const findPostsbyLocationId = await prisma.posts.update({
+          where: { LocationId: location.locationId },
+          data: {
+            Location: {
+              starAvg: starsAvg
+            }
+          }
+        })
+      }
+
+      return res.status(200).json({ message: "게시글 등록이 완료되었습니다." });
     } catch (error) {
       console.log(error);
       next(error);
