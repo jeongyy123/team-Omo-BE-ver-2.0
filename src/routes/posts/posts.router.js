@@ -220,7 +220,7 @@ router.post(
         star,
       } = validation;
       // const { userId } = req.user; //auth.middleware 넣으면 주석 해제하기
-      const userId = 7;
+      const userId = 6;
 
       const user = await prisma.users.findFirst({
         where: { userId },
@@ -299,8 +299,8 @@ router.post(
             latitude,
             longitude,
             starAvg: 0,
-            Category: { categoryId: +category.categoryId },
-            District: { districtId: +district.districtId },
+            Category: { connect: { categoryId: +category.categoryId } },
+            District: { connect: { districtId: +district.districtId } },
             User: { connect: { userId: +user.userId } },
           },
         });
@@ -310,50 +310,48 @@ router.post(
             content,
             likeCount: +likeCount,
             star,
-            User: { userId: +user.userId },
-            Category: { categoryId: +category.categoryId },
-            Location: { locationId: +createLocation.locationId },
+            User: { connect: { userId: +user.userId } },
+            Category: { connect: { categoryId: +category.categoryId } },
+            Location: { connect: { locationId: +createLocation.locationId } },
             imgUrl: imgNames.join(","),
           },
         });
 
-      } else {
-        //location 정보가 기존 O => location, posts 생성
-        const result = await prisma.$transaction(async (prisma) => {
-          await prisma.posts.create({
-            data: {
-              content,
-              likeCount: +likeCount,
-              star,
-              User: { connect: { userId: +user.userId } },
-              Category: { connect: { categoryId: +category.categoryId } },
-              Location: { connect: { locationId: +location.locationId } },
-              imgUrl: imgNames.join(","),
-            },
-          });
-
-          const starsAvg = await prisma.posts.aggregate({
-            where: { LocationId: location.locationId },
-            _avg: {
-              star: true
-            }
-          });
-
-          await prisma.locations.update({
-            where: {
-              locationId: location.locationId,
-            },
-            data: {
-              starAvg: starsAvg._avg.star
-            }
-          })
-        })
-        return result;
       }
+      //location 정보가 기존 O => location 업데이트, posts 생성
+      await prisma.$transaction(async (prisma) => {
+        await prisma.posts.create({
+          data: {
+            content,
+            likeCount: +likeCount,
+            star,
+            User: { connect: { userId: +user.userId } },
+            Category: { connect: { categoryId: +category.categoryId } },
+            Location: { connect: { locationId: +location.locationId } },
+            imgUrl: imgNames.join(","),
+          },
+        });
+
+        const starsAvg = await prisma.posts.aggregate({
+          where: { LocationId: location.locationId },
+          _avg: {
+            star: true
+          }
+        });
+
+        await prisma.locations.update({
+          where: {
+            locationId: location.locationId,
+          },
+          data: {
+            starAvg: starsAvg._avg.star
+          }
+        })
+      })
 
       return res.status(200).json({ message: "게시글 등록이 완료되었습니다." });
     } catch (error) {
-      console.log(error);
+      throw new Error("트랜잭션 실패");
       next(error);
     }
   },
