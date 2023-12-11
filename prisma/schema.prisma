@@ -8,23 +8,23 @@ datasource db {
 }
 
 model Users {
-  userId    Int       @id @default(autoincrement()) @map("userId")
-  email     String    @map("email")
-  password  String    @map("password")
-  nickname  String    @map("nickname")
-  imgUrl    String    @map("imgUrl") 
-  snsId     String?   @map("snsId")
-  provider  String?   @map("provider")
-  createdAt DateTime  @default(now()) @map("createdAt")
-  updatedAt DateTime  @updatedAt @map("updatedAt")
+  userId     Int       @id @default(autoincrement()) @map("userId")
+  email      String    @map("email")
+  password   String    @map("password")
+  nickname   String    @map("nickname")
+  imgUrl     String    @map("imgUrl") 
+  snsId      String?   @map("snsId")
+  provider   String?   @map("provider")
+  createdAt  DateTime  @default(now()) @map("createdAt")
+  updatedAt  DateTime  @updatedAt @map("updatedAt")
 
   Posts         Posts[]
   Comments      Comments[]
   Likes         Likes[]
   Bookmark      Bookmark[]
   RefreshTokens RefreshTokens[]
-  Location Locations[]  //여기
-
+  Location      Locations[]
+  Replies       Replies[]
 
   @@map("Users" )
 }
@@ -49,7 +49,7 @@ model Posts {
   content      String    @map("content") @db.Text
   imgUrl       String    @map("imgUrl") @db.Text
   likeCount    Int       @map("likeCount")
-  commentCount Int       @map("commentCount")
+  commentCount Int       @default(0) @map("commentCount")
   star         Int       @map("star")
   createdAt    DateTime  @default(now()) @map("createdAt")
   updatedAt    DateTime  @updatedAt @map("updatedAt")
@@ -58,7 +58,7 @@ model Posts {
   Category Categories @relation(fields: [CategoryId], references: [categoryId], onDelete: Cascade)
   Location Locations  @relation(fields: [LocationId], references: [locationId], onDelete: Cascade)
   Comments Comments[]
-  Likes Likes[]
+  Likes    Likes[]
 
   @@map("Posts")
 }
@@ -69,10 +69,11 @@ model Comments {
   PostId      Int       @map("PostId")
   content     String    @map("content")
   createdAt   DateTime  @default(now()) @map("createdAt")
-  updatedAt   DateTime  @updatedAt @map("updatedAt")
 
   Post Posts @relation(fields: [PostId], references: [postId], onDelete: Cascade)
   User Users @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+
+  Replies Replies[]
 
   @@map("Comments")
 }
@@ -114,7 +115,7 @@ model Locations {
   District Districts  @relation(fields: [DistrictId], references: [districtId], onDelete: Cascade)
   User Users  @relation(fields: [UserId], references: [userId], onDelete: Cascade) //여기
 
-  Posts Posts[]
+  Posts    Posts[]
   Bookmark Bookmark[]
 
   @@map("Locations")
@@ -147,4 +148,17 @@ model TokenBlacklist {
   invalidatedAt DateTime @default(now()) @map("invalidatedAt")
 
   @@map("TokenBlacklist")
+}
+
+model Replies {
+  replyId   Int      @id @default(autoincrement()) @map("replyId")
+  UserId    Int      @map("UserId")
+  CommentId Int      @map("CommentId")
+  content   String   @map("content")
+  createdAt DateTime @default(now()) @map("createdAt")
+
+  User    Users    @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+  Comment Comments @relation(fields: [CommentId], references: [commentId], onDelete: Cascade)
+  
+  @@map("Replies")
 }
