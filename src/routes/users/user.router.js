@@ -33,7 +33,6 @@ router.post("/register", async (req, res, next) => {
         email: email,
       },
     });
-    
 
     if (existEmail) {
       return res.status(409).json({ errorMessage: "중복된 이메일입니다." });
