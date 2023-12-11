@@ -45,10 +45,14 @@ router.post("/register", async (req, res, next) => {
     }
 
     const encryptPassword = await bcrypt.hash(password, 10);
+<<<<<<< HEAD
+    
+=======
 
     const defaultImageUrl =
       "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw";
 
+>>>>>>> b8228884e9244f8e4020e5721cd86902d1de9e21
     await prisma.users.create({
       data: {
         email: email,
