@@ -259,11 +259,9 @@ router.post(
       });
 
       if (findPosts) {
-        return res
-          .status(400)
-          .json({
-            message: "이미 같은 장소에 대한 유저의 포스팅이 존재합니다.",
-          });
+        return res.status(400).json({
+          message: "이미 같은 장소에 대한 유저의 포스팅이 존재합니다.",
+        });
       }
 
       //이미지 이름 나눠서 저장
@@ -321,5 +319,73 @@ router.post(
     }
   },
 );
+
+// 게시물 수정
+router.patch("/posts/:postId", authMiddleware, async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+    const { postId } = req.params;
+    const { address, content, star, storeName } = req.body;
+
+    const post = await prisma.posts.findFirst({
+      where: { postId: +postId },
+    });
+
+    if (!post) {
+      res.status(404).json({ message: "존재하지 않는 게시글 입니다." });
+    }
+    await prisma.locations.update({
+      where: { locationId: post.LocationId },
+      data: { address },
+    });
+
+    await prisma.posts.update({
+      where: { postId: +postId },
+      data: { content, star, storeName },
+    });
+    return res.status(200).json({ message: "게시물을 수정하였습니다." });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 게시물 삭제
+router.delete("/posts/:postId", authMiddleware, async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+    const { postId } = req.params;
+
+    const post = await prisma.posts.findFirst({
+      where: { postId: +postId },
+    });
+    if (!post) {
+      return res.status(404).json({ message: "존재하지 않는 게시글 입니다." });
+    }
+    if (post.UserId !== userId) {
+      return res
+        .status(404)
+        .json({ message: "삭제할 권한이 존재하지 않습니다." });
+    }
+    const imgUrlsArray = post.imgUrl.split(",");
+
+    const params = imgUrlsArray.map((url) => {
+      return {
+        Bucket: bucketName,
+        Key: url,
+      };
+    });
+
+    params.map((bucket) => {
+      return s3.send(new DeleteObjectCommand(bucket));
+    });
+
+    await prisma.posts.delete({
+      where: { postId: +postId },
+    });
+    return res.status(200).json({ message: "게시글을 삭제하였습니다." });
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

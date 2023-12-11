@@ -1,10 +1,12 @@
 import express from "express";
 import UsersRouter from "./routes/users/user.router.js";
-import AuthRouter from "./routes/users/auth.router.js";
+// import AuthRouter from "./routes/users/auth.router.js";
 // import ProfileRouter from "./routes/users/profile.router.js";
 import MainRouter from "./routes/main/main.router.js";
 import ProfileRouter from "./routes/users/profile.router.js";
 import PostsRouter from "./routes/posts/posts.router.js";
+import CommentsRouter from "./routes/comments/comments.router.js";
+import LocationRouter from "./routes/locations/location.router.js";
 import cookieParser from "cookie-parser";
 import ErrorMiddleware from "./middlewares/error.middleware.js";
 import session from "express-session";
@@ -27,17 +29,18 @@ const PORT = 5000;
 // });
 
 // express-session을 passport 설정 전에 먼저 사용하도록 설정
-// app.use(
-//   session({
-//     resave: false,
-//     saveUninitialized: false,
-//     secret: process.env.COOKIE_SECRET,
-//     cookie: {
-//       httpOnly: true,
-//       secure: false,
-//     },
-//   }),
-// );
+app.use(
+  session({
+    resave: false,
+    saveUninitialized: false,
+
+    secret: process.env.COOKIE_SECRET,
+    cookie: {
+      httpOnly: true,
+      secure: false,
+    },
+  }),
+);
 
 // Passport 설정 초기화
 // configurePassport(); // configurePassport 함수 호출
@@ -50,6 +53,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/api", [MainRouter, UsersRouter]);
 // app.use("/auth", [UsersRouter]);
+
+app.use("/api", [PostsRouter, CommentsRouter, LocationRouter]);
 
 app.get("/", (req, res) => {
   return res.status(200).json({ message: "success" });

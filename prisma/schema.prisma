@@ -48,7 +48,7 @@ model Posts {
   LocationId Int       @map("LocationId")
   content    String    @map("content") @db.Text
   imgUrl     String    @map("imgUrl") @db.Text
-  likeCount  Int       @map("likeCount") // 널 값일 수 있다.
+  likeCount  Int       @map("likeCount")
   star       Int       @map("star")
   createdAt  DateTime  @default(now()) @map("createdAt")
   updatedAt  DateTime  @updatedAt @map("updatedAt")
