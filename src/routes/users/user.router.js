@@ -4,6 +4,10 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import authMiddleware from "../../middlewares/auth.middleware.js";
+import {
+  registerSchema,
+  loginSchema,
+} from "../../validations/auth.validation.js";
 
 dotenv.config();
 const router = express.Router();
@@ -11,28 +15,51 @@ const router = express.Router();
 /** Register API */
 router.post("/register", async (req, res, next) => {
   try {
-    const { email, password, nickname } = req.body;
+    const validation = await registerSchema.validateAsync(req.body);
+    const { nickname, email, password, confirmedPassword } = validation;
 
-    const existUser = await prisma.users.findFirst({
+    const existNickname = await prisma.users.findFirst({
+      where: {
+        nickname: nickname,
+      },
+    });
+
+    if (existNickname) {
+      return res.status(409).json({ errorMessage: "중복된 닉네임입니다." });
+    }
+
+    const existEmail = await prisma.users.findFirst({
       where: {
         email: email,
       },
     });
     
 
-    if (existUser) {
+    if (existEmail) {
       return res.status(409).json({ errorMessage: "중복된 이메일입니다." });
     }
 
+    if (password !== confirmedPassword) {
+      return res.status(400).json({
+        errorMessage: "비밀번호가 일치하지 않습니다. 다시 확인해주세요.",
+      });
+    }
+
     const encryptPassword = await bcrypt.hash(password, 10);
+<<<<<<< HEAD
     
+=======
+
+    const defaultImageUrl =
+      "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw";
+
+>>>>>>> b8228884e9244f8e4020e5721cd86902d1de9e21
     await prisma.users.create({
       data: {
         email: email,
         password: encryptPassword,
         nickname: nickname,
-        imgUrl:
-          "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw",
+        imgUrl: defaultImageUrl,
       },
     });
 
@@ -40,18 +67,22 @@ router.post("/register", async (req, res, next) => {
   } catch (error) {
     console.error(error);
 
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ errorMessage: error.message });
+    }
+
     return res
       .status(500)
       .json({ errorMessage: "서버에서 오류가 발생하였습니다." });
   }
 });
 
-/** Login API
- * 사용자 인증 후, Access Token과 Refresh Token을 반환
- */
+/** Login API */
 router.post("/login", async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const validation = await loginSchema.validateAsync(req.body);
+    const { email, password } = validation;
+
     const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
     const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
 
@@ -67,9 +98,9 @@ router.post("/login", async (req, res, next) => {
         .json({ errorMessage: "해당 이메일로 가입된 계정이 없습니다." });
     }
 
-    const decodedPassword = await bcrypt.compare(password, findUser.password);
+    const isMatch = await bcrypt.compare(password, findUser.password);
 
-    if (!decodedPassword) {
+    if (!isMatch) {
       return res
         .status(401)
         .json({ errorMessage: "비밀번호가 일치하지 않습니다." });
@@ -115,13 +146,16 @@ router.post("/login", async (req, res, next) => {
         refreshToken: refreshToken,
         UserId: findUser.userId,
         expiresAt: sevenDaysLater,
-        // createdAt 필드는 기본값이 있으므로 따로 설정할 필요 없음
       },
     });
 
     return res.status(200).json({ message: "로그인이 완료되었습니다." });
   } catch (error) {
     console.error(error);
+
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ errorMessage: error.message });
+    }
 
     return res
       .status(500)
@@ -192,7 +226,6 @@ function validateToken(token, secretKey) {
 }
 
 /** Logout API
- * 현재의 인증 상태를 해제하는 작업
  */
 router.post("/logout", authMiddleware, async (req, res, next) => {
   try {
@@ -209,7 +242,6 @@ router.post("/logout", authMiddleware, async (req, res, next) => {
     res.clearCookie(accessToken);
     res.clearCookie(refreshToken);
 
-    // 나중에 클라이언트 측에서 로컬 스토리지나 쿠키 등에 저장된 토큰을 삭제하라고 요청하기!
     return res.status(200).json({
       message: "로그아웃 되었습니다.",
     });
@@ -222,9 +254,7 @@ router.post("/logout", authMiddleware, async (req, res, next) => {
   }
 });
 
-/** 회원탈퇴 API
- * 해당 사용자의 리프레시 토큰을 무효화
- */
+/** 회원탈퇴 API */
 router.delete("/withdraw", authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
@@ -245,7 +275,6 @@ router.delete("/withdraw", authMiddleware, async (req, res, next) => {
       },
     });
 
-    // 나중에 클라이언트 측에서 로컬 스토리지나 쿠키 등에 저장된 토큰을 삭제하라고 요청하기!
     return res.status(200).json({
       message:
         "회원탈퇴가 성공적으로 처리되었습니다. 이용해 주셔서 감사합니다.",
