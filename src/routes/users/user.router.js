@@ -121,15 +121,15 @@ router.post("/login", async (req, res, next) => {
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      // secure: true,
-      // sameSite: "strict",
+      secure: true,
+      sameSite: "None",
     });
 
     // 클라이언트에서 토큰을 사용할 때 매번 "Bearer "를 제거해야 하는 번거로움이 있을 수 있어서 지웠음
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      // secure: true,
-      // sameSite: "strict",
+      secure: true,
+      sameSite: "None",
     });
 
     const sevenDaysLater = new Date(); // 현재 시간
