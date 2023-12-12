@@ -155,7 +155,7 @@ router.get(
               locationId: true,
               storeName: true,
               address: true,
-              starAvg: true, //??
+              starAvg: true,
               Posts: {
                 select: {
                   LocationId: true,
