@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import { prisma } from "../../utils/prisma/index.js";
-import { createPosts } from "../../validation/joi.error.handler.js";
+import { createPosts } from "../../validations/posts.validation.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 
 import {
@@ -61,14 +61,15 @@ router.get("/posts", async (req, res, next) => {
           select: {
             storeName: true,
             address: true,
+            starAvg: true,
           },
         },
         postId: true,
         imgUrl: true,
         content: true,
         likeCount: true,
+        commentCount: true,
         createdAt: true,
-        star: true,
       },
       orderBy: { postId: "desc" },
       skip: parsedPage,
@@ -178,6 +179,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         Location: {
           select: {
             address: true,
+            starAvg: true
           },
         },
         Comments: {
@@ -199,9 +201,10 @@ router.get("/posts/:postId", async (req, res, next) => {
 });
 
 /* 게시물 작성 */
+//auth.middleware 추가로 넣기
 router.post(
   "/posts",
-  authMiddleware,
+  // authMiddleware,
   upload.array("imgUrl", 5),
   async (req, res, next) => {
     try {
@@ -216,7 +219,8 @@ router.post(
         longitude,
         star,
       } = validation;
-      const { userId } = req.user;
+      // const { userId } = req.user; //auth.middleware 넣으면 주석 해제하기
+      const userId = 6;
 
       const user = await prisma.users.findFirst({
         where: { userId },
@@ -283,47 +287,81 @@ router.post(
       const imgNames = await Promise.all(imgPromises);
 
       const location = await prisma.locations.findFirst({
-        where: { address },
+        where: { address }
       });
 
-      //트랜잭션 일괄처리 필요
-      const createLocation = await prisma.locations.create({
-        data: {
-          storeName,
-          address,
-          latitude,
-          longitude,
-          starAvg: 1,
-          Category: { connect: { categoryId: +category.categoryId } },
-          District: { connect: { districtId: +district.districtId } },
-          User: { connect: { userId: +user.userId } },
-        },
-      });
+      //location 정보가 기존 X => location랑 posts 생성.
+      if (!location) {
+        const createLocation = await prisma.locations.create({
+          data: {
+            storeName,
+            address,
+            latitude,
+            longitude,
+            starAvg: 0,
+            Category: { connect: { categoryId: +category.categoryId } },
+            District: { connect: { districtId: +district.districtId } },
+            User: { connect: { userId: +user.userId } },
+          },
+        });
 
-      const posts = await prisma.posts.create({
-        data: {
-          content,
-          likeCount: +likeCount,
-          star,
-          User: { connect: { userId: +user.userId } },
-          Category: { connect: { categoryId: +category.categoryId } },
-          Location: { connect: { locationId: +createLocation.locationId } },
-          imgUrl: imgNames.join(","),
-        },
-      });
+        await prisma.posts.create({
+          data: {
+            content,
+            likeCount: +likeCount,
+            star,
+            User: { connect: { userId: +user.userId } },
+            Category: { connect: { categoryId: +category.categoryId } },
+            Location: { connect: { locationId: +createLocation.locationId } },
+            imgUrl: imgNames.join(","),
+          },
+        });
 
-      return res.status(200).json({ posts });
+      }
+      //location 정보가 기존 O => location 업데이트, posts 생성
+      await prisma.$transaction(async (prisma) => {
+        await prisma.posts.create({
+          data: {
+            content,
+            likeCount: +likeCount,
+            star,
+            User: { connect: { userId: +user.userId } },
+            Category: { connect: { categoryId: +category.categoryId } },
+            Location: { connect: { locationId: +location.locationId } },
+            imgUrl: imgNames.join(","),
+          },
+        });
+
+        const starsAvg = await prisma.posts.aggregate({
+          where: { LocationId: location.locationId },
+          _avg: {
+            star: true
+          }
+        });
+
+        await prisma.locations.update({
+          where: {
+            locationId: location.locationId,
+          },
+          data: {
+            starAvg: starsAvg._avg.star
+          }
+        })
+      })
+
+      return res.status(200).json({ message: "게시글 등록이 완료되었습니다." });
     } catch (error) {
-      console.log(error);
+      throw new Error("트랜잭션 실패");
       next(error);
     }
   },
 );
 
 // 게시물 수정
-router.patch("/posts/:postId", authMiddleware, async (req, res, next) => {
+router.patch("/posts/:postId", async (req, res, next) => { //auth.middleware 추가로 넣기
   try {
-    const { userId } = req.user;
+    // const { userId } = req.user;
+    const userId = 4;
     const { postId } = req.params;
     const { address, content, star, storeName } = req.body;
 

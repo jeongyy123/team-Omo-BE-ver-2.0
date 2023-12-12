@@ -1,8 +1,6 @@
 import express from "express";
 import multer from "multer";
 import { prisma } from "../../utils/prisma/index.js";
-// import { createPosts } from '../../validation/joi.error.handler.js';
-// import authMiddleware from '../../middlewares/auth.middleware.js'
 
 import {
   S3Client,
@@ -32,12 +30,8 @@ const s3 = new S3Client({
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+// 주소 -> 자치구에 해당하는 주소 조회 함수
 function checkAddress(address) {
-  // 주소 -> 자치구에 해당하는 주소 조회
-  if (!address) {
-    return res.status(400).json({ message: "존재하지않는 주소입니다." });
-  }
-
   const districtName = address.split(" ")[1];
 
   const findDistrict = prisma.districts.findFirst({
@@ -64,11 +58,17 @@ router.get("/main/popular", async (req, res, next) => {
   try {
     const { address, limit } = req.query;
 
-    const findLocations = await checkAddress(address);
+    const districtName = address.split(" ")[1];
+
+    const findDistrict = await prisma.districts.findFirst({
+      where: { districtName },
+    });
 
     const findPosts = await prisma.posts.findMany({
       where: {
-        LocationId: findLocations.LocationId,
+        Location: {
+          DistrictId: findDistrict.districtId
+        },
         likeCount: {
           gte: 20,
         },
@@ -128,10 +128,11 @@ router.get("/main/popular", async (req, res, next) => {
 
 /* 최신글 조회 */
 // 자치구별 최신순 게시물
-// 💥comment(Comments) 개수 넣어야함💥
 router.get("/main/recent", async (req, res, next) => {
   try {
     const { address, limit } = req.query;
+
+    const districtName = address.split(" ")[1];
 
     const findLocations = await checkAddress(address);
 
@@ -143,57 +144,30 @@ router.get("/main/recent", async (req, res, next) => {
 
     const findPosts = await prisma.posts.findMany({
       where: {
-        LocationId: findLocations.LocationId,
+        LocationId: findLocations.locationId,
+        Location: {
+          District: {
+            districtName
+          }
+        }
       },
       select: {
         imgUrl: true,
         content: true,
         createdAt: true,
         likeCount: true,
+        commentCount: true,
         User: {
           select: {
             nickname: true
           }
         },
-        Comments: {
-          select: {
-            content: true // 개수로 반환
-          }
-        }
       },
       orderBy: {
         createdAt: 'desc'
       },
       take: +limit
     });
-    // const findPosts =
-    //   await prisma.$queryRaw`select PUC.LocationId, PUC.postId, PUC.imgUrl, PUC.content, PUC.createdAt, PUC.likeCount, PUC.userId, PUC.nickname, PUC.countContent, 
-    //                           DL.districtId, DL.districtName,DL.address
-    //                           from 
-    //                           (
-    //                             SELECT PU.LocationId, PU.postId, PU.imgUrl, PU.content, PU.createdAt, PU.likeCount, PU.userId, PU.nickname, C.countContent 
-    //                             FROM
-    //                               (
-    //                                 SELECT P.LocationId, P.postId, P.imgUrl, P.content, P.createdAt, P.likeCount, U.userId,U.nickname
-    //                                 FROM posts P JOIN users U ON P.UserId = U.userId
-    //                               ) PU
-    //                             LEFT JOIN 
-    //                               (
-    //                                 SELECT postId, count(content) as countContent FROM comments GROUP BY postId
-    //                               ) C
-    //                             ON PU.postId = C.postId
-    //                           ) PUC
-    //                           left join 
-    //                           (
-    //                             select D.districtId, D.districtName,L.locationId, L.address from districts D right join locations L on
-    //                             D.districtId = L.DistrictId
-    //                           ) DL 
-    //                           on
-    //                           PUC.LocationId = DL.locationId
-    //                           where DL.districtName = ${districtName}
-    //                           group by PUC.postId
-    //                           order by PUC.createdAt DESC 
-    //                           LIMIT ${parsedLimit};`
 
     if (!findPosts || findPosts === 0) {
       return res.status(400).json({ message: "해당 최신글이 없어요" });
@@ -231,20 +205,32 @@ router.get("/main/recent", async (req, res, next) => {
 });
 
 /* 댓글 조회 */
-// content(comments), address(Locations)
 router.get("/main/comments", async (req, res, next) => {
   try {
     const { address, limit } = req.query;
 
     const findLocations = await checkAddress(address);
 
-    console.log("봐봐", findLocations);
     const findPosts = await prisma.posts.findFirst({
       where: { LocationId: findLocations.locationId },
     });
 
+    const districtName = address.split(" ")[1];
+
+    const findDistrict = await prisma.districts.findFirst({
+      where: { districtName },
+    });
+
     const findComments = await prisma.comments.findMany({
-      where: { PostsId: findPosts.postsId },
+      where: {
+        Post: {
+          Location: {
+            is: {
+              DistrictId: findDistrict.districtId
+            }
+          }
+        }
+      },
       select: {
         content: true,
         createdAt: true,

@@ -54,7 +54,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 // app.use("/auth", [UsersRouter]);
 
-app.use("/api", [MainRouter, PostsRouter, CommentsRouter, LocationRouter]);
+app.use("/api", [ProfileRouter, UsersRouter, MainRouter, PostsRouter, CommentsRouter, LocationRouter]);
 
 app.get("/", (req, res) => {
   return res.status(200).json({ message: "success" });
@@ -74,8 +74,7 @@ app.use(cookieParser());
 // const redisCli = redisClient.v4; // 기본 redisClient 객체는 콜백기반인데 v4버젼은 프로미스 기반이라 사용
 
 app.use(ErrorMiddleware);
-app.use("/api", [ProfileRouter]);
-app.use("/auth", [UsersRouter, AuthRouter]);
+app.use("/auth", [AuthRouter]);
 
 app.listen(PORT, (req, res) => {
   console.log(PORT, `포트 ${PORT}번이 열렸습니다.`);
