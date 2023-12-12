@@ -73,7 +73,6 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
                 PostId: true,
                 content: true,
                 createdAt: true,
-                updatedAt: true,
               },
             },
             Location: {
@@ -85,7 +84,7 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
         },
       },
       orderBy: {
-        updatedAt: "desc",
+        createdAt: "desc",
       },
     });
 
@@ -156,7 +155,7 @@ router.get(
               locationId: true,
               storeName: true,
               address: true,
-              starAvg: true, //??
+              starAvg: true,
               Posts: {
                 select: {
                   LocationId: true,

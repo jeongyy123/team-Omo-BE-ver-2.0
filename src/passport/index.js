@@ -7,7 +7,6 @@ const configurePassport = () => {
     done(null, user.id);
   });
 
-  // passport.deserializeUser(): 세션에서 저장된 정보를 토대로 사용자 객체를 만들어주는 역할을 한다.
   passport.deserializeUser(async (id, done) => {
     try {
       const user = await prisma.users.findUnique({ where: { id } });
@@ -17,7 +16,7 @@ const configurePassport = () => {
     }
   });
 
-  kakaoAuthConfig(); // 카카오 전략 등록
+  kakaoAuthConfig();
 };
 
 export default configurePassport;
