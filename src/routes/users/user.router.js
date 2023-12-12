@@ -122,14 +122,14 @@ router.post("/login", async (req, res, next) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "None",
     });
 
     // 클라이언트에서 토큰을 사용할 때 매번 "Bearer "를 제거해야 하는 번거로움이 있을 수 있어서 지웠음
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "None",
     });
 
     const sevenDaysLater = new Date(); // 현재 시간
@@ -280,6 +280,26 @@ router.delete("/withdraw", authMiddleware, async (req, res, next) => {
     return res
       .status(500)
       .json({ errorMessage: "서버에서 오류가 발생하였습니다." });
+  }
+});
+
+// 테스트용. 모든 유저들 조회
+router.get("/users/all", async (req, res, next) => {
+  try {
+    const users = await prisma.users.findMany({
+      select: {
+        nickname: true,
+        email: true,
+        imgUrl: true,
+      },
+    });
+
+    console.log(users);
+
+    return res.status(200).json({ data: users });
+  } catch (error) {
+    console.error("에러 발생: ", error);
+    return res.status(500).json({ error: "서버에서 에러가 발생했습니다." });
   }
 });
 
