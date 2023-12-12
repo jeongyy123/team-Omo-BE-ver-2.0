@@ -283,4 +283,24 @@ router.delete("/withdraw", authMiddleware, async (req, res, next) => {
   }
 });
 
+// 테스트용. 모든 유저들 조회
+router.get("/users/all", async (req, res, next) => {
+  try {
+    const users = await prisma.users.findMany({
+      select: {
+        nickname: true,
+        email: true,
+        imgUrl: true,
+      },
+    });
+
+    console.log(users);
+
+    return res.status(200).json({ data: users });
+  } catch (error) {
+    console.error("에러 발생: ", error);
+    return res.status(500).json({ error: "서버에서 에러가 발생했습니다." });
+  }
+});
+
 export default router;

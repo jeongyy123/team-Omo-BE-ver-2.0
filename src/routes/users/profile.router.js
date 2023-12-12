@@ -3,7 +3,7 @@ import authMiddleware from "../../middlewares/auth.middleware.js";
 import { prisma } from "../../utils/prisma/index.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
-import sharp from "sharp"; // To adjust image size
+// import sharp from "sharp"; // To adjust image size
 import { profileEditSchema } from "../../validations/auth.validation.js";
 
 import multer from "multer";
@@ -73,7 +73,6 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
                 PostId: true,
                 content: true,
                 createdAt: true,
-                updatedAt: true,
               },
             },
             Location: {
@@ -85,7 +84,7 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
         },
       },
       orderBy: {
-        updatedAt: "desc",
+        createdAt: "desc",
       },
     });
 
@@ -223,9 +222,9 @@ router.patch(
         // resize image
         // So get the file from the post request, pass that into sharp, do some things with it,
         // get a new buffer of the modified image data and send that to S3
-        const buffer = await sharp(req.file.buffer)
-          .resize({ height: 1920, width: 1080, fit: "contain" })
-          .toBuffer();
+        // const buffer = await sharp(req.file.buffer)
+        //   .resize({ height: 1920, width: 1080, fit: "contain" })
+        //   .toBuffer();
 
         const params = {
           Bucket: bucketName,
