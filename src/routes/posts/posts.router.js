@@ -13,15 +13,16 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import dotenv from "dotenv";
 import crypto from "crypto";
-// import redis from 'redis';
+import redis from "redis";
 
 const router = express.Router();
-// const client = redis.createClient();
+const redisClient = redis.createClient();
+await redisClient.connect();
 
 dotenv.config();
 
 const bucketName = process.env.BUCKET_NAME;
-const bucketRegion = process.env.BUCKET_REGION;
+const region = process.env.BUCKET_REGION;
 const accessKeyId = process.env.ACCESS_KEY;
 const secretAccessKey = process.env.SECRET_ACCESS_KEY;
 
@@ -30,7 +31,7 @@ const s3 = new S3Client({
     accessKeyId,
     secretAccessKey,
   },
-  region: bucketRegion,
+  region,
 });
 
 const storage = multer.memoryStorage();
@@ -39,15 +40,39 @@ const upload = multer({ storage: storage });
 const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
 
 /* 게시물 목록 조회 */
+// 자치구 카테고리 선택 시 -> 조회 (없으면 전 자치구 조회)
+// (음식점, 카페, 기타) 카테고리 선택시 -> 조회 (없으면 전체 카테고리 조회)
 router.get("/posts", async (req, res, next) => {
   try {
-    const { page, pageSize, lastSeenPage } = req.query;
-    const findNowTime = new Date();
+    const { page, pageSize, lastSeenPage, categoryName, districtName } =
+      req.query;
 
+    const findCategory = await prisma.categories.findFirst({
+      where: { categoryName },
+    });
+
+    const findDistrict = await prisma.districts.findFirst({
+      where: { districtName },
+    });
+
+    //🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎🍎
+    //레디스에 데이터가 있으면 전달하고,
+    //없으면 db에서 전달하고, 레디스에 저장
+    redisClient.get('2', '하하');
+    console.log("레디스 get 바로 밑")
+
+    redisClient.set('example_key', 'Hello, Redis!', (err, reply) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send('Internal Server Error');
+      }
+      res.send('Data stored in Redis!');
+    });
     const parsedPage = +page;
     const parsedPageSize = +pageSize;
     const startIndex = (parsedPage - 1) * parsedPageSize;
     const endIndex = startIndex + parsedPageSize;
+
 
     const posts = await prisma.posts.findMany({
       select: {
@@ -75,8 +100,14 @@ router.get("/posts", async (req, res, next) => {
       skip: parsedPage,
       take: parsedPageSize,
       where: {
+        ...(findCategory?.categoryId && {
+          CategoryId: findCategory.categoryId,
+        }),
+        ...(findDistrict?.districtId && {
+          Location: { DistrictId: findDistrict.districtId },
+        }),
         updatedAt: {
-          lt: findNowTime,
+          lt: new Date(),
         },
       },
     });
@@ -110,7 +141,7 @@ router.get("/posts", async (req, res, next) => {
         orderBy: { postId: "desc" },
         where: {
           updatedAt: {
-            lt: findNowTime,
+            lt: new Date(),
           },
           postId: {
             lt: (page - 1) * pageSize,
@@ -151,10 +182,9 @@ router.get("/posts", async (req, res, next) => {
     };
 
     return res.status(200).json(responseData);
-    // });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(400).json({ error: "서버가 닫혔습니다." });
   }
 });
 
@@ -179,7 +209,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         Location: {
           select: {
             address: true,
-            starAvg: true
+            starAvg: true,
           },
         },
         Comments: {
@@ -287,7 +317,7 @@ router.post(
       const imgNames = await Promise.all(imgPromises);
 
       const location = await prisma.locations.findFirst({
-        where: { address }
+        where: { address },
       });
 
       //location 정보가 기존 X => location랑 posts 생성.
@@ -316,7 +346,6 @@ router.post(
             imgUrl: imgNames.join(","),
           },
         });
-
       }
       //location 정보가 기존 O => location 업데이트, posts 생성
       await prisma.$transaction(async (prisma) => {
@@ -335,8 +364,8 @@ router.post(
         const starsAvg = await prisma.posts.aggregate({
           where: { LocationId: location.locationId },
           _avg: {
-            star: true
-          }
+            star: true,
+          },
         });
 
         await prisma.locations.update({
@@ -344,10 +373,10 @@ router.post(
             locationId: location.locationId,
           },
           data: {
-            starAvg: starsAvg._avg.star
-          }
-        })
-      })
+            starAvg: starsAvg._avg.star,
+          },
+        });
+      });
 
       return res.status(200).json({ message: "게시글 등록이 완료되었습니다." });
     } catch (error) {
@@ -358,7 +387,8 @@ router.post(
 );
 
 // 게시물 수정
-router.patch("/posts/:postId", async (req, res, next) => { //auth.middleware 추가로 넣기
+router.patch("/posts/:postId", async (req, res, next) => {
+  //auth.middleware 추가로 넣기
   try {
     // const { userId } = req.user;
     const userId = 4;
