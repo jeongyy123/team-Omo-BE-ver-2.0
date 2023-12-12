@@ -231,7 +231,7 @@ router.patch(
           // Key: req.file.originalname, // image files with the same name will overlap
           Key: imageName,
           // Body: req.file.buffer,
-          Body: buffer,
+          Body: req.file.buffer,
           ContentType: req.file.mimetype,
         };
 

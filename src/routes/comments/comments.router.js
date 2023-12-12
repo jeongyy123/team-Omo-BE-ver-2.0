@@ -47,6 +47,16 @@ router.get("/posts/:postId/comments", async (req, res, next) => {
     if (!post) {
         return res.status(404).json({ errorMessage: "존재하지 않는 게시글 입니다." })
     }
+    // 게시글에 보이는 댓글 총 갯수
+    const commentCount = await prisma.comments.count({
+        where: { PostId: +postId }
+    });
+
+    await prisma.posts.update({
+        where: { postId: +postId },
+        data: { commentCount }
+    });
+    // 댓글 전부 조회
     const comment = await prisma.comments.findMany({
         where: { PostId: +postId },
         orderBy: { createdAt: "desc" }
