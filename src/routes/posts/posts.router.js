@@ -181,6 +181,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         createdAt: true,
         likeCount: true,
         imgUrl: true,
+        star: true,
         User: {
           select: {
             nickname: true,
@@ -189,12 +190,18 @@ router.get("/posts/:postId", async (req, res, next) => {
         Location: {
           select: {
             address: true,
-            starAvg: true,
           },
         },
         Comments: {
           select: {
             content: true,
+            createdAt: true,
+            User: {
+              select: {
+                imgUrl: true,
+                nickname: true
+              }
+            }
           },
         },
       },
@@ -382,7 +389,7 @@ router.post(
       return res.status(200).json({ message: "게시글 등록이 완료되었습니다." });
     } catch (error) {
       next(error);
-      throw new Error("트랜잭션 실패");
+      throw new Error("게시글 작성에 실패했습니다.");
     }
   },
 );
@@ -401,22 +408,37 @@ router.patch("/posts/:postId", authMiddleware, async (req, res, next) => {
     if (!post) {
       res.status(404).json({ message: "존재하지 않는 게시글 입니다." });
     }
+    await prisma.$transaction(async (prisma) => {
+      const createPost = await prisma.posts.update({
+        where: { postId: +postId, UserId: +userId },
+        data: {
+          content,
+          star
+        },
+      });
 
-    await prisma.locations.update({
-      where: { locationId: post.LocationId },
-      data: { address },
-    });
+      //starAvg 업데이트
+      const starAvg = await prisma.posts.aggregate({
+        where: { LocationId: createPost.LocationId },
+        _avg: {
+          star: true,
+        },
+      });
 
-    await prisma.posts.update({
-      where: { postId: +postId, UserId: +userId },
-      data: { content, star, storeName },
-    });
-
-    //starAvg 업데이트
+      await prisma.locations.update({
+        where: {
+          locationId: createPost.LocationId,
+        },
+        data: {
+          starAvg: starAvg._avg.star, address, storeName
+        },
+      });
+    })
 
     return res.status(200).json({ message: "게시물을 수정하였습니다." });
   } catch (error) {
     next(error);
+    throw new Error("게시글 수정에서 에러가 발생했습니다.")
   }
 });
 
