@@ -1,4 +1,4 @@
-REPOSITORY=/home/ubuntu/team-Omo-BE
+REPOSITORY=/home/ubuntu/Omo-Web-Server
 
 cd $REPOSITORY
 
