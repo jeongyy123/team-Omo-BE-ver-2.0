@@ -81,8 +81,8 @@ app.use(cookieParser());
 // redisClient.connect().then(); // redis v4 연결 (비동기)
 // const redisCli = redisClient.v4; // 기본 redisClient 객체는 콜백기반인데 v4버젼은 프로미스 기반이라 사용
 
-app.use(ErrorMiddleware);
 app.use("/auth", [AuthRouter]);
+app.use(ErrorMiddleware);
 
 app.listen(PORT, (req, res) => {
   console.log(PORT, `포트 ${PORT}번이 열렸습니다.`);
