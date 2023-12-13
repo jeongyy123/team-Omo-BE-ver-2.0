@@ -26,3 +26,23 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "yarn"
       - run: yarn install
+
+      # S3로 보낼 압축 파일 생성
+      - name: zip file
+        run: zip -r CI.zip ./src/* ./prisma/* ./.env ./scripts ./appspec.yml ./.eslintrc.js ./.prettierrc.json ./.yarnrc ./package.json ./package-lock.json ./yarn.lock
+
+      # AWS 인증하기
+      - name: AWS configure credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # S3로 업로드하기
+      - name: upload to S3
+        run: aws s3 cp --region ap-northeast-2 ./CI.zip s3://omo-cicd-bucket/deploy/
+
+      # codeDeploy 실행
+      - name: deploy with AWS codeDeploy
+        run: aws deploy create-deployment --application-name my-codedeploy-app --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name my-codedeploy-development-group --s3-location bucket=omo-cicd-bucket,bundleType=zip,key=deploy/CI.zip
