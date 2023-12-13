@@ -17,6 +17,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+//
 const app = express();
 const PORT = 5000;
 
@@ -54,7 +55,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 // app.use("/auth", [UsersRouter]);
 
-app.use("/api", [ProfileRouter, UsersRouter, MainRouter, PostsRouter, CommentsRouter, LocationRouter]);
+app.use("/api", [
+  ProfileRouter,
+  UsersRouter,
+  MainRouter,
+  PostsRouter,
+  CommentsRouter,
+  LocationRouter,
+]);
 
 app.get("/", (req, res) => {
   return res.status(200).json({ message: "success" });
