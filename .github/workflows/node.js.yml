@@ -27,6 +27,14 @@ jobs:
           cache: "yarn"
       - run: yarn install
 
+      - name: Create .env file
+        working-directory: ./
+        run: |
+          pwd
+          touch .env
+          echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
+          cat .env
+
       # S3로 보낼 압축 파일 생성
       - name: zip file
         run: zip -r CI.zip ./src/* ./prisma/* ./.env ./scripts ./appspec.yml ./.eslintrc.js ./.prettierrc.json ./.yarnrc ./package.json ./package-lock.json ./yarn.lock
