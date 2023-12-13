@@ -9,7 +9,7 @@ import LocationRouter from "./routes/locations/location.router.js";
 import cookieParser from "cookie-parser";
 import ErrorMiddleware from "./middlewares/error.middleware.js";
 import session from "express-session";
-import configurePassport from "./passport/index.js";
+// import configurePassport from "./passport/index.js";
 import passport from "passport";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -43,7 +43,7 @@ app.use(
 );
 
 // Passport 설정 초기화
-configurePassport(); // configurePassport 함수 호출  // passport 불러온다.
+// configurePassport(); // configurePassport 함수 호출  // passport 불러온다.
 
 //! express-session에 의존하므로 뒤에 위치해야 함
 app.use(passport.initialize()); // 요청 객체에 passport 설정을 심음
