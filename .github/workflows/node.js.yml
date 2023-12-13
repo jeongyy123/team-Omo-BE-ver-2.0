@@ -27,6 +27,9 @@ jobs:
           cache: "yarn"
       - run: yarn install
 
+      - name: Check npm -v
+        run: npm -v
+
       - name: Create .env file
         working-directory: ./
         run: |
@@ -34,6 +37,11 @@ jobs:
           touch .env
           echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
           cat .env
+
+      - name: build server file
+        working-directory: ./
+        run: |
+          yarn
 
       # S3로 보낼 압축 파일 생성
       - name: zip file
@@ -53,4 +61,8 @@ jobs:
 
       # codeDeploy 실행
       - name: deploy with AWS codeDeploy
-        run: aws deploy create-deployment --application-name my-codedeploy-app --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name my-codedeploy-development-group --s3-location bucket=omo-cicd-bucket,bundleType=zip,key=deploy/CI.zip
+        run: aws deploy create-deployment
+          --application-name my-codedeploy-app
+          --deployment-config-name CodeDeployDefault.OneAtATime
+          --deployment-group-name my-codedeploy-development-group
+          --s3-location bucket=omo-cicd-bucket,bundleType=zip,key=deploy/CI.zip
