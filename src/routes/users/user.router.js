@@ -128,8 +128,8 @@ router.post("/login", async (req, res, next) => {
     // 클라이언트에서 토큰을 사용할 때 매번 "Bearer "를 제거해야 하는 번거로움이 있을 수 있어서 지웠음
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "None",
+      secure: true, // HTTPS 프로토콜에서만 동작하도록 설정
+      sameSite: "None", // 다른 도메인 간에 쿠키를 공유해야 하는 경우
     });
 
     const sevenDaysLater = new Date(); // 현재 시간
