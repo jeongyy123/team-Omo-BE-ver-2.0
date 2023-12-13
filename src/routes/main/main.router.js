@@ -143,6 +143,7 @@ router.get("/main/recent", async (req, res, next) => {
         },
       },
       select: {
+        postId: true,
         imgUrl: true,
         content: true,
         createdAt: true,
