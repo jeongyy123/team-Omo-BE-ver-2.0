@@ -20,6 +20,7 @@
     "express-session": "^1.17.3",
     "file-type": "^18.7.0",
     "install": "^0.13.0",
+    "ioredis": "^5.3.2",
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",

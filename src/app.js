@@ -6,7 +6,9 @@ import PostsRouter from "./routes/posts/posts.router.js";
 import ProfileRouter from "./routes/users/profile.router.js";
 import CommentsRouter from "./routes/comments/comments.router.js";
 import LocationRouter from "./routes/locations/location.router.js";
-import SearchingRouter from './routes/searching/searching.router.js'
+import SearchingRouter from "./routes/searching/searching.router.js";
+import LikeRouter from './routes/isLike/isLike.router.js'
+import BookmarkRouter from './routes/bookmark/bookmark.router.js'
 import cookieParser from "cookie-parser";
 import ErrorMiddleware from "./middlewares/error.middleware.js";
 import session from "express-session";
@@ -14,28 +16,8 @@ import configurePassport from "./passport/index.js";
 import passport from "passport";
 import cors from "cors";
 import dotenv from "dotenv";
-// import redis from "redis";
 
 dotenv.config();
-
-//* Redis 연결
-// const redisClient = redis.createClient({
-//   url: `redis://${process.env.REDIS_USERNAME}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/0`,
-//   legacyMode: true,
-// });
-// redisClient.on('connect', () => {
-//   console.log('Connected to Redis!');
-// });
-
-// redisClient.set('name', 'test');
-// redisClient.get('name', (err, reply) => {
-//   console.log(reply);
-// })
-
-// redisClient.on("error", (err) => {
-//   console.error("레디스 클라이언트 에러", err);
-// });
-
 
 const app = express();
 const PORT = 5000;
@@ -72,14 +54,15 @@ app.get("/", (req, res) => {
 app.use(cookieParser());
 app.use("/api", [
   ProfileRouter,
-  UsersRouter,
   MainRouter,
   PostsRouter,
   CommentsRouter,
   LocationRouter,
-  SearchingRouter
+  SearchingRouter,
+  LikeRouter,
+  BookmarkRouter
 ]);
-app.use("/auth", [AuthRouter]);
+app.use("/auth", [AuthRouter, UsersRouter]);
 app.use(ErrorMiddleware);
 
 app.listen(PORT, (req, res) => {
