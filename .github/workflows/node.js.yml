@@ -36,6 +36,15 @@ jobs:
           pwd
           touch .env
           echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
+          echo BUCKET_NAME=${{ secrets.BUCKET_NAME }} >> .env
+          echo BUCKET_REGION=${{ secrets.BUCKET_REGION }} >> .env
+          echo ACCESS_KEY=${{ secrets.ACCESS_KEY }} >> .env
+          echo SECRET_ACCESS_KEY=${{ secrets.SECRET_ACCESS_KEY }} >> .env
+          echo KAKAO_ID=${{ secrets.KAKAO_ID }} >> .env
+          echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
+          echo ACCESS_TOKEN_SECRET_KEY=${{ secrets.ACCESS_TOKEN_SECRET_KEY }} >> .env
+          echo REFRESH_TOKEN_SECRET_KEY=${{ secrets.REFRESH_TOKEN_SECRET_KEY }} >> .env
+          echo COOKIE_SECRET=${{ secrets.COOKIE_SECRET }} >> .env
           cat .env
 
       # S3로 보낼 압축 파일 생성
