@@ -51,24 +51,24 @@ app.use(passport.session()); // req.session 객체에 passport정보를 추가 �
 // passport.session()이 실행되면, 세션쿠키 정보를 바탕으로 해서 passport/index.js의 deserializeUser()가 실행하게 한다.
 
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-// app.use("/auth", [UsersRouter]);
+
+app.get("/", (req, res) => {
+  return res.status(200).json({ message: "success" });
+});
 
 app.use("/api", [
   ProfileRouter,
-  UsersRouter,
   MainRouter,
   PostsRouter,
   CommentsRouter,
   LocationRouter,
 ]);
 
-app.get("/", (req, res) => {
-  return res.status(200).json({ message: "success" });
-});
-
-app.use(cookieParser());
+app.use("/auth", [AuthRouter, UsersRouter]);
+app.use(ErrorMiddleware);
 
 // redisClient.on('connect', () => {
 //   console.info('Redis connected!');
@@ -80,9 +80,6 @@ app.use(cookieParser());
 
 // redisClient.connect().then(); // redis v4 연결 (비동기)
 // const redisCli = redisClient.v4; // 기본 redisClient 객체는 콜백기반인데 v4버젼은 프로미스 기반이라 사용
-
-app.use("/auth", [AuthRouter]);
-app.use(ErrorMiddleware);
 
 app.listen(PORT, (req, res) => {
   console.log(PORT, `포트 ${PORT}번이 열렸습니다.`);
