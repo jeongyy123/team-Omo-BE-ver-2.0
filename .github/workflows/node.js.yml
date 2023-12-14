@@ -27,9 +27,6 @@ jobs:
           cache: "yarn"
       - run: yarn install
 
-      - name: Update database
-        run: npx prisma db push
-
       - name: Check npm -v
         run: npm -v
 
@@ -49,6 +46,9 @@ jobs:
           echo REFRESH_TOKEN_SECRET_KEY=${{ secrets.REFRESH_TOKEN_SECRET_KEY }} >> .env
           echo COOKIE_SECRET=${{ secrets.COOKIE_SECRET }} >> .env
           cat .env
+
+      - name: Update database
+        run: npx prisma db push
 
       # S3로 보낼 압축 파일 생성
       - name: zip file
