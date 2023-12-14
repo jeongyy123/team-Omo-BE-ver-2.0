@@ -11,13 +11,14 @@ import BookmarkRouter from './routes/bookmark/bookmark.router.js'
 import cookieParser from "cookie-parser";
 import ErrorMiddleware from "./middlewares/error.middleware.js";
 import session from "express-session";
-import configurePassport from "./passport/index.js";
+// import configurePassport from "./passport/index.js";
 import passport from "passport";
 import cors from "cors";
 import dotenv from "dotenv";
 
 dotenv.config();
 
+//
 const app = express();
 const PORT = 5000;
 
@@ -43,6 +44,7 @@ app.use(
 // // passport.session()이 실행되면, 세션쿠키 정보를 바탕으로 해서 passport/index.js의 deserializeUser()가 실행하게 한다.
 
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -50,7 +52,6 @@ app.get("/", (req, res) => {
   return res.status(200).json({ message: "success" });
 });
 
-app.use(cookieParser());
 app.use("/api", [
   ProfileRouter,
   MainRouter,
