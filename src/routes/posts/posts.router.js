@@ -3,6 +3,7 @@ import multer from "multer";
 import { prisma } from "../../utils/prisma/index.js";
 import { createPosts } from "../../validations/posts.validation.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
+import { getImageS3, getManyImagesS3 } from "../../utils/getImageS3.js";
 import {
   S3Client,
   PutObjectCommand,
@@ -139,28 +140,7 @@ router.get("/posts", async (req, res, next) => {
       return res.status(400).json({ message: "존재하지 않는 게시글입니다." });
     }
 
-    // 이미지 배열로 반환하는 로직
-    const imgUrlsArray = posts.map((post) => post.imgUrl.split(","));
-    const paramsArray = imgUrlsArray.map((urls) =>
-      urls.map((url) => ({
-        Bucket: bucketName,
-        Key: url,
-      })),
-    );
-
-    const signedUrlsArray = await Promise.all(
-      paramsArray.map(async (params) => {
-        const commands = params.map((param) => new GetObjectCommand(param));
-        const urls = await Promise.all(
-          commands.map((command) => getSignedUrl(s3, command)),
-        );
-        return urls;
-      }),
-    );
-
-    for (let i = 0; i < posts.length; i++) {
-      posts[i].imgUrl = signedUrlsArray[i];
-    }
+    await getManyImagesS3(posts);
 
     return res.status(200).json({ posts });
   } catch (error) {
@@ -211,25 +191,7 @@ router.get("/posts/:postId", async (req, res, next) => {
       return res.status(400).json({ message: "존재하지않는 게시글입니다." });
     }
 
-    const imgUrlsArray = posts.imgUrl.split(","); // 여러 사진들 쪼개기
-    const paramsArray = imgUrlsArray.map((url) => ({
-      Bucket: bucketName,
-      Key: url,
-    }));
-
-    const signedUrlsArray = await Promise.all(
-      paramsArray.map(async (params) => {
-        const command = new GetObjectCommand(params);
-        const signedUrl = await getSignedUrl(s3, command);
-        return signedUrl;
-      }),
-    );
-
-    posts.imgUrl = signedUrlsArray;
-
-    if (!posts) {
-      return res.status(400).json({ message: "존재하지않는 게시물입니다." });
-    }
+    await getImageS3(posts);
 
     return res.status(200).json(posts);
   } catch (error) {

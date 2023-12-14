@@ -17,7 +17,8 @@ router.post("/posts/:locationId/bookmark", authMiddleware, async (req, res, next
     if (!bookmark) {
       await prisma.bookmark.create({
         data: {
-          LocationId: +locationId, UserId: +userId
+          LocationId: +locationId,
+          UserId: +userId
         }
       })
     } else {

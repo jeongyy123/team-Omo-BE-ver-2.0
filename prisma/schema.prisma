@@ -104,7 +104,7 @@ model Locations {
   locationId  Int     @id @default(autoincrement()) @map("locationId")
   CategoryId  Int     @map("CategoryId")
   DistrictId  Int     @map("DistrictId")
-  UserId      Int     @map("UserId") //여기
+  UserId      Int     @map("UserId")
   storeName   String  @map("storeName")
   address     String  @map("address")
   latitude    String  @map("latitude")
