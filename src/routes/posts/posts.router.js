@@ -63,7 +63,6 @@ router.get("/posts", async (req, res, next) => {
           User: {
             select: {
               nickname: true,
-              imgUrl: true,
             },
           },
           Location: {
@@ -100,7 +99,6 @@ router.get("/posts", async (req, res, next) => {
           User: {
             select: {
               nickname: true,
-              imgUrl: true,
             },
           },
           Location: {
@@ -165,6 +163,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         User: {
           select: {
             nickname: true,
+            imgUrl: true
           },
         },
         Location: {
@@ -191,6 +190,26 @@ router.get("/posts/:postId", async (req, res, next) => {
       return res.status(400).json({ message: "존재하지않는 게시글입니다." });
     }
 
+    //user 이미지와 comment 이미지 불러오기
+    const user = await prisma.users.findFirst({
+      where: { userId: posts.UserId },
+      select: { nickname: true, imgUrl: true }
+    })
+
+    const comments = await prisma.comments.findMany({
+      where: { PostId: posts.postId },
+      select: {
+        content: true,
+        createdAt: true,
+        User: {
+          select: {
+            imgUrl: true,
+            nickname: true
+          }
+        }
+      }
+    })
+
     await getImageS3(posts);
 
     return res.status(200).json(posts);
@@ -210,7 +229,6 @@ router.post(
       const validation = await createPosts.validateAsync(req.body);
       const {
         content,
-        likeCount,
         categoryName,
         storeName,
         address,
@@ -218,8 +236,7 @@ router.post(
         longitude,
         star,
       } = validation;
-      const { userId } = req.user; //auth.middleware 넣으면 주석 해제하기
-      // const userId = 6;
+      const { userId } = req.user;
 
       const user = await prisma.users.findFirst({
         where: { userId },
@@ -307,7 +324,6 @@ router.post(
         await prisma.posts.create({
           data: {
             content,
-            likeCount: +likeCount,
             star,
             User: { connect: { userId: +user.userId } },
             Category: { connect: { categoryId: +category.categoryId } },
@@ -321,7 +337,6 @@ router.post(
           await prisma.posts.create({
             data: {
               content,
-              likeCount: +likeCount,
               star,
               User: { connect: { userId: +user.userId } },
               Category: { connect: { categoryId: +category.categoryId } },

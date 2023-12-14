@@ -10,6 +10,14 @@ router.post("/posts/:postId/like", authMiddleware, async (req, res, next) => {
     const { postId } = req.params;
     const { userId } = req.user;
 
+    const post = await prisma.posts.findFirst({
+      where: { postId: +postId }
+    })
+
+    if (!post) {
+      return res.status(400).json({ message: "해당 게시글이 존재하지 않습니다. " })
+    }
+
     const like = await prisma.likes.findFirst({
       where: { PostId: +postId, UserId: +userId }
     })
@@ -38,6 +46,14 @@ router.delete("/posts/:postId/like", authMiddleware, async (req, res, next) => {
   try {
     const { postId } = req.params;
     const { userId } = req.user;
+
+    const post = await prisma.posts.findFirst({
+      where: { postId: +postId }
+    })
+
+    if (!post) {
+      return res.status(400).json({ message: "해당 게시글이 존재하지 않습니다. " })
+    }
 
     const like = await prisma.likes.findFirst({
       where: { PostId: +postId, UserId: +userId }

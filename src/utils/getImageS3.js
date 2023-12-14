@@ -32,12 +32,18 @@ const upload = multer({ storage: storage });
 
 const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
 
-// 1개 이미지 저장
-export const putImageS3 = async () => {
+//1개의 게시글 - 1개 이미지 조회
+export const getSingleImageS3 = async (post) => {
+  const param = {
+    Bucket: bucketName,
+    Key: post.imgUrl
+  }
 
+  const command = new GetObjectCommand(param);
+  const imgUrl = await getSignedUrl(s3, command);
+
+  return post.imgUrl = imgUrl
 }
-
-
 
 // 1개의 게시글 - 여러 개 이미지 조회
 export const getImageS3 = async (post) => {
@@ -63,7 +69,7 @@ export const getImageS3 = async (post) => {
 export const getManyImagesS3 = async (posts) => {
   // 이미지 배열로 반환하는 로직
   const imgUrlsArray = posts.map((post) => post.imgUrl.split(","));
-  console.log("imgUrlsArray", imgUrlsArray)
+
   const paramsArray = imgUrlsArray.map((urls) =>
     urls.map((url) => ({
       Bucket: bucketName,

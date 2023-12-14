@@ -10,6 +10,14 @@ router.post("/posts/:locationId/bookmark", authMiddleware, async (req, res, next
     const { locationId } = req.params;
     const { userId } = req.user;
 
+    const location = await prisma.locations.findFirst({
+      where: { locationId: +locationId }
+    })
+
+    if (!location) {
+      return res.status(400).json({ message: "장소가 존재하지 않습니다." })
+    }
+
     const bookmark = await prisma.bookmark.findFirst({
       where: { LocationId: +locationId, UserId: +userId }
     })
@@ -37,6 +45,14 @@ router.delete("/posts/:locationId/bookmark", authMiddleware, async (req, res, ne
     const { locationId } = req.params;
     const { userId } = req.user;
 
+    const location = await prisma.locations.findFirst({
+      where: { locationId: +locationId }
+    })
+
+    if (!location) {
+      return res.status(400).json({ message: "장소가 존재하지 않습니다." })
+    }
+
     const bookmark = await prisma.bookmark.findFirst({
       where: { LocationId: +locationId, UserId: +userId }
     })
@@ -46,7 +62,7 @@ router.delete("/posts/:locationId/bookmark", authMiddleware, async (req, res, ne
         where: { bookmarkId: bookmark.bookmarkId }
       })
     } else {
-      return res.status(400).json({ message: "이미 북마트 취소한 장소입니다." })
+      return res.status(400).json({ message: "이미 북마크 취소한 장소입니다." })
     }
 
     return res.status(200).json({ message: "북마크 취소" })
