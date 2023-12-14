@@ -48,7 +48,7 @@ model Posts {
   LocationId   Int       @map("LocationId")
   content      String    @map("content") @db.Text
   imgUrl       String    @map("imgUrl") @db.Text
-  likeCount    Int       @default(0) @map("likeCount") // 수정
+  likeCount    Int       @default(0) @map("likeCount")
   commentCount Int       @default(0) @map("commentCount")
   star         Int       @map("star")
   createdAt    DateTime  @default(now()) @map("createdAt")

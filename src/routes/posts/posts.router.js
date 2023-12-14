@@ -169,6 +169,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         Location: {
           select: {
             address: true,
+            storeName: true
           },
         },
         Comments: {
@@ -219,7 +220,6 @@ router.get("/posts/:postId", async (req, res, next) => {
 });
 
 /* 게시물 작성 */
-//auth.middleware 추가로 넣기
 router.post(
   "/posts",
   authMiddleware,
@@ -325,6 +325,7 @@ router.post(
           data: {
             content,
             star,
+            likeCount: 0,
             User: { connect: { userId: +user.userId } },
             Category: { connect: { categoryId: +category.categoryId } },
             Location: { connect: { locationId: +createLocation.locationId } },
@@ -338,6 +339,7 @@ router.post(
             data: {
               content,
               star,
+              likeCount: 0,
               User: { connect: { userId: +user.userId } },
               Category: { connect: { categoryId: +category.categoryId } },
               Location: { connect: { locationId: +location.locationId } },
