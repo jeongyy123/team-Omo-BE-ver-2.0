@@ -6,7 +6,6 @@ import PostsRouter from "./routes/posts/posts.router.js";
 import ProfileRouter from "./routes/users/profile.router.js";
 import CommentsRouter from "./routes/comments/comments.router.js";
 import LocationRouter from "./routes/locations/location.router.js";
-import SearchingRouter from "./routes/searching/searching.router.js";
 import LikeRouter from './routes/isLike/isLike.router.js'
 import BookmarkRouter from './routes/bookmark/bookmark.router.js'
 import cookieParser from "cookie-parser";
@@ -58,7 +57,6 @@ app.use("/api", [
   PostsRouter,
   CommentsRouter,
   LocationRouter,
-  SearchingRouter,
   LikeRouter,
   BookmarkRouter
 ]);
