@@ -204,7 +204,7 @@ router.get("/posts/:postId", async (req, res, next) => {
 //auth.middleware 추가로 넣기
 router.post(
   "/posts",
-  // authMiddleware,
+  authMiddleware,
   upload.array("imgUrl", 5),
   async (req, res, next) => {
     try {
@@ -219,8 +219,8 @@ router.post(
         longitude,
         star,
       } = validation;
-      // const { userId } = req.user; //auth.middleware 넣으면 주석 해제하기
-      const userId = 6;
+      const { userId } = req.user;
+
 
       const user = await prisma.users.findFirst({
         where: { userId },
@@ -358,10 +358,9 @@ router.post(
 );
 
 // 게시물 수정
-router.patch("/posts/:postId", async (req, res, next) => { //auth.middleware 추가로 넣기
+router.patch("/posts/:postId",authmiddleware, async (req, res, next) => { //auth.middleware 추가로 넣기
   try {
-    // const { userId } = req.user;
-    const userId = 4;
+    const { userId } = req.user;
     const { postId } = req.params;
     const { address, content, star, storeName } = req.body;
 
