@@ -68,6 +68,7 @@ app.use("/api", [
 ]);
 
 app.use("/auth", [AuthRouter, UsersRouter]);
+
 app.use(ErrorMiddleware);
 
 // redisClient.on('connect', () => {

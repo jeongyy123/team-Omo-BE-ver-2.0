@@ -37,7 +37,7 @@ export default async function (req, res, next) {
       return res.status(403).json({ errorMessage: "접근 권한이 없습니다" });
     }
 
-    //
+    // 토큰이 서버에서 발급된 토큰인지 확인
     const decodedAccessToken = validateToken(accessToken, accessKey);
     const decodedRefreshToken = validateToken(refreshToken, refreshKey);
 
@@ -50,7 +50,7 @@ export default async function (req, res, next) {
       );
     }
 
-    //
+    // 서버에서 발급한 엑세스 토큰안에 있는 유저정보
     const { userId } = decodedAccessToken;
 
     const user = await prisma.users.findUnique({
