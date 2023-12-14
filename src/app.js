@@ -62,6 +62,7 @@ app.use("/api", [
   BookmarkRouter
 ]);
 app.use("/auth", [AuthRouter, UsersRouter]);
+
 app.use(ErrorMiddleware);
 
 app.listen(PORT, (req, res) => {
