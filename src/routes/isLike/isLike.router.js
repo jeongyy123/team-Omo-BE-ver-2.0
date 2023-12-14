@@ -24,7 +24,7 @@ router.post("/posts/:postId/like", authMiddleware, async (req, res, next) => {
 
     if (!like) {
       await prisma.posts.update({
-        where: { postId: +postId, UserId: +userId },
+        where: { postId: +postId },
         data: { likeCount: { increment: 1 } }
       })
 
