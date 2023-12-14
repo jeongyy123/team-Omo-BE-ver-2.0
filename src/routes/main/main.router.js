@@ -2,10 +2,7 @@ import express from "express";
 import multer from "multer";
 import { prisma } from "../../utils/prisma/index.js";
 
-import {
-  S3Client,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import dotenv from "dotenv";
@@ -31,9 +28,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // 주소 -> 자치구에 해당하는 주소 조회 함수
-function checkAddress(address) {
-  const districtName = address.split(" ")[1];
-
+function checkAddress(districtName) {
   const findDistrict = prisma.districts.findFirst({
     where: { districtName },
   });
@@ -56,9 +51,7 @@ function checkAddress(address) {
 // 자치구별 / 좋아요 20개이상 / 작성일 기준 최신순
 router.get("/main/popular", async (req, res, next) => {
   try {
-    const { address, limit } = req.query;
-
-    const districtName = address.split(" ")[1];
+    const { districtName, limit } = req.query;
 
     const findDistrict = await prisma.districts.findFirst({
       where: { districtName },
@@ -67,7 +60,7 @@ router.get("/main/popular", async (req, res, next) => {
     const findPosts = await prisma.posts.findMany({
       where: {
         Location: {
-          DistrictId: findDistrict.districtId
+          DistrictId: findDistrict.districtId,
         },
         likeCount: {
           gte: 20,
@@ -130,11 +123,9 @@ router.get("/main/popular", async (req, res, next) => {
 // 자치구별 최신순 게시물
 router.get("/main/recent", async (req, res, next) => {
   try {
-    const { address, limit } = req.query;
+    const { districtName, limit } = req.query;
 
-    const districtName = address.split(" ")[1];
-
-    const findLocations = await checkAddress(address);
+    const findLocations = await checkAddress(districtName);
 
     const parsedLimit = +limit || 9;
 
@@ -147,11 +138,12 @@ router.get("/main/recent", async (req, res, next) => {
         LocationId: findLocations.locationId,
         Location: {
           District: {
-            districtName
-          }
-        }
+            districtName,
+          },
+        },
       },
       select: {
+        postId: true,
         imgUrl: true,
         content: true,
         createdAt: true,
@@ -159,14 +151,14 @@ router.get("/main/recent", async (req, res, next) => {
         commentCount: true,
         User: {
           select: {
-            nickname: true
-          }
+            nickname: true,
+          },
         },
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: "desc",
       },
-      take: +limit
+      take: +limit,
     });
 
     if (!findPosts || findPosts === 0) {
@@ -186,9 +178,7 @@ router.get("/main/recent", async (req, res, next) => {
       paramsArray.map(async (params) => {
         const commands = params.map((param) => new GetObjectCommand(param));
         const urls = await Promise.all(
-          commands.map((command) =>
-            getSignedUrl(s3, command),
-          ),
+          commands.map((command) => getSignedUrl(s3, command)),
         );
         return urls;
       }),
@@ -207,15 +197,9 @@ router.get("/main/recent", async (req, res, next) => {
 /* 댓글 조회 */
 router.get("/main/comments", async (req, res, next) => {
   try {
-    const { address, limit } = req.query;
+    const { districtName, limit } = req.query;
 
-    const findLocations = await checkAddress(address);
-
-    const findPosts = await prisma.posts.findFirst({
-      where: { LocationId: findLocations.locationId },
-    });
-
-    const districtName = address.split(" ")[1];
+    const findLocations = await checkAddress(districtName);
 
     const findDistrict = await prisma.districts.findFirst({
       where: { districtName },
@@ -226,10 +210,10 @@ router.get("/main/comments", async (req, res, next) => {
         Post: {
           Location: {
             is: {
-              DistrictId: findDistrict.districtId
-            }
-          }
-        }
+              DistrictId: findDistrict.districtId,
+            },
+          },
+        },
       },
       select: {
         content: true,

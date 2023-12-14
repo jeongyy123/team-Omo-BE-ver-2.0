@@ -3,25 +3,23 @@ import multer from "multer";
 import { prisma } from "../../utils/prisma/index.js";
 import { createPosts } from "../../validations/posts.validation.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
-
+import { getImageS3, getManyImagesS3 } from "../../utils/getImageS3.js";
 import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-
 import dotenv from "dotenv";
 import crypto from "crypto";
-// import redis from 'redis';
 
 const router = express.Router();
-// const client = redis.createClient();
 
 dotenv.config();
 
 const bucketName = process.env.BUCKET_NAME;
-const bucketRegion = process.env.BUCKET_REGION;
+const region = process.env.BUCKET_REGION;
 const accessKeyId = process.env.ACCESS_KEY;
 const secretAccessKey = process.env.SECRET_ACCESS_KEY;
 
@@ -30,7 +28,7 @@ const s3 = new S3Client({
     accessKeyId,
     secretAccessKey,
   },
-  region: bucketRegion,
+  region,
 });
 
 const storage = multer.memoryStorage();
@@ -39,122 +37,112 @@ const upload = multer({ storage: storage });
 const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
 
 /* 게시물 목록 조회 */
+// 자치구 카테고리 선택 시 -> 조회 (없으면 전 자치구 조회)
+// (음식점, 카페, 기타) 카테고리 선택시 -> 조회 (없으면 해당 카테고리의 전체 조회)
+// lastSeenPage : 조회 전 마지막 게시글 postId
+// page : 몇 개의 게시글 조회할 지
+// 1. lastSeenPage X (첫페이지 조회) : 요청 page만큼 넘기기
+// 2. lastSeenPage O (두번째 이후 조회) : lastSeenPage보다 작은 postId 조회, 요청 page만큼 넘기기
 router.get("/posts", async (req, res, next) => {
   try {
-    const { page, pageSize, lastSeenPage } = req.query;
-    const findNowTime = new Date();
+    const { page, lastSeenPage, categoryName, districtName } = req.query;
 
-    const parsedPage = +page;
-    const parsedPageSize = +pageSize;
-    const startIndex = (parsedPage - 1) * parsedPageSize;
-    const endIndex = startIndex + parsedPageSize;
+    const findCategory = categoryName
+      ? await prisma.categories.findFirst({ where: { categoryName } })
+      : null;
+    const findDistrict = districtName
+      ? await prisma.districts.findFirst({ where: { districtName } })
+      : null;
 
-    const posts = await prisma.posts.findMany({
-      select: {
-        User: {
-          select: {
-            nickname: true,
-            imgUrl: true,
-          },
-        },
-        Location: {
-          select: {
-            storeName: true,
-            address: true,
-            starAvg: true,
-          },
-        },
-        postId: true,
-        imgUrl: true,
-        content: true,
-        likeCount: true,
-        commentCount: true,
-        createdAt: true,
-      },
-      orderBy: { postId: "desc" },
-      skip: parsedPage,
-      take: parsedPageSize,
-      where: {
-        updatedAt: {
-          lt: findNowTime,
-        },
-      },
-    });
+    const parsedPage = parseInt(page) || 24; // 조회할 게시글 수
 
-    if (!posts) {
-      return res.status(400).json({ message: "존재하지 않는 게시글입니다." });
-    }
-
-    function latestPostsPage(page, pageSize) {
-      const posts = prisma.posts.findMany({
+    let posts;
+    if (!lastSeenPage) {
+      posts = await prisma.posts.findMany({
         select: {
           User: {
             select: {
               nickname: true,
-              imgUrl: true,
             },
           },
           Location: {
             select: {
               storeName: true,
               address: true,
+              starAvg: true,
             },
           },
           postId: true,
           imgUrl: true,
           content: true,
           likeCount: true,
+          commentCount: true,
           createdAt: true,
-          star: true,
         },
         orderBy: { postId: "desc" },
+        take: parsedPage,
         where: {
+          ...(findCategory?.categoryId && {
+            CategoryId: findCategory.categoryId,
+          }),
+          ...(findDistrict?.districtId && {
+            Location: { DistrictId: findDistrict.districtId },
+          }),
           updatedAt: {
-            lt: findNowTime,
-          },
-          postId: {
-            lt: (page - 1) * pageSize,
+            lt: new Date(), // 조회 당시 시간으로 또다른 사용자가 작성한 글 보지 않도록 하기.
           },
         },
       });
-      return posts.postId;
+    } else {
+      posts = await prisma.posts.findMany({
+        select: {
+          User: {
+            select: {
+              nickname: true,
+            },
+          },
+          Location: {
+            select: {
+              storeName: true,
+              address: true,
+              starAvg: true,
+            },
+          },
+          postId: true,
+          imgUrl: true,
+          content: true,
+          likeCount: true,
+          commentCount: true,
+          createdAt: true,
+        },
+        orderBy: { postId: "desc" },
+        take: parsedPage,
+        where: {
+          ...(findCategory?.categoryId && {
+            CategoryId: findCategory.categoryId,
+          }),
+          ...(findDistrict?.districtId && {
+            Location: { DistrictId: findDistrict.districtId },
+          }),
+          updatedAt: {
+            lt: new Date(),
+          },
+          postId: {
+            lt: parseInt(lastSeenPage),
+          },
+        },
+      });
     }
 
-    const data = latestPostsPage(page, pageSize);
-    // 이미지 배열로 반환하는 로직
-    const imgUrlsArray = posts.map((post) => post.imgUrl.split(","));
-    const paramsArray = imgUrlsArray.map((urls) =>
-      urls.map((url) => ({
-        Bucket: bucketName,
-        Key: url,
-      })),
-    );
-
-    const signedUrlsArray = await Promise.all(
-      paramsArray.map(async (params) => {
-        const commands = params.map((param) => new GetObjectCommand(param));
-        const urls = await Promise.all(
-          commands.map((command) => getSignedUrl(s3, command)),
-        );
-        return urls;
-      }),
-    );
-
-    for (let i = 0; i < posts.length; i++) {
-      posts[i].imgUrl = signedUrlsArray[i];
+    if (!posts) {
+      return res.status(400).json({ message: "존재하지 않는 게시글입니다." });
     }
 
-    const responseData = {
-      data: posts,
-      data2: data,
-      pagination: { page: parsedPage, pageSize: parsedPageSize },
-    };
+    await getManyImagesS3(posts);
 
-    return res.status(200).json(responseData);
-    // });
+    return res.status(200).json({ posts });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    next(error);
   }
 });
 
@@ -170,29 +158,59 @@ router.get("/posts/:postId", async (req, res, next) => {
         content: true,
         createdAt: true,
         likeCount: true,
-        imgUrl: false,
+        imgUrl: true,
+        star: true,
         User: {
           select: {
             nickname: true,
+            imgUrl: true
           },
         },
         Location: {
           select: {
             address: true,
-            starAvg: true
           },
         },
         Comments: {
           select: {
             content: true,
+            createdAt: true,
+            User: {
+              select: {
+                imgUrl: true,
+                nickname: true
+              }
+            }
           },
         },
       },
     });
 
     if (!posts) {
-      return res.status(400).json({ message: "존재하지않는 게시물입니다." });
+      return res.status(400).json({ message: "존재하지않는 게시글입니다." });
     }
+
+    //user 이미지와 comment 이미지 불러오기
+    const user = await prisma.users.findFirst({
+      where: { userId: posts.UserId },
+      select: { nickname: true, imgUrl: true }
+    })
+
+    const comments = await prisma.comments.findMany({
+      where: { PostId: posts.postId },
+      select: {
+        content: true,
+        createdAt: true,
+        User: {
+          select: {
+            imgUrl: true,
+            nickname: true
+          }
+        }
+      }
+    })
+
+    await getImageS3(posts);
 
     return res.status(200).json(posts);
   } catch (error) {
@@ -211,7 +229,6 @@ router.post(
       const validation = await createPosts.validateAsync(req.body);
       const {
         content,
-        likeCount,
         categoryName,
         storeName,
         address,
@@ -220,7 +237,6 @@ router.post(
         star,
       } = validation;
       const { userId } = req.user;
-
 
       const user = await prisma.users.findFirst({
         where: { userId },
@@ -287,7 +303,7 @@ router.post(
       const imgNames = await Promise.all(imgPromises);
 
       const location = await prisma.locations.findFirst({
-        where: { address }
+        where: { address },
       });
 
       //location 정보가 기존 X => location랑 posts 생성.
@@ -308,7 +324,6 @@ router.post(
         await prisma.posts.create({
           data: {
             content,
-            likeCount: +likeCount,
             star,
             User: { connect: { userId: +user.userId } },
             Category: { connect: { categoryId: +category.categoryId } },
@@ -316,49 +331,48 @@ router.post(
             imgUrl: imgNames.join(","),
           },
         });
+      } else {
+        //location 정보가 기존 O => location 업데이트, posts 생성
+        await prisma.$transaction(async (prisma) => {
+          await prisma.posts.create({
+            data: {
+              content,
+              star,
+              User: { connect: { userId: +user.userId } },
+              Category: { connect: { categoryId: +category.categoryId } },
+              Location: { connect: { locationId: +location.locationId } },
+              imgUrl: imgNames.join(","),
+            },
+          });
 
+          const starsAvg = await prisma.posts.aggregate({
+            where: { LocationId: location.locationId },
+            _avg: {
+              star: true,
+            },
+          });
+
+          await prisma.locations.update({
+            where: {
+              locationId: location.locationId,
+            },
+            data: {
+              starAvg: starsAvg._avg.star,
+            },
+          });
+        });
       }
-      //location 정보가 기존 O => location 업데이트, posts 생성
-      await prisma.$transaction(async (prisma) => {
-        await prisma.posts.create({
-          data: {
-            content,
-            likeCount: +likeCount,
-            star,
-            User: { connect: { userId: +user.userId } },
-            Category: { connect: { categoryId: +category.categoryId } },
-            Location: { connect: { locationId: +location.locationId } },
-            imgUrl: imgNames.join(","),
-          },
-        });
-
-        const starsAvg = await prisma.posts.aggregate({
-          where: { LocationId: location.locationId },
-          _avg: {
-            star: true
-          }
-        });
-
-        await prisma.locations.update({
-          where: {
-            locationId: location.locationId,
-          },
-          data: {
-            starAvg: starsAvg._avg.star
-          }
-        })
-      })
 
       return res.status(200).json({ message: "게시글 등록이 완료되었습니다." });
     } catch (error) {
-      throw new Error("트랜잭션 실패");
       next(error);
+      throw new Error("게시글 작성에 실패했습니다.");
     }
   },
 );
 
 // 게시물 수정
-router.patch("/posts/:postId",authmiddleware, async (req, res, next) => { //auth.middleware 추가로 넣기
+router.patch("/posts/:postId", authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
     const { postId } = req.params;
@@ -371,18 +385,37 @@ router.patch("/posts/:postId",authmiddleware, async (req, res, next) => { //auth
     if (!post) {
       res.status(404).json({ message: "존재하지 않는 게시글 입니다." });
     }
-    await prisma.locations.update({
-      where: { locationId: post.LocationId },
-      data: { address },
-    });
+    await prisma.$transaction(async (prisma) => {
+      const createPost = await prisma.posts.update({
+        where: { postId: +postId, UserId: +userId },
+        data: {
+          content,
+          star
+        },
+      });
 
-    await prisma.posts.update({
-      where: { postId: +postId },
-      data: { content, star, storeName },
-    });
+      //starAvg 업데이트
+      const starAvg = await prisma.posts.aggregate({
+        where: { LocationId: createPost.LocationId },
+        _avg: {
+          star: true,
+        },
+      });
+
+      await prisma.locations.update({
+        where: {
+          locationId: createPost.LocationId,
+        },
+        data: {
+          starAvg: starAvg._avg.star, address, storeName
+        },
+      });
+    })
+
     return res.status(200).json({ message: "게시물을 수정하였습니다." });
   } catch (error) {
     next(error);
+    throw new Error("게시글 수정에서 에러가 발생했습니다.")
   }
 });
 
@@ -403,22 +436,26 @@ router.delete("/posts/:postId", authMiddleware, async (req, res, next) => {
         .status(404)
         .json({ message: "삭제할 권한이 존재하지 않습니다." });
     }
-    const imgUrlsArray = post.imgUrl.split(",");
 
-    const params = imgUrlsArray.map((url) => {
-      return {
-        Bucket: bucketName,
-        Key: url,
-      };
+    await prisma.$transaction(async (prisma) => {
+      const imgUrlsArray = post.imgUrl.split(",");
+
+      const params = imgUrlsArray.map((url) => {
+        return {
+          Bucket: bucketName,
+          Key: url,
+        };
+      });
+
+      params.map((bucket) => {
+        return s3.send(new DeleteObjectCommand(bucket));
+      });
+
+      await prisma.posts.delete({
+        where: { postId: +postId },
+      });
     });
 
-    params.map((bucket) => {
-      return s3.send(new DeleteObjectCommand(bucket));
-    });
-
-    await prisma.posts.delete({
-      where: { postId: +postId },
-    });
     return res.status(200).json({ message: "게시글을 삭제하였습니다." });
   } catch (error) {
     next(error);
