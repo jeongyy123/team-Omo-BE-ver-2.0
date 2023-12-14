@@ -104,15 +104,17 @@ router.post("/login", async (req, res, next) => {
     // Issue access token
     const accessToken = jwt.sign(
       {
+        purpose: "access",
         userId: findUser.userId,
       },
       accessKey,
-      { expiresIn: "1h" },
+      { expiresIn: "2h" },
     );
 
     // Issue refresh token
     const refreshToken = jwt.sign(
       {
+        purpose: "refresh",
         userId: findUser.userId,
       },
       refreshKey,
@@ -122,7 +124,7 @@ router.post("/login", async (req, res, next) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: false,
-      // sameSite: "None",
+      // sameSite: "None",  // CSRF 공격을 방지하기 위함
     });
 
     // 클라이언트에서 토큰을 사용할 때 매번 "Bearer "를 제거해야 하는 번거로움이 있을 수 있어서 지웠음
@@ -161,64 +163,78 @@ router.post("/login", async (req, res, next) => {
 /** 리프레시 토큰을 이용해서 엑세스 토큰을 재발급하는 API
  * Access Token의 만료를 감지하고, Refresh Token을 사용하여 새로운 Access Token을 발급하는 API
  */
-router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
-  const { refreshToken } = req.cookies;
-  const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
-  const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
+// router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
+//   try {
+//     const { refreshToken } = req.cookies;
+//     const { userId } = req.user;
+//     const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
+//     const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
 
-  // 클라이언트가 위 Refresh token을 실제로 가지고 있는지 확인
-  if (!refreshToken) {
-    return res
-      .status(400)
-      .json({ errorMessage: "Refresh Token이 존재하지 않습니다." });
-  }
+//     // Refresh token의 검증
+//     if (!refreshToken) {
+//       return res
+//         .status(400)
+//         .json({ errorMessage: "Refresh Token이 존재하지 않습니다." });
+//     }
 
-  // 서버에서 전달한 Refresh token이 맞는지 확인
-  const decodedToken = validateToken(refreshToken, refreshKey);
+//     // 서버에서 전달한 Refresh token이 맞는지 확인
+//     const decodedToken = validateToken(refreshToken, refreshKey);
 
-  if (!decodedToken) {
-    return res
-      .status(401)
-      .json({ errorMessage: "Refresh token이 유효하지 않습니다." });
-  }
+//     if (!decodedToken) {
+//       return res
+//         .status(401)
+//         .json({ errorMessage: "Refresh token이 유효하지 않습니다." });
+//     }
 
-  // 서버에서도 실제 정보를 가지고 있는지 확인
-  const userInfo = await prisma.refreshTokens.findMany({
-    where: {
-      refreshToken: refreshToken,
-    },
-  });
+//     // 서버에서도 실제 정보를 가지고 있는지 확인
+//     const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
+//       where: {
+//         refreshToken: refreshToken, // 전달받은 토큰
+//       },
+//     });
 
-  if (!userInfo) {
-    return res.status(419).json({
-      errorMessage: "Refresh token의 정보가 서버에 존재하지 않습니다.",
-    });
-  }
+//     console.log("isRefreshTokenExist >>>>>>>>>>>", isRefreshTokenExist);
 
-  // 새로운 Access token을 발급
-  const newAccessToken = jwt.sign(
-    {
-      userId: userInfo.userId,
-    },
-    accessKey,
-    { expiresIn: "1h" },
-  );
+//     if (!isRefreshTokenExist) {
+//       return res.status(419).json({
+//         errorMessage: "Refresh token의 정보가 서버에 존재하지 않습니다.",
+//       });
+//     }
 
-  res.cookie("accessToken", newAccessToken);
+//     // 새로운 Access token을 발급
+//     const newAccessToken = jwt.sign(
+//       {
+//         purpose: "access",
+//         userId: +userId,
+//       },
+//       accessKey,
+//       { expiresIn: "10s" },
+//     );
 
-  return res
-    .status(200)
-    .json({ message: "Access Token을 정상적으로 새롭게 발급했습니다." });
-});
+//     console.log("새롭게 재발급 받은 AccessToken >>>>>>>>>", newAccessToken);
+
+//     res.cookie("accessToken", newAccessToken);
+
+//     return res
+//       .status(200)
+//       .json({ message: "Access Token을 정상적으로 새롭게 발급했습니다." });
+//   } catch (error) {
+//     console.error(error);
+
+//     return res
+//       .status(500)
+//       .json({ errorMessage: "서버에서 문제가 발생하였습니다." });
+//   }
+// });
 
 // 제공된 토큰이 유효한지 여부를 검증하는 함수
-function validateToken(token, secretKey) {
-  try {
-    return jwt.verify(token, secretKey);
-  } catch (error) {
-    return null;
-  }
-}
+// function validateToken(token, secretKey) {
+//   try {
+//     return jwt.verify(token, secretKey);
+//   } catch (error) {
+//     return null;
+//   }
+// }
 
 /** Logout API
  */
