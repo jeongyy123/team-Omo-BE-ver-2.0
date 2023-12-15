@@ -1,9 +1,10 @@
 import express from "express";
 import multer from "multer";
+import jimp from "jimp";
 import { prisma } from "../../utils/prisma/index.js";
 import { createPosts } from "../../validations/posts.validation.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
-import { getImageS3, getManyImagesS3 } from "../../utils/getImageS3.js";
+import { getImageS3, getManyImagesS3, getSingleImageS3, getProfileImageS3 } from "../../utils/getImageS3.js";
 import {
   S3Client,
   PutObjectCommand,
@@ -169,11 +170,20 @@ router.get("/posts/:postId", async (req, res, next) => {
         Location: {
           select: {
             address: true,
-            storeName: true
+            storeName: true,
+            latitude: true,
+            longitude: true,
+            Category: {
+              select: {
+                categoryId: true,
+                categoryName: true
+              }
+            }
           },
         },
         Comments: {
           select: {
+            commentId: true,
             content: true,
             createdAt: true,
             User: {
@@ -191,26 +201,8 @@ router.get("/posts/:postId", async (req, res, next) => {
       return res.status(400).json({ message: "존재하지않는 게시글입니다." });
     }
 
-    //user 이미지와 comment 이미지 불러오기
-    const user = await prisma.users.findFirst({
-      where: { userId: posts.UserId },
-      select: { nickname: true, imgUrl: true }
-    })
-
-    const comments = await prisma.comments.findMany({
-      where: { PostId: posts.postId },
-      select: {
-        content: true,
-        createdAt: true,
-        User: {
-          select: {
-            imgUrl: true,
-            nickname: true
-          }
-        }
-      }
-    })
-
+    await getProfileImageS3(posts.Comments);
+    await getSingleImageS3(posts.User);
     await getImageS3(posts);
 
     return res.status(200).json(posts);
@@ -288,10 +280,14 @@ router.post(
       const imgPromises = req.files.map(async (file) => {
         const imgName = randomImgName();
 
+        // 이미지 사이즈 조정
+        const buffer = await jimp.read(file.buffer)
+          .then(image => image.resize(jimp.AUTO, 350).quality(70).getBufferAsync(jimp.MIME_JPEG));
+
         const params = {
           Bucket: bucketName,
           Key: imgName,
-          Body: file.buffer,
+          Body: buffer,
           ContentType: file.mimetype,
         };
         const command = new PutObjectCommand(params);
