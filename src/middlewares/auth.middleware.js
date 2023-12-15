@@ -6,99 +6,142 @@ dotenv.config();
 
 export default async function (req, res, next) {
   try {
-    const { accessToken, refreshToken } = req.cookies;
-    // const accessToken = req.headers.authorization;
-    // const refreshToken = req.headers.authorization;
+    const authorizationHeader = req.headers.authorization;
 
-    console.log("받은 accessToken >>>>>>>", accessToken);
-    console.log("받은 refreshToken >>>>>>", refreshToken);
+    console.log("authorizationHeader >>>>>>>>>>>>>>>>>", authorizationHeader);
 
-    const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
-    const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
+    if (!authorizationHeader) {
+      return res
+        .status(401)
+        .json({ errorMessage: "Authorization 헤더가 없습니다." });
+    }
+
+    const [tokenType, token] = authorizationHeader.split(" ");
+
+    console.log("받은 token >>>>>>>", token);
+
+    const accessKey = process.env.SECRET_TOKEN_KEY;
+
+    // 1. 받은 토큰이 엑세스 토큰이 아니라 리프레시 토큰일 경우에만 검사 ********
+    // 2. 받은 리프레시 토큰의 유효기간이 남아있는지 확인해야 한다.
+    // 3. 엑세스 토큰 비밀키랑 리프레시 토큰 비밀키가 같음..
+    // --
+    // const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
+    //   where: {
+    //     refreshToken: token, // 전달받은 토큰
+    //   },
+    // });
+
+    // console.log("isRefreshTokenExist >>>>>>>>>>>", isRefreshTokenExist);
+
+    // if (!isRefreshTokenExist) {
+    //   return res.status(419).json({
+    //     errorMessage: "Refresh token의 정보가 서버에 존재하지 않습니다.",
+    //   });
+    // }
+    // ******************************************************************
 
     // 위 토큰이 실제로 존재하는지 확인한다.
-    if (!accessToken || !refreshToken) {
+    if (!token) {
       return res
         .status(400)
         .json({ errorMessage: "토큰이 존재하지 않습니다." });
     }
 
-    // Refresh Token이 블랙리스트에 있는지 확인
-    const blockUserRefresh = await prisma.tokenBlacklist.findFirst({
-      where: {
-        token: refreshToken,
-      },
-    });
+    if (tokenType !== "Bearer") {
+      return res.status(400).json({ errorMessage: "Bearer형식이 아닙니다." });
+    }
 
-    // Access Token이 블랙리스트에 있는지 확인
+    // Access Token or Refresh token 이 블랙리스트에 있는지 확인
     const blockUserAccess = await prisma.tokenBlacklist.findFirst({
       where: {
-        token: accessToken,
+        token: tokenType,
       },
     });
 
-    if (blockUserRefresh || blockUserAccess) {
+    if (blockUserAccess) {
       return res.status(403).json({ errorMessage: "접근 권한이 없습니다" });
     }
 
     // 토큰이 서버에서 발급된 토큰이고 존재하는지 확인
-    const decodedAccessToken = validateToken(accessToken, accessKey);
+    const decodedToken = validateToken(token, accessKey);
 
-    // ==========================================================================================
-    // ========================엑세스 토큰 재발급=================================================
-    // 엑세스 토큰이 만료되었거나 유효하지 않은 경우 리프레시 토큰으로 새로운 엑세스 토큰을 발급한다.
-    if (!decodedAccessToken) {
-      if (!refreshToken) {
-        return res
-          .status(404)
-          .json({ errorMessage: "Refresh Token이 존재하지 않습니다." });
-      }
+    // 토큰이 만료되었는지 확인
+    // const isTokenExpired = Date.now() >= decodedAccessToken.exp * 1000;
+    // const isTokenExpired = decodedAccessToken
+    //   ? Date.now() >= decodedAccessToken.exp * 1000
+    //   : false;
 
-      // 서버에서 전달한 Refresh token이 맞는지 확인
-      const decodedRefreshToken = validateToken(refreshToken, refreshKey);
+    //--------------------------------------------------------------------
+    // if (isTokenExpired) {
+    //   const [refreshTokenType, refreshToken] = authorizationHeader.split(" ");
 
-      // 서버에서 발급한 Refresh token안에 있는 유저정보
-      const { userId } = decodedRefreshToken;
+    //   console.log("받은 refreshToken >>>>>>>", refreshToken);
 
-      if (!decodedRefreshToken) {
-        return res
-          .status(401)
-          .json({ errorMessage: "Refresh token이 유효하지 않습니다." });
-      }
+    //   const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
 
-      // 서버에서도 실제 정보를 가지고 있는지 확인
-      const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
-        where: {
-          refreshToken: refreshToken, // 전달받은 토큰
-        },
-      });
+    //   // 위 토큰이 실제로 존재하는지 확인한다.
+    //   if (!refreshToken) {
+    //     return res
+    //       .status(400)
+    //       .json({ errorMessage: "토큰이 존재하지 않습니다." });
+    //   }
 
-      console.log("isRefreshTokenExist >>>>>>>>>>>", isRefreshTokenExist);
+    //   if (refreshTokenType !== "Bearer") {
+    //     return res.status(400).json({ errorMessage: "Bearer형식이 아닙니다." });
+    //   }
 
-      if (!isRefreshTokenExist) {
-        return res.status(419).json({
-          errorMessage: "Refresh token의 정보가 서버에 존재하지 않습니다.",
-        });
-      }
+    //   // Access Token이 블랙리스트에 있는지 확인
+    //   const blockUserRefresh = await prisma.tokenBlacklist.findFirst({
+    //     where: {
+    //       token: refreshToken,
+    //     },
+    //   });
 
-      // 새로운 엑세스 토큰 발급 로직
-      const newAccessToken = jwt.sign(
-        {
-          purpose: "access",
-          userId: +userId,
-        },
-        accessKey,
-        { expiresIn: "2h" },
-      );
+    //   if (blockUserRefresh) {
+    //     return res.status(403).json({ errorMessage: "접근 권한이 없습니다" });
+    //   }
 
-      console.log("새롭게 재발급 받은 AccessToken >>>>>>>>>", newAccessToken);
+    //   // 토큰이 서버에서 발급된 토큰이고 존재하는지 확인
+    //   const decodedRefreshToken = validateToken(refreshToken, refreshKey);
 
-      res.cookie("accessToken", newAccessToken);
-    }
-    // =============================================================================
+    //   const isRefreshTokenExpired = decodedRefreshToken
+    //     ? Date.now() >= decodedRefreshToken.exp * 1000
+    //     : false;
+
+    //   if (isRefreshTokenExpired) {
+    //     return res
+    //       .status(401)
+    //       .json({ errorMessage: "Refresh 토큰이 만료되었습니다." });
+    //   }
+
+    //   // 서버에서 발급한 엑세스 토큰안에 있는 유저정보
+    //   const { userId } = decodedRefreshToken;
+
+    //   const user = await prisma.users.findUnique({
+    //     where: {
+    //       userId: +userId,
+    //     },
+    //   });
+
+    //   if (!user) {
+    //     return res
+    //       .status(404)
+    //       .json({ errorMessage: "사용자가 존재하지 않습니다." });
+    //   }
+
+    //   req.user = user;
+    // } else {
+    //--------------------------------------------------------------------------
 
     // 서버에서 발급한 엑세스 토큰안에 있는 유저정보
-    const { userId } = decodedAccessToken;
+    const { userId } = decodedToken;
+
+    // if (!userId) {
+    //   return res
+    //     .status(404)
+    //     .json({ errorMessage: "사용자가 존재하지 않습니다." });
+    // }
 
     const user = await prisma.users.findUnique({
       where: {
@@ -115,12 +158,13 @@ export default async function (req, res, next) {
     req.user = user;
 
     next();
+    // }
   } catch (error) {
     console.error(error);
 
     return res
       .status(500)
-      .json({ errorMessage: "전달된 쿠키에서 오류가 발생했습니다." });
+      .json({ errorMessage: "전달된 토큰에서 오류가 발생했습니다." });
   }
 }
 

@@ -95,8 +95,6 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
     //   },
     // });
 
-    // console.log("numOfCommentsForEachPost >>>>>>>", numOfCommentsForEachPost);
-
     // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
     if (userPosts.imgUrl && userPosts.imgUrl.length === 64) {
       const getObjectParams = {
@@ -150,8 +148,6 @@ router.get(
           UserId: +userId,
         },
         select: {
-          // UserId: true,
-          // LocationId: true,
           Location: {
             select: {
               locationId: true,
@@ -244,15 +240,6 @@ router.patch(
           Body: processedImage,
           ContentType: req.file.mimetype,
         };
-
-        // const params = {
-        //   Bucket: bucketName,
-        //   // Key: req.file.originalname, // image files with the same name will overlap
-        //   Key: imageName,
-        //   // Body: req.file.buffer,
-        //   Body: buffer,
-        //   ContentType: req.file.mimetype,
-        // };
 
         // Specify all the information about the file here
         const command = new PutObjectCommand(params);
