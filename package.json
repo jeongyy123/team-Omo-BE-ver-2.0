@@ -21,6 +21,8 @@
     "file-type": "^18.7.0",
     "haversine": "^1.1.1",
     "install": "^0.13.0",
+    "ioredis": "^5.3.2",
+    "jimp": "^0.22.10",
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
@@ -30,7 +32,6 @@
     "passport-local": "^1.0.0",
     "prettier": "^3.1.0",
     "prisma": "^5.6.0",
-    "redis": "^4.6.11",
     "yarn": "^1.22.21"
   },
   "devDependencies": {
@@ -42,7 +43,7 @@
     "nodemon": "^3.0.2"
   },
   "scripts": {
-    "start": "nodemon src/app.js",
+    "start": "pm2 start src/app.js",
     "format": "prettier --write *.js **/*.js"
   }
 }

@@ -5,6 +5,7 @@ import multer from "multer";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
+import {getManyImagesS3} from "../../utils/getImageS3.js"
 // import authMiddleware from "../../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -27,7 +28,6 @@ const s3 = new S3Client({
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-router.get("/locations/:locationId");
 
 router.get("/locations", async (req, res, next) => {
   try {
@@ -38,14 +38,17 @@ router.get("/locations", async (req, res, next) => {
     const location = await prisma.locations.findMany({
       where: { District: { districtName: districtName } },
       select: {
+        locationId: true,
         address: true,
         latitude: true,
         longitude: true,
+        // starAvg: true
         Posts: {
           select: {
             imgUrl: true,
-            starAvg: 5
           },
+          // skip: 1,
+          take: 1
         },
         Category: {
           select: {
@@ -55,6 +58,8 @@ router.get("/locations", async (req, res, next) => {
       },
     });
 
+    
+    console.log("이것", location)
     // 거리 계산 및 정렬
     if (latitude && longitude) {
       const start = {
@@ -79,19 +84,20 @@ router.get("/locations", async (req, res, next) => {
         })
         .sort((a, b) => a.distance - b.distance);
 
-      console.log("location", locationsWithDistance);
+      // console.log("location", locationsWithDistance);
       // 이미지 배열로 반환하는 로직
 
       const imgUrlsArray = locationsWithDistance.flatMap((location) =>
         location.Posts.map((post) => post.imgUrl),
       );
 
-      console.log("imgarray", imgUrlsArray);
+      // console.log("imgarray", imgUrlsArray);
 
       const paramsArray = imgUrlsArray.map((url) => ({
         Bucket: bucketName,
         Key: url,
       }));
+      // console.log("paramsArray", paramsArray)
 
       const signedUrlsArray = await Promise.all(
         paramsArray.map(async (params) => {
@@ -103,17 +109,32 @@ router.get("/locations", async (req, res, next) => {
           return urls;
         })
       )
+      // console.log("이곳", signedUrlsArray)
+      const locationsWithSignedUrls = locationsWithDistance.map(
+        (location, index) => ({
+          ...location,
+          Posts: location.Posts.map((post, postIndex) => ({
+            ...post,
+            imgUrl: signedUrlsArray[postIndex],
+          })),
+        })
+      );
+      // for (let i = 0; i < locationsWithDistance.length; i++) {
+      //   locationsWithDistance[i].imgUrl = signedUrlsArray[i];
+      // }
+           // 펼쳐진 Posts 내용 출력
+           const flatPostsArray = locationsWithSignedUrls.flatMap(
+            (location) => location.Posts
+          );
 
-      for (let i = 0; i < locationsWithDistance.length; i++) {
-        locationsWithDistance[i].imgUrl = signedUrlsArray[i];
-      }
+          console.log("response", flatPostsArray);
 
-      return res.status(200).json({ locations: locationsWithDistance });
+      return res.status(200).json({ locations: locationsWithSignedUrls });
     } else {
       return res.status(200).json({ location });
     }
   } catch (error) {
-    next (error);
+    next (error); 
   }
 });
 
@@ -164,7 +185,7 @@ router.get("/locations/:locationId", async (req, res, next) => {
   })
   // 좋아요 순서로 정렬
   const sortedPosts = posts.sort((a, b) => b.likeCount - a.likeCount)
-
+console.log("나일세", sortedPosts)
   const imgUrlsArray = sortedPosts.flatMap((post) => post.imgUrl.split(","));
   const paramsArray = imgUrlsArray.map((url) => ({
     Bucket: bucketName,
@@ -182,7 +203,7 @@ router.get("/locations/:locationId", async (req, res, next) => {
     sortedPosts.forEach((post, index) => {
       post.imgUrl = signedUrlsArray[index];
     });
-
+    
     return res.status(200).json({ location, posts: sortedPosts });
   } catch (error) {
     next (error)
