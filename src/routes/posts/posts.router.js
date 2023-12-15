@@ -14,7 +14,6 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 import crypto from "crypto";
-import jimp from "jimp";
 
 const router = express.Router();
 
