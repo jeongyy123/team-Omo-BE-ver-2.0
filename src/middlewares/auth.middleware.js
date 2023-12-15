@@ -7,11 +7,12 @@ dotenv.config();
 export default async function (req, res, next) {
   try {
     const { accessToken, refreshToken } = req.cookies;
+
     // const accessToken = req.headers.authorization;
     // const refreshToken = req.headers.authorization;
     const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
     const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
-
+    
     // 위 토큰이 실제로 존재하는지 확인한다.
     if (!accessToken || !refreshToken) {
       return res
@@ -66,7 +67,7 @@ export default async function (req, res, next) {
     }
 
     req.user = user;
-
+    console.log("req.user",user)
     next();
   } catch (error) {
     console.error(error);

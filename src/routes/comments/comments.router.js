@@ -1,86 +1,149 @@
-import express from "express"
+import express from "express";
 import authMiddleware from "../../middlewares/auth.middleware.js";
-import { prisma } from '../../utils/prisma/index.js';
-
-
+import { prisma } from "../../utils/prisma/index.js";
 
 const router = express.Router();
 
-
-
 // comment POST API
-router.post("/posts/:postId/comments", authMiddleware, async (req, res, next) => {
+router.post(
+  "/posts/:postId/comments",
+  authMiddleware,
+  async (req, res, next) => {
     try {
-    const { userId } = req.user
-    const { postId } = req.params
-    const { content } = req.body
-    
-    const post = await prisma.posts.findFirst({
-        where: { postId: +postId }
-    })
+      const { userId } = req.user;
+      const { postId } = req.params;
+      const { content } = req.body;
 
-    const comment = await prisma.comments.create({
+      const post = await prisma.posts.findFirst({
+        where: { postId: +postId },
+      });
+
+      const comment = await prisma.comments.create({
         data: {
-            UserId: userId,
-            PostId: +postId,
-            content: content
-        }
-    })
-    if (!comment) {
-        return res.status(404).json({ errorMessage: "댓글을 등록할 권한이 없습니다." })
+          UserId: userId,
+          PostId: +postId,
+          content: content,
+        },
+      });
+      if (!comment) {
+        return res
+          .status(404)
+          .json({ errorMessage: "댓글을 등록할 권한이 없습니다." });
+      }
+      return res.status(200).json({ data: comment });
+    } catch (error) {
+      next(error);
     }
-    return res.status(200).json({ data: comment })
-    }catch (error) {
-        next(error)
-    }
-})
-
+  },
+);
 
 // comment GET API
 router.get("/posts/:postId/comments", async (req, res, next) => {
-    try {
-    const { postId } = req.params
+  try {
+    const { postId } = req.params;
 
     const post = await prisma.posts.findFirst({
-        where: { postId: +postId }
-    })
+      where: { postId: +postId },
+    });
     if (!post) {
-        return res.status(404).json({ errorMessage: "존재하지 않는 게시글 입니다." })
+      return res
+        .status(404)
+        .json({ errorMessage: "존재하지 않는 게시글 입니다." });
     }
     // 게시글에 보이는 댓글 총 갯수
     const commentCount = await prisma.comments.count({
-        where: { PostId: +postId }
+      where: { PostId: +postId },
     });
 
     await prisma.posts.update({
-        where: { postId: +postId },
-        data: { commentCount }
+      where: { postId: +postId },
+      data: { commentCount },
     });
     // 댓글 전부 조회
-    const comment = await prisma.comments.findMany({
-        where: { PostId: +postId },
-        orderBy: { createdAt: "desc" }
-    })
-    return res.status(200).json({ data: comment })
-}catch (error) {
-    next(error)
-}
-})
+    const comments = await prisma.comments.findMany({
+      where: { PostId: +postId },
+      select: {
+        User: {
+          select: {
+            nickname: true,
+            imgUrl: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return res.status(200).json({ data: comments });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // comment DELETE API
-router.delete("/posts/:postId/comments/:commentId", authMiddleware, async (req, res, next) => {
-    const { userId } = req.user
-    const { commentId } = req.params
+router.delete(
+  "/posts/:postId/comments/:commentId",
+  authMiddleware,
+  async (req, res, next) => {
+    const { userId } = req.user;
+    const { commentId } = req.params;
 
     const comment = await prisma.comments.findFirst({
-        where: { commentId: +commentId }
-    })
-        await prisma.comments.delete({
-            where: { UserId: userId, commentId: +commentId }
-        })
-        return res.status(200).json({ data: comment })
+      where: { commentId: +commentId },
+    });
+    await prisma.comments.delete({
+      where: { UserId: userId, commentId: +commentId },
+    });
+    return res.status(200).json({ data: comment });
+  },
+);
 
-})
+// // Reply POST API
+// router.post(
+//   "/posts/:postId/comments/:commentId/replies",
+//   authMiddleware,
+//   async (req, res, next) => {
+//     try {
+//       const { userId } = req.user;
+//       const { postId, commentId } = req.params;
+//       const { content } = req.body;
 
+//       const postComment = await prisma.posts.findFirst({
+//         where: { postId: +postId }, // connect 없이 comment: commentId: +commentId
+//       });
+//       if (!postComment) {
+//         return res
+//           .status(404)
+//           .json({ message: "댓글이 삭제되었거나 존재 하지 않습니다." });
+//       }
+
+//       const findComment = await prisma.comments.findFirst({
+//         where: { commentId: +commentId },
+//       });
+
+//       const reply = await prisma.replies.create({
+//         data: {
+//           UserId: userId,
+//           PostId: +postId,
+//           commentId: +commentId,
+//           content: content,
+//         },
+//       });
+//       return res.status(200).json({ data: reply });
+//     } catch (error) {
+//       next(error);
+//     }
+//   },
+// );
+
+// // Reply GET API
+// router.get(
+//   "/posts/:postId/comments/:commentId/replies",
+//   async (req, res, next) => {
+//     const { replyId } = req.params;
+
+//     const reply = await prisma.replies.findFirst({
+//       where: {},
+//     });
+//   },
+// );
 
 export default router;

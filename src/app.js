@@ -42,7 +42,7 @@ app.use(
 );
 
 // Passport 설정 초기화
-configurePassport(); // configurePassport 함수 호출  // passport 불러온다.
+// configurePassport(); // configurePassport 함수 호출  // passport 불러온다.
 
 //! express-session에 의존하므로 뒤에 위치해야 함
 app.use(passport.initialize()); // 요청 객체에 passport 설정을 심음
@@ -54,7 +54,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 // app.use("/auth", [UsersRouter]);
 
-app.use("/api", [ProfileRouter, UsersRouter, MainRouter, PostsRouter, CommentsRouter, LocationRouter]);
+app.use("/api", [ProfileRouter, MainRouter, PostsRouter, CommentsRouter, LocationRouter]);
 
 app.get("/", (req, res) => {
   return res.status(200).json({ message: "success" });
@@ -73,8 +73,8 @@ app.use(cookieParser());
 // redisClient.connect().then(); // redis v4 연결 (비동기)
 // const redisCli = redisClient.v4; // 기본 redisClient 객체는 콜백기반인데 v4버젼은 프로미스 기반이라 사용
 
+app.use("/auth", [AuthRouter, UsersRouter]);
 app.use(ErrorMiddleware);
-app.use("/auth", [AuthRouter]);
 
 app.listen(PORT, (req, res) => {
   console.log(PORT, `포트 ${PORT}번이 열렸습니다.`);
