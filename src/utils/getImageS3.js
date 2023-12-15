@@ -99,10 +99,8 @@ export const getProfileImageS3 = async (posts) => {
       Bucket: bucketName,
       Key: post.User.imgUrl
     }
-    console.log("하하", params)
     const command = new GetObjectCommand(params);
     const imgUrl = await getSignedUrl(s3, command);
-    console.log("imgUrl", imgUrl)
     return post.User.imgUrl = imgUrl
   })
 }
