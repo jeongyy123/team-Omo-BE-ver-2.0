@@ -41,11 +41,11 @@ const profileEditSchema = Joi.object({
     "string.min": "닉네임은 최소 2자리 이상이어야 합니다.",
     "string.max": "닉네임은 최대 15자리 이하이어야 합니다.",
   }),
-  password: Joi.string().alphanum().min(6).messages({
+  newPassword: Joi.string().alphanum().min(6).messages({
     "string.min": "비밀번호는 최소 6자 이상이어야 합니다.",
     "string.alphanum": "비밀번호는 영문자와 숫자로만 구성되어야 합니다.",
   }),
-  confirmedPassword: Joi.string().valid(Joi.ref("password")).messages({
+  confirmedPassword: Joi.string().valid(Joi.ref("newPassword")).messages({
     "any.only": "비밀번호가 일치하지 않습니다.",
   }),
 });

@@ -4,7 +4,7 @@ import jimp from "jimp";
 import { prisma } from "../../utils/prisma/index.js";
 import { createPosts } from "../../validations/posts.validation.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
-import { getImageS3, getManyImagesS3 } from "../../utils/getImageS3.js";
+import { getImageS3, getManyImagesS3, getSingleImageS3, getProfileImageS3 } from "../../utils/getImageS3.js";
 import {
   S3Client,
   PutObjectCommand,
@@ -192,26 +192,8 @@ router.get("/posts/:postId", async (req, res, next) => {
       return res.status(400).json({ message: "존재하지않는 게시글입니다." });
     }
 
-    //user 이미지와 comment 이미지 불러오기
-    const user = await prisma.users.findFirst({
-      where: { userId: posts.UserId },
-      select: { nickname: true, imgUrl: true }
-    })
-
-    const comments = await prisma.comments.findMany({
-      where: { PostId: posts.postId },
-      select: {
-        content: true,
-        createdAt: true,
-        User: {
-          select: {
-            imgUrl: true,
-            nickname: true
-          }
-        }
-      }
-    })
-
+    await getProfileImageS3(posts.Comments);
+    await getSingleImageS3(posts.User);
     await getImageS3(posts);
 
     return res.status(200).json(posts);

@@ -91,3 +91,18 @@ export const getManyImagesS3 = async (posts) => {
     posts[i].imgUrl = signedUrlsArray[i];
   }
 }
+
+// 댓글 여러 유저들의 프로필 이미지
+export const getProfileImageS3 = async (posts) => {
+  posts.map(async (post) => {
+    const params = {
+      Bucket: bucketName,
+      Key: post.User.imgUrl
+    }
+    console.log("하하", params)
+    const command = new GetObjectCommand(params);
+    const imgUrl = await getSignedUrl(s3, command);
+    console.log("imgUrl", imgUrl)
+    return post.User.imgUrl = imgUrl
+  })
+}
