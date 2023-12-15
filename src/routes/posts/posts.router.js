@@ -1,5 +1,6 @@
 import express from "express";
 import multer from "multer";
+import jimp from "jimp";
 import { prisma } from "../../utils/prisma/index.js";
 import { createPosts } from "../../validations/posts.validation.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
@@ -288,10 +289,14 @@ router.post(
       const imgPromises = req.files.map(async (file) => {
         const imgName = randomImgName();
 
+        // 이미지 사이즈 조정
+        const buffer = await jimp.read(file.buffer)
+          .then(image => image.resize(jimp.AUTO, 350).quality(70).getBufferAsync(jimp.MIME_JPEG));
+
         const params = {
           Bucket: bucketName,
           Key: imgName,
-          Body: file.buffer,
+          Body: buffer,
           ContentType: file.mimetype,
         };
         const command = new PutObjectCommand(params);
