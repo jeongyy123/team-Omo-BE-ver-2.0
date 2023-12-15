@@ -14,6 +14,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 import crypto from "crypto";
+import jimp from "jimp";
 
 const router = express.Router();
 
@@ -36,6 +37,12 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
+
+// const redisClient = new Redis({
+//   host: process.env.REDIS_HOST, // Redis 서버 호스트
+//   port: process.env.REDIS_PORT,         // Redis 포트 번호
+//   password: process.env.REDIS_PASSWORD,         // Redis 포트 번호
+// });
 
 /* 게시물 목록 조회 */
 // 자치구 카테고리 선택 시 -> 조회 (없으면 전 자치구 조회)
@@ -196,6 +203,22 @@ router.get("/posts/:postId", async (req, res, next) => {
         },
       },
     });
+
+    const imgUrlsArray = posts.imgUrl.split(","); // 여러 사진들 쪼개기
+    const paramsArray = imgUrlsArray.map((url) => ({
+      Bucket: bucketName,
+      Key: url,
+    }));
+
+    const signedUrlsArray = await Promise.all(
+      paramsArray.map(async (params) => {
+        const command = new GetObjectCommand(params);
+        const signedUrl = await getSignedUrl(s3, command);
+        return signedUrl;
+      })
+    );
+
+    posts.imgUrl = signedUrlsArray;
 
     if (!posts) {
       return res.status(400).json({ message: "존재하지않는 게시글입니다." });
