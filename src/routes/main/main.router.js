@@ -63,7 +63,7 @@ router.get("/main/popular", async (req, res, next) => {
           DistrictId: findDistrict.districtId,
         },
         likeCount: {
-          gte: 20,
+          gte: 3,
         },
       },
       select: {
