@@ -27,7 +27,7 @@ const s3 = new S3Client({
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// 주소 -> 자치구에 해당하는 주소 조회 함수
+// 자치구에 해당하는 장소정보 조회 함수
 function checkAddress(districtName) {
   const findDistrict = prisma.districts.findFirst({
     where: { districtName },
@@ -60,7 +60,7 @@ router.get("/main/popular", async (req, res, next) => {
     const findPosts = await prisma.posts.findMany({
       where: {
         Location: {
-          DistrictId: findDistrict.districtId,
+          ...(findDistrict?.districtId && { DistrictId: findDistrict.districtId })
         },
         likeCount: {
           gte: 3,
@@ -135,11 +135,13 @@ router.get("/main/recent", async (req, res, next) => {
 
     const findPosts = await prisma.posts.findMany({
       where: {
-        LocationId: findLocations.locationId,
+        ...(findLocations?.locationId && { LocationId: findLocations.locationId }),
         Location: {
-          District: {
-            districtName,
-          },
+          ...(districtName && {
+            District: {
+              districtName,
+            }
+          }),
         },
       },
       select: {
@@ -199,21 +201,19 @@ router.get("/main/comments", async (req, res, next) => {
   try {
     const { districtName, limit } = req.query;
 
-    const findLocations = await checkAddress(districtName);
-
     const findDistrict = await prisma.districts.findFirst({
       where: { districtName },
     });
 
     const findComments = await prisma.comments.findMany({
       where: {
-        Post: {
-          Location: {
-            is: {
+        ...(findDistrict?.districtId && {
+          Post: {
+            Location: {
               DistrictId: findDistrict.districtId,
             },
-          },
-        },
+          }
+        })
       },
       select: {
         content: true,
