@@ -3,7 +3,7 @@ import authMiddleware from "../../middlewares/auth.middleware.js";
 import { prisma } from "../../utils/prisma/index.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
-// import sharp from "sharp"; // To adjust image size
+import jimp from "jimp";
 import { profileEditSchema } from "../../validations/auth.validation.js";
 
 import multer from "multer";
@@ -143,6 +143,8 @@ router.get(
         },
       });
 
+      // 장소에 대한 게시글의 갯수...!!!!!!!!!!!!!!!!!!!!*******************
+
       const favouritePlaces = await prisma.bookmark.findMany({
         where: {
           UserId: +userId,
@@ -159,10 +161,11 @@ router.get(
               Posts: {
                 select: {
                   LocationId: true,
-                  imgUrl: true, // ***********
+                  likeCount: true,
+                  imgUrl: true,
                 },
                 orderBy: {
-                  likeCount: "desc", // **************
+                  likeCount: "desc",
                 },
               },
               Category: {
@@ -226,14 +229,30 @@ router.patch(
         //   .resize({ height: 1920, width: 1080, fit: "contain" })
         //   .toBuffer();
 
+        const image = await jimp.read(req.file.buffer);
+        const processedImage = await image
+          .resize(jimp.AUTO, 150) // 이미지 크기 조절
+          .quality(70) // 이미지 품질 설정
+          .getBufferAsync(jimp.AUTO); // 버퍼로 변환
+
+        // S3에 보낼 버퍼 처리
         const params = {
           Bucket: bucketName,
           // Key: req.file.originalname, // image files with the same name will overlap
           Key: imageName,
           // Body: req.file.buffer,
-          Body: req.file.buffer,
+          Body: processedImage,
           ContentType: req.file.mimetype,
         };
+
+        // const params = {
+        //   Bucket: bucketName,
+        //   // Key: req.file.originalname, // image files with the same name will overlap
+        //   Key: imageName,
+        //   // Body: req.file.buffer,
+        //   Body: buffer,
+        //   ContentType: req.file.mimetype,
+        // };
 
         // Specify all the information about the file here
         const command = new PutObjectCommand(params);
@@ -318,7 +337,7 @@ router.patch(
       console.error(error);
 
       if (error.name === "ValidationError") {
-        return res.status(200).json({ errorMessage: error.message });
+        return res.status(400).json({ errorMessage: error.message });
       }
 
       return res
