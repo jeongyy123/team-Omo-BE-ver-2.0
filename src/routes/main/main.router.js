@@ -116,6 +116,7 @@ router.get("/main/popular", async (req, res, next) => {
     return res.status(200).json(findPosts);
   } catch (error) {
     next(error);
+    console.log(error)
   }
 });
 
