@@ -41,7 +41,7 @@ const s3 = new S3Client({
 // Profile API
 router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
   try {
-    const { userId, imgUrl, nickname, email } = req.user;
+    const { userId } = req.user;
 
     // 유저가 작성한 게시글의 갯수
     const myPostsCount = await prisma.posts.count({

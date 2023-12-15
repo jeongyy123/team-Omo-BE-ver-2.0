@@ -1,6 +1,36 @@
 import express from "express";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import { prisma } from "../../utils/prisma/index.js";
+import multer from "multer";
+import crypto from "crypto";
+
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
+
+//dotenv.config();
+
+// To get a complately unique name
+const randomImageName = (bytes = 32) =>
+  crypto.randomBytes(bytes).toString("hex");
+
+const imageName = randomImageName(); // file name will be random
+
+const bucketName = process.env.BUCKET_NAME;
+const bucketRegion = process.env.BUCKET_REGION;
+const accessKey = process.env.ACCESS_KEY;
+const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: process.env.ACCESS_KEY,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+  },
+  region: bucketRegion,
+});
+
 
 const router = express.Router();
 
@@ -10,37 +40,27 @@ router.post(
   authMiddleware,
   async (req, res, next) => {
     try {
-      const { userId } = req.user;
-      const { postId } = req.params;
-      const { content } = req.body;
-
-      const post = await prisma.posts.findFirst({
-        where: { postId: +postId },
-      });
-
-      if (!post) {
-        return res
-          .status(401)
-          .json({ message: "해당 게시글이 존재하지않습니다." });
-      }
+    const { userId } = req.user
+    const { postId } = req.params
+    const { content } = req.body
+    
+    const post = await prisma.posts.findFirst({
+        where: { postId: +postId }
+    })
 
       const comment = await prisma.comments.create({
         data: {
-          UserId: userId,
-          PostId: +postId,
-          content: content,
-        },
-      });
-
-      if (!comment) {
-        return res
-          .status(404)
-          .json({ errorMessage: "댓글을 등록할 권한이 없습니다." });
-      }
-
-      return res.status(200).json({ data: comment });
-    } catch (error) {
-      next(error);
+            UserId: userId,
+            PostId: +postId,
+            content: content
+        }
+    })
+    if (!comment) {
+        return res.status(404).json({ errorMessage: "댓글을 등록할 권한이 없습니다." })
+    }
+    return res.status(200).json({ data: comment })
+    }catch (error) {
+        next(error)
     }
   },
 );
@@ -69,48 +89,46 @@ router.get("/posts/:postId/comments", async (req, res, next) => {
     });
     // 댓글 전부 조회
     const comment = await prisma.comments.findMany({
-      where: { PostId: +postId },
-      orderBy: { createdAt: "desc" },
-    });
-    return res.status(200).json({ data: comment });
-  } catch (error) {
-    next(error);
-  }
-});
+        where: { PostId: +postId },
+        select: {
+            User: {
+                nickname: true,
+                imgUrl: true
+            }
+        },
+        orderBy: { createdAt: "desc" }
+    })
+
+    const getObjectParams = {
+        Bucket: bucketName, // 버킷 이름
+        Key: userPosts.imgUrl, // 이미지 키
+      };
+
+      // User GetObjectCommand to create the url
+      const command = new GetObjectCommand(getObjectParams);
+      const url = await getSignedUrl(s3, command);
+      userPosts.imgUrl = url;
+
+    return res.status(200).json({ data: comment })
+}catch (error) {
+    next(error)
+}
+})
 
 // comment DELETE API
-router.delete(
-  "/posts/:postId/comments/:commentId",
-  authMiddleware,
-  async (req, res, next) => {
-    try {
-      const { userId } = req.user;
-      const { postId, commentId } = req.params;
+router.delete("/posts/:postId/comments/:commentId", authMiddleware, async (req, res, next) => {
+    const { userId } = req.user
+    const { commentId } = req.params
 
-      const post = await prisma.posts.findFirst({
-        where: { postId: +postId },
-      });
+    const comment = await prisma.comments.findFirst({
+        where: { commentId: +commentId }
+    })
+        await prisma.comments.delete({
+            where: { UserId: userId, commentId: +commentId }
+        })
+        return res.status(200).json({ data: comment })
 
-      if (!post) {
-        return res.status(400).json({ message: "존재하지 않는 게시글입니다." });
-      }
+})
 
-      const comment = await prisma.comments.findFirst({
-        where: { commentId: +commentId },
-      });
-
-      if (!comment) {
-        return res.status(400).json({ message: "존재하지 않는 댓글입니다." });
-      }
-      await prisma.comments.delete({
-        where: { UserId: userId, commentId: +commentId },
-      });
-
-      return res.status(200).json({ message: "댓글이 삭제되었습니다." });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
 
 export default router;

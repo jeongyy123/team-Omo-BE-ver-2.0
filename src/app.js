@@ -48,6 +48,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+
 app.get("/", (req, res) => {
   return res.status(200).json({ message: "success" });
 });
@@ -61,8 +62,8 @@ app.use("/api", [
   LikeRouter,
   BookmarkRouter
 ]);
-app.use("/auth", [AuthRouter, UsersRouter]);
 
+app.use("/auth", [AuthRouter, UsersRouter]);
 app.use(ErrorMiddleware);
 
 app.listen(PORT, (req, res) => {

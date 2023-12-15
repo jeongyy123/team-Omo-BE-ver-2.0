@@ -47,6 +47,9 @@ jobs:
           echo COOKIE_SECRET=${{ secrets.COOKIE_SECRET }} >> .env
           cat .env
 
+      - name: Update database
+        run: npx prisma db push
+
       # S3로 보낼 압축 파일 생성
       - name: zip file
         run: zip -r CI.zip ./src/* ./prisma/* ./.yarn/* ./.env ./scripts/* ./appspec.yml ./.eslintrc.js ./.prettierrc.json ./.yarnrc ./package.json ./package-lock.json ./yarn.lock
