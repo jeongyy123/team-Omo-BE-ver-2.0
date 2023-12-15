@@ -203,24 +203,21 @@ router.get("/posts/:postId", async (req, res, next) => {
       },
     });
 
-    const imgUrlsArray = posts.imgUrl.split(","); // 여러 사진들 쪼개기
-    const paramsArray = imgUrlsArray.map((url) => ({
-      Bucket: bucketName,
-      Key: url,
-    }));
-
-    const signedUrlsArray = await Promise.all(
-      paramsArray.map(async (params) => {
-        const command = new GetObjectCommand(params);
-        const signedUrl = await getSignedUrl(s3, command);
-        return signedUrl;
-      })
-    );
-
-    posts.imgUrl = signedUrlsArray;
-
     if (!posts) {
       return res.status(400).json({ message: "존재하지않는 게시글입니다." });
+    }
+
+    const getProfileImageS31 = async (posts) => {
+      posts.map(async (post) => {
+        const params = {
+          Bucket: bucketName,
+          Key: post.User.imgUrl
+        }
+        const command = new GetObjectCommand(params);
+        const imgUrl = await getSignedUrl(s3, command);
+        console.log("imgUrl", imgUrl)
+        return post.User.imgUrl = imgUrl
+      })
     }
 
     await getProfileImageS3(posts.Comments);
