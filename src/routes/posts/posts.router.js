@@ -170,11 +170,20 @@ router.get("/posts/:postId", async (req, res, next) => {
         Location: {
           select: {
             address: true,
-            storeName: true
+            storeName: true,
+            latitude: true,
+            longitude: true,
+            Category: {
+              select: {
+                categoryId: true,
+                categoryName: true
+              }
+            }
           },
         },
         Comments: {
           select: {
+            commentId: true,
             content: true,
             createdAt: true,
             User: {
