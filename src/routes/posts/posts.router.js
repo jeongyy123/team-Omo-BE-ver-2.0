@@ -207,19 +207,6 @@ router.get("/posts/:postId", async (req, res, next) => {
       return res.status(400).json({ message: "존재하지않는 게시글입니다." });
     }
 
-    const getProfileImageS31 = async (posts) => {
-      posts.map(async (post) => {
-        const params = {
-          Bucket: bucketName,
-          Key: post.User.imgUrl
-        }
-        const command = new GetObjectCommand(params);
-        const imgUrl = await getSignedUrl(s3, command);
-        console.log("imgUrl", imgUrl)
-        return post.User.imgUrl = imgUrl
-      })
-    }
-
     await getProfileImageS3(posts.Comments);
     await getSingleImageS3(posts.User);
     await getImageS3(posts);
