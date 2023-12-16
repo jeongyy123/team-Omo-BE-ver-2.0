@@ -135,8 +135,13 @@ router.post("/login", async (req, res, next) => {
     });
 
     // 응답 헤더로 전달
+    res.setHeader(
+      "Access-Control-Expose-Headers",
+      "Authorization, RefreshToken",
+    );
     res.setHeader("Authorization", `Bearer ${accessToken}`);
-    res.setHeader("Refresh-Token", `Bearer ${refreshToken}`);
+    res.setHeader("RefreshToken", `Bearer ${refreshToken}`);
+    //
     res.status(200).json({ message: "로그인에 성공하였습니다." });
   } catch (error) {
     console.error(error);
@@ -151,34 +156,12 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
-/** 리프레시 토큰을 이용해서 엑세스 토큰을 재발급하는 API
- * Access Token의 만료를 감지하고, Refresh Token을 사용하여 새로운 Access Token을 발급하는 API
- */
+/** 리프레시 토큰을 이용해서 엑세스 토큰을 재발급하는 API */
 router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
   try {
-    // const refreshToken = req.headers.authorization;
-    // console.log("refreshToken >>>>>>>hey!!!!!!>>>>", refreshToken);
-    // const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
-    // const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
     const secretKey = process.env.SECRET_TOKEN_KEY;
     const { userId } = req.user;
     const { refreshToken } = req.headers;
-
-    // Refresh token의 검증
-    // if (!refreshToken) {
-    //   return res
-    //     .status(400)
-    //     .json({ errorMessage: "Refresh Token이 존재하지 않습니다." });
-    // }
-
-    // 서버에서 전달한 Refresh token이 맞는지 확인
-    // const decodedToken = validateToken(refreshToken, secretKey);
-
-    // if (!decodedToken) {
-    //   return res
-    //     .status(401)
-    //     .json({ errorMessage: "Refresh token이 유효하지 않습니다." });
-    // }
 
     // 서버에서도 실제 정보를 가지고 있는지 확인
     const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
@@ -195,17 +178,6 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
       });
     }
 
-    // Refresh Token이 블랙리스트에 있는지 확인
-    // const blockUserRefresh = await prisma.tokenBlacklist.findFirst({
-    //   where: {
-    //     token: refreshToken,
-    //   },
-    // });
-
-    // if (blockUserRefresh) {
-    //   return res.status(403).json({ errorMessage: "접근 권한이 없습니다" });
-    // }
-
     // 새로운 엑세스 토큰 발급 로직
     const newAccessToken = jwt.sign(
       {
@@ -215,8 +187,6 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
       secretKey,
       { expiresIn: "1h" },
     );
-
-    console.log("새롭게 재발급 받은 AccessToken >>>>>>>>>", newAccessToken);
 
     // 응답 헤더로 전달
     res.set("Authorization", `Bearer ${newAccessToken}`);
@@ -242,24 +212,41 @@ function validateToken(token, secretKey) {
   }
 }
 
-/** Logout API
- */
+/** Logout API */
 router.post("/logout", authMiddleware, async (req, res, next) => {
   try {
-    const accessToken = req.headers.authorization;
-    const refreshToken = req.headers.authorization;
+    const { userId } = req.user;
 
-    // 클라이언트가 보낸 accessToken과 refreshToken을 블랙리스트에 추가
-    await prisma.tokenBlacklist.createMany({
-      data: [{ token: accessToken }, { token: refreshToken }],
+    // 사용자가 가지고 있는 리프레시 토큰을 찾는다.
+    const findRefreshToken = await prisma.refreshTokens.findFirst({
+      where: {
+        UserId: +userId,
+      },
+      select: {
+        refreshToken: true,
+      },
     });
 
-    res.setHeader("Authorization", "");
-    res.setHeader("Refresh-Authorization", "");
+    if (findRefreshToken) {
+      const refreshToken = findRefreshToken.refreshToken;
 
-    return res.status(200).json({
-      message: "로그아웃 되었습니다.",
-    });
+      console.log("findRefreshToken >>>", refreshToken);
+
+      // 클라이언트가 보낸 accessToken과 refreshToken을 블랙리스트에 추가
+      await prisma.tokenBlacklist.createMany({
+        data: [{ token: refreshToken }],
+      });
+
+      // 클라이언트 측에서 로컬 스토리지 등에서 토큰을 삭제
+
+      return res.status(200).json({
+        message: "로그아웃 되었습니다.",
+      });
+    } else {
+      return res
+        .status(404)
+        .json({ errorMessage: "리프레시 토큰을 찾을 수 없습니다." });
+    }
   } catch (error) {
     console.error(error);
 
@@ -273,26 +260,46 @@ router.post("/logout", authMiddleware, async (req, res, next) => {
 router.delete("/withdraw", authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
-    const refreshToken = req.headers.authorization;
 
-    // 블랙리스트에 해당 토큰을 추가
-    await prisma.tokenBlacklist.create({
-      data: {
-        token: refreshToken,
-      },
-    });
-
-    // 회원 삭제
-    await prisma.users.delete({
+    // 사용자가 가지고 있는 리프레시 토큰을 찾는다.
+    const findRefreshToken = await prisma.refreshTokens.findFirst({
       where: {
-        userId: +userId,
+        UserId: +userId,
+      },
+      select: {
+        refreshToken: true,
       },
     });
 
-    return res.status(200).json({
-      message:
-        "회원탈퇴가 성공적으로 처리되었습니다. 이용해 주셔서 감사합니다.",
-    });
+    if (findRefreshToken) {
+      const refreshToken = findRefreshToken.refreshToken;
+
+      console.log("findRefreshToken >>>", refreshToken);
+
+      // 블랙리스트에 해당 토큰을 추가
+      await prisma.tokenBlacklist.create({
+        data: {
+          token: refreshToken,
+        },
+      });
+
+      // 회원 삭제
+      await prisma.users.delete({
+        where: {
+          userId: +userId,
+        },
+      });
+
+      return res.status(200).json({
+        message:
+          "회원탈퇴가 성공적으로 처리되었습니다. 이용해 주셔서 감사합니다.",
+      });
+    } else {
+      // try catch로 에러핸들링
+      return res
+        .status(404)
+        .json({ errorMessage: "리프레시 토큰을 찾을 수 없습니다." });
+    }
   } catch (error) {
     console.error(error);
 
