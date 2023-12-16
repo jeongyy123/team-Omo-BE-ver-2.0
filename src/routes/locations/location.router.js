@@ -23,11 +23,12 @@ const s3 = new S3Client({
 });
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+
 router.get("/locations", async (req, res, next) => {
   try {
     const { categoryName } = req.query;
-    const { latitude, longitude } = req.query;
-    const { districtName } = req.query;
+    const { latitude, longitude, qa, pa, ha, oa } = req.query;
+    // const { districtName } = req.query;
 
     const category = await prisma.categories.findFirst({ // 이거
       where: { categoryName }
@@ -35,10 +36,14 @@ router.get("/locations", async (req, res, next) => {
     // 위치 정보 가져오기
     const location = await prisma.locations.findMany({
       where: {
-        // District:
-        // {
-        //   districtName: districtName
-        // },
+        latitude: {
+          gte: qa,
+          lte: pa
+        },
+        longitude: {
+          gte: ha,
+          lte: oa
+        },
         ...(category?.categoryId && { CategoryId: category.categoryId } // 이거
         )
       },
@@ -159,76 +164,79 @@ router.get("/locations", async (req, res, next) => {
 }); 
 
 
-// // 인기게시글 
-// // 해당 하는 지역에 postId, latitude, longitude, 별점, content, likeCount
-// // commentCount, imgUrl, createdAt
-// router.get("/locations/:locationId", async (req, res, next) => {
-//   try {
-//   const { locationId } = req.params
+// 인기게시글 
+// 해당 하는 지역에 postId, latitude, longitude, 별점, content, likeCount
+// commentCount, imgUrl, createdAt
+router.get("/locations/:locationId", async (req, res, next) => {
+  try {
+  const { latitude, longitude } = req.query;
 
-//   const location = await prisma.locations.findFirst({
-//     where: { locationId: +locationId },
-//     select: { 
-//       address: true,
-//       starAvg: true,
-//       storeName: true,
-//       Posts: {
-//         select: {
-//           imgUrl: true
-//         }
-//       }
-//     }
-//   })
-//   const posts = await prisma.posts.findMany({
-//     where: {
-//       LocationId: +locationId
-//     },
-//     select: {
-//       User: {
-//         select: {
-//           nickname: true,
-//           imgUrl: true
-//         }
-//       },
-//       // Category: {
-//       //   select: {
-//       //     categoryName: true
-//       //   }
-//       },
-//       imgUrl: true,
-//       content: true,
-//       commentCount: true,
-//       likeCount: true,
-//       star: true,
-//       createdAt: true
-//     }
-//   })
-//   // 좋아요 순서로 정렬
-//   const sortedPosts = posts.sort((a, b) => b.likeCount - a.likeCount)
-// console.log("나일세", sortedPosts)
-//   const imgUrlsArray = sortedPosts.flatMap((post) => post.imgUrl.split(","));
-//   const paramsArray = imgUrlsArray.map((url) => ({
-//     Bucket: bucketName,
-//     Key: url,
-//   }));
+  const location = await prisma.locations.findFirst({
+    where: { locationId: +locationId },
+    select: { 
+      address: true,
+      starAvg: true,
+      storeName: true,
+      Posts: {
+        select: {
+          imgUrl: true
+        }
+      }
+    }
+  })
+  const posts = await prisma.posts.findMany({
+    where: {
+      LocationId: +locationId
+    },
+    select: {
+      imgUrl: true,
+      content: true,
+      commentCount: true,
+      likeCount: true,
+      star: true,
+      createdAt: true
+    },
+    select: {
+      User: {
+        select: {
+          nickname: true,
+          imgUrl: true
+        }
+      },
+      // Category: {
+      //   select: {
+      //     categoryName: true
+      //   }
+      },
 
-//   const signedUrlsArray = await Promise.all(
-//     paramsArray.map(async (params) => {
-//       const command = new GetObjectCommand(params);
-//       const signedUrl = await getSignedUrl(s3, command);
-//       return signedUrl;
-//     })
-//   );
-//     // imgUrl을 signedUrlsArray로 교체
-//     sortedPosts.forEach((post, index) => {
-//       post.imgUrl = signedUrlsArray[index];
-//     });
     
-//     return res.status(200).json({ location, posts: sortedPosts });
-//   } catch (error) {
-//     next (error)
-//   }
-// });
+  })
+  // 좋아요 순서로 정렬
+  const sortedPosts = posts.sort((a, b) => b.likeCount - a.likeCount)
+console.log("나일세", sortedPosts)
+  const imgUrlsArray = sortedPosts.flatMap((post) => post.imgUrl.split(","));
+  const paramsArray = imgUrlsArray.map((url) => ({
+    Bucket: bucketName,
+    Key: url,
+  }));
+
+  const signedUrlsArray = await Promise.all(
+    paramsArray.map(async (params) => {
+      const command = new GetObjectCommand(params);
+      const signedUrl = await getSignedUrl(s3, command);
+      return signedUrl;
+    })
+  );
+    // imgUrl을 signedUrlsArray로 교체
+    sortedPosts.forEach((post, index) => {
+      post.imgUrl = signedUrlsArray[index];
+    });
+    
+    return res.status(200).json({ location, posts: sortedPosts });
+  } catch (error) {
+    next (error)
+  }
+});
 
 
 export default router;
