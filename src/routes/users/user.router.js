@@ -134,10 +134,10 @@ router.post("/login", async (req, res, next) => {
       },
     });
 
-    return res.status(200).json({
-      accessToken: `Bearer ${accessToken}`,
-      refreshToken: `Bearer ${refreshToken}`,
-    });
+    // 응답 헤더로 전달
+    res.setHeader("Authorization", `Bearer ${accessToken}`);
+    res.setHeader("Refresh-Token", `Bearer ${refreshToken}`);
+    res.status(200).json({ message: "로그인에 성공하였습니다." });
   } catch (error) {
     console.error(error);
 
@@ -162,6 +162,7 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
     // const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
     const secretKey = process.env.SECRET_TOKEN_KEY;
     const { userId } = req.user;
+    const { refreshToken } = req.headers;
 
     // Refresh token의 검증
     // if (!refreshToken) {
@@ -180,19 +181,19 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
     // }
 
     // 서버에서도 실제 정보를 가지고 있는지 확인
-    // const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
-    //   where: {
-    //     refreshToken: refreshToken, // 전달받은 토큰
-    //   },
-    // });
+    const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
+      where: {
+        refreshToken: refreshToken, // 전달받은 토큰
+      },
+    });
 
-    // console.log("isRefreshTokenExist >>>>>>>>>>>", isRefreshTokenExist);
+    console.log("isRefreshTokenExist >>>>>>>>>>>", isRefreshTokenExist);
 
-    // if (!isRefreshTokenExist) {
-    //   return res.status(419).json({
-    //     errorMessage: "Refresh token의 정보가 서버에 존재하지 않습니다.",
-    //   });
-    // }
+    if (!isRefreshTokenExist) {
+      return res.status(419).json({
+        errorMessage: "Refresh token의 정보가 서버에 존재하지 않습니다.",
+      });
+    }
 
     // Refresh Token이 블랙리스트에 있는지 확인
     // const blockUserRefresh = await prisma.tokenBlacklist.findFirst({
@@ -217,7 +218,12 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
 
     console.log("새롭게 재발급 받은 AccessToken >>>>>>>>>", newAccessToken);
 
-    return res.status(200).json({ accessToken: `Bearer ${newAccessToken}` });
+    // 응답 헤더로 전달
+    res.set("Authorization", `Bearer ${newAccessToken}`);
+
+    return res
+      .status(200)
+      .json({ message: "엑세스 토큰이 정상적으로 재발급되었습니다." });
   } catch (error) {
     console.error(error);
 
@@ -248,7 +254,8 @@ router.post("/logout", authMiddleware, async (req, res, next) => {
       data: [{ token: accessToken }, { token: refreshToken }],
     });
 
-    res.clearCookie(refreshToken);
+    res.setHeader("Authorization", "");
+    res.setHeader("Refresh-Authorization", "");
 
     return res.status(200).json({
       message: "로그아웃 되었습니다.",
@@ -292,26 +299,6 @@ router.delete("/withdraw", authMiddleware, async (req, res, next) => {
     return res
       .status(500)
       .json({ errorMessage: "서버에서 오류가 발생하였습니다." });
-  }
-});
-
-// 테스트용. 모든 유저들 조회
-router.get("/users/all", async (req, res, next) => {
-  try {
-    const users = await prisma.users.findMany({
-      select: {
-        nickname: true,
-        email: true,
-        imgUrl: true,
-      },
-    });
-
-    console.log(users);
-
-    return res.status(200).json({ data: users });
-  } catch (error) {
-    console.error("에러 발생: ", error);
-    return res.status(500).json({ error: "서버에서 에러가 발생했습니다." });
   }
 });
 
