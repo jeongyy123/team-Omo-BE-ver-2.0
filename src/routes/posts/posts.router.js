@@ -14,7 +14,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 import crypto from "crypto";
-import jimp from "jimp";
+
 
 const router = express.Router();
 
@@ -203,22 +203,6 @@ router.get("/posts/:postId", async (req, res, next) => {
         },
       },
     });
-
-    const imgUrlsArray = posts.imgUrl.split(","); // 여러 사진들 쪼개기
-    const paramsArray = imgUrlsArray.map((url) => ({
-      Bucket: bucketName,
-      Key: url,
-    }));
-
-    const signedUrlsArray = await Promise.all(
-      paramsArray.map(async (params) => {
-        const command = new GetObjectCommand(params);
-        const signedUrl = await getSignedUrl(s3, command);
-        return signedUrl;
-      })
-    );
-
-    posts.imgUrl = signedUrlsArray;
 
     if (!posts) {
       return res.status(400).json({ message: "존재하지않는 게시글입니다." });
