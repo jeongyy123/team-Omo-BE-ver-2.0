@@ -69,7 +69,7 @@ export default async function (req, res, next) {
     }
 
     req.user = user;
-
+    console.log("req.user",user)
     next();
     // }
   } catch (error) {

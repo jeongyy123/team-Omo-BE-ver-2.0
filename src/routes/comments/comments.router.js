@@ -1,15 +1,44 @@
-import express from "express"
+import express from "express";
 import authMiddleware from "../../middlewares/auth.middleware.js";
-import { prisma } from '../../utils/prisma/index.js';
+import { prisma } from "../../utils/prisma/index.js";
+import multer from "multer";
+import crypto from "crypto";
 
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
+
+//dotenv.config();
+
+// To get a complately unique name
+const randomImageName = (bytes = 32) =>
+  crypto.randomBytes(bytes).toString("hex");
+
+const imageName = randomImageName(); // file name will be random
+
+const bucketName = process.env.BUCKET_NAME;
+const bucketRegion = process.env.BUCKET_REGION;
+const accessKey = process.env.ACCESS_KEY;
+const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: process.env.ACCESS_KEY,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+  },
+  region: bucketRegion,
+});
 
 
 const router = express.Router();
 
-
-
 // comment POST API
-router.post("/posts/:postId/comments", authMiddleware, async (req, res, next) => {
+router.post(
+  "/posts/:postId/comments",
+  authMiddleware,
+  async (req, res, next) => {
     try {
     const { userId } = req.user
     const { postId } = req.params
@@ -19,7 +48,7 @@ router.post("/posts/:postId/comments", authMiddleware, async (req, res, next) =>
         where: { postId: +postId }
     })
 
-    const comment = await prisma.comments.create({
+      const comment = await prisma.comments.create({
         data: {
             UserId: userId,
             PostId: +postId,
@@ -33,34 +62,53 @@ router.post("/posts/:postId/comments", authMiddleware, async (req, res, next) =>
     }catch (error) {
         next(error)
     }
-})
-
+  },
+);
 
 // comment GET API
 router.get("/posts/:postId/comments", async (req, res, next) => {
-    try {
-    const { postId } = req.params
+  try {
+    const { postId } = req.params;
 
     const post = await prisma.posts.findFirst({
-        where: { postId: +postId }
-    })
+      where: { postId: +postId },
+    });
     if (!post) {
-        return res.status(404).json({ errorMessage: "존재하지 않는 게시글 입니다." })
+      return res
+        .status(404)
+        .json({ errorMessage: "존재하지 않는 게시글 입니다." });
     }
     // 게시글에 보이는 댓글 총 갯수
     const commentCount = await prisma.comments.count({
-        where: { PostId: +postId }
+      where: { PostId: +postId },
     });
 
     await prisma.posts.update({
-        where: { postId: +postId },
-        data: { commentCount }
+      where: { postId: +postId },
+      data: { commentCount },
     });
     // 댓글 전부 조회
     const comment = await prisma.comments.findMany({
         where: { PostId: +postId },
+        select: {
+            User: {
+                nickname: true,
+                imgUrl: true
+            }
+        },
         orderBy: { createdAt: "desc" }
     })
+
+    const getObjectParams = {
+        Bucket: bucketName, // 버킷 이름
+        Key: userPosts.imgUrl, // 이미지 키
+      };
+
+      // User GetObjectCommand to create the url
+      const command = new GetObjectCommand(getObjectParams);
+      const url = await getSignedUrl(s3, command);
+      userPosts.imgUrl = url;
+
     return res.status(200).json({ data: comment })
 }catch (error) {
     next(error)

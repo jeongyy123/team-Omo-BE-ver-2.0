@@ -48,7 +48,7 @@ model Posts {
   LocationId   Int       @map("LocationId")
   content      String    @map("content") @db.Text
   imgUrl       String    @map("imgUrl") @db.Text
-  likeCount    Int       @map("likeCount")
+  likeCount    Int       @default(0) @map("likeCount")
   commentCount Int       @default(0) @map("commentCount")
   star         Int       @map("star")
   createdAt    DateTime  @default(now()) @map("createdAt")
@@ -83,7 +83,7 @@ model Bookmark {
   UserId      Int @map("UserId")
   LocationId  Int @map("LocationId")
   createdAt   DateTime @default(now()) @map("createdAt")
-
+  
   User     Users     @relation(fields: [UserId], references: [userId], onDelete: Cascade)
   Location Locations @relation(fields: [LocationId], references: [locationId], onDelete: Cascade)
 
@@ -104,7 +104,7 @@ model Locations {
   locationId  Int     @id @default(autoincrement()) @map("locationId")
   CategoryId  Int     @map("CategoryId")
   DistrictId  Int     @map("DistrictId")
-  UserId      Int     @map("UserId") //여기
+  UserId      Int     @map("UserId")
   storeName   String  @map("storeName")
   address     String  @map("address")
   latitude    String  @map("latitude")
@@ -113,7 +113,7 @@ model Locations {
 
   Category Categories @relation(fields: [CategoryId], references: [categoryId], onDelete: Cascade)
   District Districts  @relation(fields: [DistrictId], references: [districtId], onDelete: Cascade)
-  User Users  @relation(fields: [UserId], references: [userId], onDelete: Cascade) //여기
+  User Users  @relation(fields: [UserId], references: [userId], onDelete: Cascade)
 
   Posts    Posts[]
   Bookmark Bookmark[]
