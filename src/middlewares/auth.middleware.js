@@ -9,9 +9,10 @@ export default async function (req, res, next) {
     // console.log("req.headers", req.headers);
     // req.headers에서 authorization과 refresh-token 헤더를 읽음
     // host, cookie, user-agent, authorization, accept, content-length
-    const { authorization, "refresh-token": refreshToken } = req.headers;
+    const { authorization, refreshToken } = req.headers;
     const accessKey = process.env.SECRET_TOKEN_KEY;
 
+    const [tokenType, token] = authorization.split(" ");
 
     // 위 토큰이 실제로 존재하는지 확인한다.
     if (!token) {
