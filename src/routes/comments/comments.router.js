@@ -2,6 +2,7 @@ import express from "express";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import { prisma } from "../../utils/prisma/index.js";
 import multer from "multer";
+import { createComments } from "../../validations/comments.validation.js"
 import crypto from "crypto";
 
 import {
