@@ -25,35 +25,45 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 router.get("/locations", async (req, res, next) => {
   try {
+    const { categoryName } = req.query;
     const { latitude, longitude } = req.query;
     const { districtName } = req.query;
+
+    const category = await prisma.categories.findFirst({ // 이거
+      where: { categoryName }
+    })
     // 위치 정보 가져오기
     const location = await prisma.locations.findMany({
-      where: { District: { districtName: districtName } },
+      where: {
+        // District:
+        // {
+        //   districtName: districtName
+        // },
+        ...(category?.categoryId && { CategoryId: category.categoryId } // 이거
+        )
+      },
       select: {
         locationId: true,
+        storeName: true,
         address: true,
         latitude: true,
         longitude: true,
-        // starAvg: true,
-        Posts: {
-          select: {
-            postId: true,
-            imgUrl: true,
-          },
-          // skip: 1,
-          take: 1 
-        },
+        starAvg: true,
         Category: {
           select: {
             categoryName: true,
           },
         },
+        Posts: {
+          select: {
+            postId: true,
+            star: true,
+            imgUrl: true,
+          }
+        },
       },
     });
 
-    
-    // console.log("이것", location)
     // 거리 계산 및 정렬
     if (latitude && longitude) {
       const start = {
@@ -63,26 +73,43 @@ router.get("/locations", async (req, res, next) => {
       // const postCount = await prisma.posts.count({
       //   where: { locationId: +locationId }
       // })
-      const locationsWithDistance = location
-        .map((loc) => {
-          return {
-            ...loc,
-            distance: haversine(
-              start,
-              { latitude: loc.latitude, longitude: loc.longitude },
-              { unit: "meter" },
-            ),
-          };
-        })
-        .sort((a, b) => a.distance - b.distance);
-      // console.log("location", locationsWithDistance);
+      // const locationsWithDistance = location
+      //   .map((loc) => {
+      //     return {
+      //       ...loc,
+      //       distance: haversine(
+      //         start,
+      //         { latitude: loc.latitude, longitude: loc.longitude },
+      //         { unit: "meter" },
+      //       ),
+      //     };
+      //   })
+      //   .sort((a, b) => a.distance - b.distance);
+
+      const locationsWithDistance = await Promise.all(location.map(async (loc) => {
+        const postCount = await prisma.posts.count({
+          where: { LocationId: loc.locationId },
+        });
+
+        const distance = haversine(
+          start,
+          { latitude: loc.latitude, longitude: loc.longitude },
+          { unit: "meter" }
+        );
+
+        return {
+          ...loc,
+          distance,
+          postCount,
+        }
+      }));
+
       // 이미지 배열로 반환하는 로직
-      const imgUrlsArray = locationsWithDistance.flatMap((location) =>
+      const imgUrlsArray = locationsWithDistance.sort((a, b) => a.distance - b.distance)
+      .flatMap((location) =>
         location.Posts.map((post) => post.imgUrl)
       );
 
-      console.log("imgarray>>>>>>>>>>", imgUrlsArray);
-      
       // const paramsArray = imgUrlsArray.map((url) => ({
       //   Bucket: bucketName,
       //   Key: url
@@ -93,23 +120,16 @@ router.get("/locations", async (req, res, next) => {
     Key: url
   }))
 );
-      
-    
-      console.log("paramsArray", paramsArray)
 
       const signedUrlsArray = await Promise.all(
         paramsArray.map(async (params) => {
           const commands = new GetObjectCommand(params);
-          console.log("commands", commands);
           const urls = await getSignedUrl(s3, commands);
-          console.log("img", urls)
           return urls;
         })
       )
 
 
-      
-      // console.log("이곳", signedUrlsArray)
       const locationsWithSignedUrls = locationsWithDistance.map(
         (location, index) => ({
           ...location,
