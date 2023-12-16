@@ -12,9 +12,6 @@ export default async function (req, res, next) {
     const { authorization, "refresh-token": refreshToken } = req.headers;
     const accessKey = process.env.SECRET_TOKEN_KEY;
 
-    const [tokenType, token] = authorization.split(" ");
-
-    console.log("받은 token >>>>>>>", token);
 
     // 위 토큰이 실제로 존재하는지 확인한다.
     if (!token) {
@@ -69,7 +66,7 @@ export default async function (req, res, next) {
     }
 
     req.user = user;
-    console.log("req.user",user)
+    console.log("req.user", user);
     next();
     // }
   } catch (error) {
