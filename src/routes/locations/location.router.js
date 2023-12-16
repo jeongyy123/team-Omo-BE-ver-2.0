@@ -8,16 +8,12 @@ import dotenv from "dotenv";
 import {getManyImagesS3, getSingleImageS3, getImageS3} from "../../utils/getImageS3.js"
 
 // import authMiddleware from "../../middlewares/auth.middleware.js";
-
 const router = express.Router();
-
 dotenv.config();
-
 const bucketName = process.env.BUCKET_NAME;
 const region = process.env.BUCKET_REGION;
 const accessKeyId = process.env.ACCESS_KEY;
 const secretAccessKey = process.env.SECRET_ACCESS_KEY;
-
 const s3 = new S3Client({
   credentials: {
     accessKeyId,
@@ -25,16 +21,12 @@ const s3 = new S3Client({
   },
   region,
 });
-
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
-
 router.get("/locations", async (req, res, next) => {
   try {
     const { latitude, longitude } = req.query;
     const { districtName } = req.query;
-
     // 위치 정보 가져오기
     const location = await prisma.locations.findMany({
       where: { District: { districtName: districtName } },
@@ -68,11 +60,9 @@ router.get("/locations", async (req, res, next) => {
         latitude: +latitude,
         longitude: +longitude,
       };
-
       // const postCount = await prisma.posts.count({
       //   where: { locationId: +locationId }
       // })
-
       const locationsWithDistance = location
         .map((loc) => {
           return {
@@ -85,10 +75,8 @@ router.get("/locations", async (req, res, next) => {
           };
         })
         .sort((a, b) => a.distance - b.distance);
-
       // console.log("location", locationsWithDistance);
       // 이미지 배열로 반환하는 로직
-
       const imgUrlsArray = locationsWithDistance.flatMap((location) =>
         location.Posts.map((post) => post.imgUrl)
       );
@@ -146,7 +134,7 @@ router.get("/locations", async (req, res, next) => {
       return res.status(200).json({ location });
 
   } catch (error) {
-    next (error); 
+    next(error);
   }
 }); 
 
