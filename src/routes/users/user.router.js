@@ -12,6 +12,30 @@ import {
 dotenv.config();
 const router = express.Router();
 
+/**
+ * @swagger
+ * paths:
+ *  /auth/register:
+ *    post:
+ *      summary: "Register"
+ *      description: "Endpoint for user registration"
+ *      tags: [Users]
+ *      responses:
+ *        "200":
+ *          description: 회원 가입 성공
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                    ok:
+ *                      type: boolean
+ *                    users:
+ *                      type: object
+ *                      example:
+ *                          message: "회원가입이 완료되었습니다."
+ */
+
 /** Register API */
 router.post("/register", async (req, res, next) => {
   try {
@@ -71,6 +95,30 @@ router.post("/register", async (req, res, next) => {
       .json({ errorMessage: "서버에서 오류가 발생하였습니다." });
   }
 });
+
+/**
+ * @swagger
+ * paths:
+ *  /auth/login:
+ *    post:
+ *      summary: "Login"
+ *      description: "Endpoint for user login"
+ *      tags: [Users]
+ *      responses:
+ *        "200":
+ *          description: 회원 가입 성공
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                    ok:
+ *                      type: boolean
+ *                    users:
+ *                      type: object
+ *                      example:
+ *                          message: "회원가입이 완료되었습니다."
+ */
 
 /** Login API */
 router.post("/login", async (req, res, next) => {
@@ -157,6 +205,30 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * paths:
+ *  /auth/tokens/refresh:
+ *    post:
+ *      summary: "Refresh Token"
+ *      description: "Endpoint for refreshing access tokens"
+ *      tags: [Users]
+ *      responses:
+ *        "200":
+ *          description: 회원 가입 성공
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                    ok:
+ *                      type: boolean
+ *                    users:
+ *                      type: object
+ *                      example:
+ *                          message: "회원가입이 완료되었습니다."
+ */
+
 /** 리프레시 토큰을 이용해서 엑세스 토큰을 재발급하는 API */
 router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
   try {
@@ -212,6 +284,30 @@ function validateToken(token, secretKey) {
   }
 }
 
+/**
+ * @swagger
+ * paths:
+ *  /auth/logout:
+ *    post:
+ *      summary: "Logout"
+ *      description: "Endpoint for user logout"
+ *      tags: [Users]
+ *      responses:
+ *        "200":
+ *          description: 회원 가입 성공
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                    ok:
+ *                      type: boolean
+ *                    users:
+ *                      type: object
+ *                      example:
+ *                          message: "회원가입이 완료되었습니다."
+ */
+
 /** Logout API */
 router.post("/logout", authMiddleware, async (req, res, next) => {
   try {
@@ -235,7 +331,31 @@ router.post("/logout", authMiddleware, async (req, res, next) => {
   }
 });
 
-/** 회원탈퇴 API */
+/**
+ * @swagger
+ * paths:
+ *  /auth/withdraw:
+ *    post:
+ *      summary: "User account deletion"
+ *      description: "Endpoint for user account deletion"
+ *      tags: [Users]
+ *      responses:
+ *        "200":
+ *          description: 회원 가입 성공
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                    ok:
+ *                      type: boolean
+ *                    users:
+ *                      type: object
+ *                      example:
+ *                          message: "회원가입이 완료되었습니다."
+ */
+
+/** Account Deletion API */
 router.delete("/withdraw", authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;

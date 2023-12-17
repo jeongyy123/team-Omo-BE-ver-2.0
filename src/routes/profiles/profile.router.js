@@ -38,6 +38,30 @@ const s3 = new S3Client({
   region: bucketRegion,
 });
 
+/**
+ * @swagger
+ * paths:
+ *  /api/users/self/profile:
+ *    post:
+ *      summary: "Edit Profile"
+ *      description: "Endpoint for editing user profile"
+ *      tags: [Profiles]
+ *      responses:
+ *        "200":
+ *          description: 회원 가입 성공
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                    ok:
+ *                      type: boolean
+ *                    users:
+ *                      type: object
+ *                      example:
+ *                          message: "회원가입이 완료되었습니다."
+ */
+
 // Profile API
 router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
   try {
@@ -119,6 +143,30 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * paths:
+ *  /api/users/self/profile/bookmark:
+ *    post:
+ *      summary: "Bookmark Profile"
+ *      description: "Endpoint for bookmarking user profile"
+ *      tags: [Profiles]
+ *      responses:
+ *        "200":
+ *          description: 회원 가입 성공
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                    ok:
+ *                      type: boolean
+ *                    users:
+ *                      type: object
+ *                      example:
+ *                          message: "회원가입이 완료되었습니다."
+ */
+
 // 마이페이지 북마크
 router.get(
   "/users/self/profile/bookmark",
@@ -190,6 +238,30 @@ router.get(
 const storage = multer.memoryStorage();
 // multer로 업로드 기능을 생성. 항상 이미지를 메모리에 저장하도록 하기 위함이다.
 const upload = multer({ storage: storage });
+
+/**
+ * @swagger
+ * paths:
+ *  /api/users/self/profile/edit:
+ *    post:
+ *      summary: "Edit Profile"
+ *      description: "Endpoint for editing user profile"
+ *      tags: [Profiles]
+ *      responses:
+ *        "200":
+ *          description: 회원 가입 성공
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                    ok:
+ *                      type: boolean
+ *                    users:
+ *                      type: object
+ *                      example:
+ *                          message: "회원가입이 완료되었습니다."
+ */
 
 // 마이페이지 내 정보 수정
 router.patch(
