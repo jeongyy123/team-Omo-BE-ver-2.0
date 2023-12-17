@@ -16,7 +16,7 @@ const router = express.Router();
  * @swagger
  * tags:
  *   - name: Users
- *     description: User registration/login/logout/account deletion/access token reissue
+ *     description: 회원가입/로그인/로그아웃/회원탈퇴/엑세스 토큰 재발급
  */
 
 /**

@@ -42,7 +42,7 @@ const s3 = new S3Client({
  * @swagger
  * tags:
  *   - name: Profiles
- *     description: Profile viewing/profile information modification/bookmark viewing/posts authored by user
+ *     description: 프로필 조회/프로필 수정/유저의 북마크 조회/유저가 작성한 게시글의 목록 조회
  */
 
 /**
@@ -50,14 +50,12 @@ const s3 = new S3Client({
  * paths:
  *  /users/self/profile:
  *    get:
- *      summary: Retrieve User Profile Information
- *      description: Retrieves profile information for the authenticated user
+ *      summary: 프로필 조회
+ *      description: 로그인에 성공한 사용자는 자신의 프로필을 조회할 수 있다
  *      tags: [Users]
- *      security:
- *        - BearerAuth: []
  *      responses:
  *        '200':
- *          description: Successful retrieval of user profile information
+ *          description: 사용자의 정보를 성공적으로 가져왔을 경우
  *          content:
  *            application/json:
  *              schema:
@@ -65,31 +63,31 @@ const s3 = new S3Client({
  *                properties:
  *                  postsCount:
  *                    type: integer
- *                    description: Number of posts authored by the user
+ *                    description: 사용자 자신이 작성한 게시글의 갯수
  *                    example: 5
  *                  data:
  *                    type: object
  *                    properties:
  *                      email:
  *                        type: string
- *                        description: User email
+ *                        description: 사용자 이메일 주소
  *                      nickname:
  *                        type: string
- *                        description: User nickname
+ *                        description: 사용자 닉네님
  *                      imgUrl:
  *                        type: string
- *                        description: URL to user profile image
+ *                        description: 사용자의 프로필 이미지 주소(이미지는 S3에 저장)
  *                      Posts:
  *                        type: array
- *                        description: Array of user's posts
+ *                        description: 사용자의 게시글 목록
  *                        items:
  *                          type: object
  *                          properties:
  *                            postId:
  *                              type: integer
- *                              description: ID of the post
+ *                              description: 각 게시글의 고유 번호
  *        '500':
- *          description: Internal server error
+ *          description: 서버에서 에러가 발생했을 경우
  *          content:
  *            application/json:
  *              schema:
@@ -97,6 +95,7 @@ const s3 = new S3Client({
  *                properties:
  *                  errorMessage:
  *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다.
  */
 
 // Profile API
@@ -185,14 +184,12 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
  * paths:
  *  /users/self/profile/bookmark:
  *    get:
- *      summary: Retrieve User's Bookmarked Places
- *      description: Retrieves bookmarked places for the authenticated user
+ *      summary: 사용자가 북마크한 장소들의 목록들을 불러온다
+ *      description: 로그인에 성공한 사용자는 자신이 북마크한 장소들의 목록들을 조회할 수 있다
  *      tags: [Users]
- *      security:
- *        - BearerAuth: []
  *      responses:
  *        '200':
- *          description: Successful retrieval of user's bookmarked places
+ *          description: 사용자가 북마크한 장소들의 목록을 성공적으로 불러왔을 경우
  *          content:
  *            application/json:
  *              schema:
@@ -200,11 +197,11 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
  *                properties:
  *                  bookmarkCount:
  *                    type: integer
- *                    description: Number of places bookmarked by the user
+ *                    description: 사용자가 북마크한 장소들의 객수
  *                    example: 10
  *                  data:
  *                    type: array
- *                    description: Array of user's bookmarked places
+ *                    description: 사용자가 북마크한 장소들의 목록들
  *                    items:
  *                      type: object
  *                      properties:
@@ -213,33 +210,33 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
  *                          properties:
  *                            locationId:
  *                              type: integer
- *                              description: ID of the location
+ *                              description: 북마크한 장소의 고유 번호
  *                            storeName:
  *                              type: string
- *                              description: Name of the store
+ *                              description: 북마크한 장소 이름
  *                            address:
  *                              type: string
- *                              description: Address of the location
+ *                              description: 북마크한 장소의 주소
  *                            starAvg:
  *                              type: number
- *                              description: Average star rating of the location
+ *                              description: 해당 장소의 별점 평균
  *                            Posts:
  *                              type: array
- *                              description: Array of posts associated with the location
+ *                              description: 장소에 관련관 게시글들의 목록
  *                              items:
  *                                type: object
  *                                properties:
  *                                  LocationId:
  *                                    type: integer
- *                                    description: ID of the location
+ *                                    description: 장소 고유의 번호
  *                                  likeCount:
  *                                    type: integer
- *                                    description: Count of likes for the post
+ *                                    description: 해당하는 장소에 관련된 게시글의 좋아요 갯수
  *                                  imgUrl:
  *                                    type: string
- *                                    description: URL to the image associated with the post
+ *                                    description: 해당하는 장소의 이미지 주소
  *        '500':
- *          description: Internal server error
+ *          description: 서버에서 에러가 발생했을 경우
  *          content:
  *            application/json:
  *              schema:
@@ -247,6 +244,7 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
  *                properties:
  *                  errorMessage:
  *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다.
  */
 
 // 마이페이지 북마크
@@ -326,11 +324,9 @@ const upload = multer({ storage: storage });
  * paths:
  *  /users/self/profile/edit:
  *    patch:
- *      summary: Update User Profile
- *      description: Updates the authenticated user's profile information
+ *      summary: 사용자 프로필 수정
+ *      description: 사용자는 자신의 프로필을 수정할 수 있다
  *      tags: [Users]
- *      security:
- *        - BearerAuth: []
  *      requestBody:
  *        required: true
  *        content:
@@ -340,20 +336,20 @@ const upload = multer({ storage: storage });
  *              properties:
  *                nickname:
  *                  type: string
- *                  description: New nickname of the user
+ *                  description: 새로운 닉네임
  *                newPassword:
  *                  type: string
- *                  description: New password of the user
+ *                  description: 새로운 비밀번호
  *                confirmedPassword:
  *                  type: string
- *                  description: Confirmation of the new password
+ *                  description: 입력된 새로운 비밀번호 재확인
  *                imgUrl:
  *                  type: string
  *                  format: binary
- *                  description: New image file for user's profile picture
+ *                  description: 프로필 사진 수정하기 위해서 업로드
  *      responses:
  *        '201':
- *          description: User profile successfully updated
+ *          description: 프로필이 성공적으로 수정되었을 경우
  *          content:
  *            application/json:
  *              schema:
@@ -361,8 +357,9 @@ const upload = multer({ storage: storage });
  *                properties:
  *                  message:
  *                    type: string
+ *                    message: 회원정보가 수정되었습니다.
  *        '400':
- *          description: Bad request, invalid input data
+ *          description: 입력한 두 비밀번호가 일치하지 않을 경우 (new password !== repeat password)
  *          content:
  *            application/json:
  *              schema:
@@ -370,8 +367,9 @@ const upload = multer({ storage: storage });
  *                properties:
  *                  errorMessage:
  *                    type: string
+ *                    example: 비밀번호가 일치하지 않습니다. 다시 확인해주세요.
  *        '401':
- *          description: Unauthorized, previous password entered matches new password
+ *          description: 사용자가 입력한 비밀번호가 이전의 비밀번호와 같은 경우
  *          content:
  *            application/json:
  *              schema:
@@ -379,8 +377,9 @@ const upload = multer({ storage: storage });
  *                properties:
  *                  errorMessage:
  *                    type: string
+ *                    message: 새 비밀번호를 입력해 주세요
  *        '500':
- *          description: Internal server error
+ *          description: 서버에서 에러가 발생하였을 경우
  *          content:
  *            application/json:
  *              schema:
@@ -388,6 +387,7 @@ const upload = multer({ storage: storage });
  *                properties:
  *                  errorMessage:
  *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다
  */
 
 // 마이페이지 내 정보 수정

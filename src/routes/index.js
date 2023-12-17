@@ -8,14 +8,14 @@ const router = express.Router();
  * @swagger
  * tags:
  *   - name: Users
- *     description: User registration/login/logout/account deletion/access token reissue
+ *     description: 회원가입/로그인/로그아웃/회원탈퇴/엑세스 토큰 재발급
  */
 
 /**
  * @swagger
  * tags:
  *   - name: Profiles
- *     description: Profile viewing/profile information modification/bookmark viewing/posts authored by user
+ *     description: 프로필 조회/프로필 수정/유저의 북마크 조회/유저가 작성한 게시글의 목록 조회
  */
 
 router.use("/users", users);
