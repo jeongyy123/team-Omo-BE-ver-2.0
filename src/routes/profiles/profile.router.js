@@ -40,26 +40,62 @@ const s3 = new S3Client({
 
 /**
  * @swagger
+ * tags:
+ *   - name: Profiles
+ *     description: 프로필 조회/프로필 수정/유저의 북마크 조회/유저가 작성한 게시글의 목록 조회
+ */
+
+/**
+ * @swagger
  * paths:
- *  /api/users/self/profile:
- *    post:
- *      summary: "Edit Profile"
- *      description: "Endpoint for editing user profile"
- *      tags: [Profiles]
+ *  /users/self/profile:
+ *    get:
+ *      summary: 프로필 조회
+ *      description: 로그인에 성공한 사용자는 자신의 프로필을 조회할 수 있다
+ *      tags: [Users]
  *      responses:
- *        "200":
- *          description: 회원 가입 성공
+ *        '200':
+ *          description: 사용자의 정보를 성공적으로 가져왔을 경우
  *          content:
  *            application/json:
  *              schema:
  *                type: object
  *                properties:
- *                    ok:
- *                      type: boolean
- *                    users:
- *                      type: object
- *                      example:
- *                          message: "회원가입이 완료되었습니다."
+ *                  postsCount:
+ *                    type: integer
+ *                    description: 사용자 자신이 작성한 게시글의 갯수
+ *                    example: 5
+ *                  data:
+ *                    type: object
+ *                    properties:
+ *                      email:
+ *                        type: string
+ *                        description: 사용자 이메일 주소
+ *                      nickname:
+ *                        type: string
+ *                        description: 사용자 닉네님
+ *                      imgUrl:
+ *                        type: string
+ *                        description: 사용자의 프로필 이미지 주소(이미지는 S3에 저장)
+ *                      Posts:
+ *                        type: array
+ *                        description: 사용자의 게시글 목록
+ *                        items:
+ *                          type: object
+ *                          properties:
+ *                            postId:
+ *                              type: integer
+ *                              description: 각 게시글의 고유 번호
+ *        '500':
+ *          description: 서버에서 에러가 발생했을 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다.
  */
 
 // Profile API
@@ -146,25 +182,69 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
 /**
  * @swagger
  * paths:
- *  /api/users/self/profile/bookmark:
- *    post:
- *      summary: "Bookmark Profile"
- *      description: "Endpoint for bookmarking user profile"
- *      tags: [Profiles]
+ *  /users/self/profile/bookmark:
+ *    get:
+ *      summary: 사용자가 북마크한 장소들의 목록들을 불러온다
+ *      description: 로그인에 성공한 사용자는 자신이 북마크한 장소들의 목록들을 조회할 수 있다
+ *      tags: [Users]
  *      responses:
- *        "200":
- *          description: 회원 가입 성공
+ *        '200':
+ *          description: 사용자가 북마크한 장소들의 목록을 성공적으로 불러왔을 경우
  *          content:
  *            application/json:
  *              schema:
  *                type: object
  *                properties:
- *                    ok:
- *                      type: boolean
- *                    users:
+ *                  bookmarkCount:
+ *                    type: integer
+ *                    description: 사용자가 북마크한 장소들의 객수
+ *                    example: 10
+ *                  data:
+ *                    type: array
+ *                    description: 사용자가 북마크한 장소들의 목록들
+ *                    items:
  *                      type: object
- *                      example:
- *                          message: "회원가입이 완료되었습니다."
+ *                      properties:
+ *                        Location:
+ *                          type: object
+ *                          properties:
+ *                            locationId:
+ *                              type: integer
+ *                              description: 북마크한 장소의 고유 번호
+ *                            storeName:
+ *                              type: string
+ *                              description: 북마크한 장소 이름
+ *                            address:
+ *                              type: string
+ *                              description: 북마크한 장소의 주소
+ *                            starAvg:
+ *                              type: number
+ *                              description: 해당 장소의 별점 평균
+ *                            Posts:
+ *                              type: array
+ *                              description: 장소에 관련관 게시글들의 목록
+ *                              items:
+ *                                type: object
+ *                                properties:
+ *                                  LocationId:
+ *                                    type: integer
+ *                                    description: 장소 고유의 번호
+ *                                  likeCount:
+ *                                    type: integer
+ *                                    description: 해당하는 장소에 관련된 게시글의 좋아요 갯수
+ *                                  imgUrl:
+ *                                    type: string
+ *                                    description: 해당하는 장소의 이미지 주소
+ *        '500':
+ *          description: 서버에서 에러가 발생했을 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다.
  */
 
 // 마이페이지 북마크
@@ -242,25 +322,72 @@ const upload = multer({ storage: storage });
 /**
  * @swagger
  * paths:
- *  /api/users/self/profile/edit:
- *    post:
- *      summary: "Edit Profile"
- *      description: "Endpoint for editing user profile"
- *      tags: [Profiles]
+ *  /users/self/profile/edit:
+ *    patch:
+ *      summary: 사용자 프로필 수정
+ *      description: 사용자는 자신의 프로필을 수정할 수 있다
+ *      tags: [Users]
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          multipart/form-data:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                nickname:
+ *                  type: string
+ *                  description: 새로운 닉네임
+ *                newPassword:
+ *                  type: string
+ *                  description: 새로운 비밀번호
+ *                confirmedPassword:
+ *                  type: string
+ *                  description: 입력된 새로운 비밀번호 재확인
+ *                imgUrl:
+ *                  type: string
+ *                  format: binary
+ *                  description: 프로필 사진 수정하기 위해서 업로드
  *      responses:
- *        "200":
- *          description: 회원 가입 성공
+ *        '201':
+ *          description: 프로필이 성공적으로 수정되었을 경우
  *          content:
  *            application/json:
  *              schema:
  *                type: object
  *                properties:
- *                    ok:
- *                      type: boolean
- *                    users:
- *                      type: object
- *                      example:
- *                          message: "회원가입이 완료되었습니다."
+ *                  message:
+ *                    type: string
+ *                    message: 회원정보가 수정되었습니다.
+ *        '400':
+ *          description: 입력한 두 비밀번호가 일치하지 않을 경우 (new password !== repeat password)
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: 비밀번호가 일치하지 않습니다. 다시 확인해주세요.
+ *        '401':
+ *          description: 사용자가 입력한 비밀번호가 이전의 비밀번호와 같은 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    message: 새 비밀번호를 입력해 주세요
+ *        '500':
+ *          description: 서버에서 에러가 발생하였을 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다
  */
 
 // 마이페이지 내 정보 수정
