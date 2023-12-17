@@ -14,26 +14,75 @@ const router = express.Router();
 
 /**
  * @swagger
- * paths:
- *  /auth/register:
- *    post:
- *      summary: "Register"
- *      description: "Endpoint for user registration"
- *      tags: [Users]
- *      responses:
- *        "200":
- *          description: 회원 가입 성공
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                    ok:
- *                      type: boolean
- *                    users:
- *                      type: object
- *                      example:
- *                          message: "회원가입이 완료되었습니다."
+ * tags:
+ *   - name: Users
+ *     description: User registration/login/logout/account deletion/access token reissue
+ */
+
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: 사용자 등록
+ *     description: POST 방식으로 사용자를 등록한다
+ *     tags: [Users]
+ *     requestBody:
+ *       description: 사용자가 서버에 전달하는 값에 따라 결과 값이 다르다 (사용자 등록)
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nickname:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               confirmedPassword:
+ *                 type: string
+ *     responses:
+ *       '201':
+ *         description: 회원가입에 성공했을 경우
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                  type: string
+ *                  example: "회원가입이 완료되었습니다."
+ *       '400':
+ *         description: 비밀번호 일치하지 않을 경우
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorMessage:
+ *                  type: string
+ *                  example: "비밀번호가 일치하지 않습니다. 다시 확인해주세요."
+ *       '409':
+ *         description: 중복된 이메일 주소나 닉네임을 입력했을 경우
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorMessage:
+ *                  type: string
+ *                  example: "중복된 닉네임입니다. 또는 중복된 이메일입니다."
+ *       '500':
+ *         description: "서버 에러가 발생했을 경우"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorMessage:
+ *                  type: string
+ *                  example: "서버에서 오류가 발생하였습니다."
  */
 
 /** Register API */
@@ -101,23 +150,67 @@ router.post("/register", async (req, res, next) => {
  * paths:
  *  /auth/login:
  *    post:
- *      summary: "Login"
- *      description: "Endpoint for user login"
+ *      summary: 로그인
+ *      description: 이메일 주소와 비밀번호로 로그인
  *      tags: [Users]
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                email:
+ *                  type: string
+ *                password:
+ *                  type: string
  *      responses:
- *        "200":
- *          description: 회원 가입 성공
+ *        '200':
+ *          description: 로그인에 성공했을 경우
+ *          headers:
+ *            Authorization:
+ *              description: Bearer token for authentication
+ *              schema:
+ *                type: string
+ *                example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *            RefreshToken:
+ *              description: Bearer token for refresh purposes
+ *              schema:
+ *                type: string
+ *                example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *            message:
+ *              type: string
+ *              example: "로그인에 성공하였습니다."
+ *        '401':
+ *          description: 입력된 비밀번호가 일치하지 않을 경우
  *          content:
  *            application/json:
  *              schema:
  *                type: object
  *                properties:
- *                    ok:
- *                      type: boolean
- *                    users:
- *                      type: object
- *                      example:
- *                          message: "회원가입이 완료되었습니다."
+ *                  errorMessage:
+ *                    type: string
+ *                    example: "비밀번호가 일치하지 않습니다."
+ *        '404':
+ *          description: 유저가 존재하지 않을 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: "해당 이메일로 가입된 계정이 없습니다."
+ *        '500':
+ *          description: 서버에서 발생한 에러일 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: "서버에서 오류가 발생하였습니다."
  */
 
 /** Login API */
@@ -210,23 +303,41 @@ router.post("/login", async (req, res, next) => {
  * paths:
  *  /auth/tokens/refresh:
  *    post:
- *      summary: "Refresh Token"
- *      description: "Endpoint for refreshing access tokens"
+ *      summary: 엑세스 토큰 재발급
+ *      description: 유효한 리프레시 토큰을 가지고 엑세스 토큰을 재발급 받는다
  *      tags: [Users]
  *      responses:
- *        "200":
- *          description: 회원 가입 성공
+ *        '200':
+ *          description: 성공적으로 엑세스 토큰이 재발급된 경우
+ *          headers:
+ *            Authorization:
+ *              description: Bearer token for authentication
+ *              schema:
+ *                type: string
+ *                example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *            message:
+ *              type: string
+ *              example: "엑세스 토큰이 정상적으로 재발급되었습니다."
+ *        '419':
+ *          description: 전달받은 리프레시 토큰이 유효하지 않거나 존재하지 않을 경우
  *          content:
  *            application/json:
  *              schema:
  *                type: object
  *                properties:
- *                    ok:
- *                      type: boolean
- *                    users:
- *                      type: object
- *                      example:
- *                          message: "회원가입이 완료되었습니다."
+ *                  errorMessage:
+ *                    type: string
+ *                    example: Refresh token의 정보가 서버에 존재하지 않습니다.
+ *        '500':
+ *          description: 서버에서 오류가 발생한 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: 서버에서 오류가 발생하였습니다.
  */
 
 /** 리프레시 토큰을 이용해서 엑세스 토큰을 재발급하는 API */
@@ -289,23 +400,30 @@ function validateToken(token, secretKey) {
  * paths:
  *  /auth/logout:
  *    post:
- *      summary: "Logout"
- *      description: "Endpoint for user logout"
+ *      summary: 로그아웃
+ *      description: 유저를 로그아웃 시키고 토큰을 무효화시킨다
  *      tags: [Users]
  *      responses:
- *        "200":
- *          description: 회원 가입 성공
+ *        '200':
+ *          description: 성공적으로 로그아웃이 된 경우
  *          content:
  *            application/json:
  *              schema:
  *                type: object
  *                properties:
- *                    ok:
- *                      type: boolean
- *                    users:
- *                      type: object
- *                      example:
- *                          message: "회원가입이 완료되었습니다."
+ *                  message:
+ *                    type: string
+ *                    example: "로그아웃 되었습니다."
+ *        '500':
+ *          description: 서버에서 에러가 발생한 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다.
  */
 
 /** Logout API */
@@ -335,24 +453,31 @@ router.post("/logout", authMiddleware, async (req, res, next) => {
  * @swagger
  * paths:
  *  /auth/withdraw:
- *    post:
- *      summary: "User account deletion"
- *      description: "Endpoint for user account deletion"
+ *    delete:
+ *      summary: 회원탈퇴
+ *      description: 회원탈퇴를 요청받은 경우 유저 데이터를 삭제, 발급받은 리프레시 토큰을 무효화 시킨다
  *      tags: [Users]
  *      responses:
- *        "200":
- *          description: 회원 가입 성공
+ *        '200':
+ *          description: 유저의 정보가 삭제되고 성공적으로 회원탈퇴가 된 경우
  *          content:
  *            application/json:
  *              schema:
  *                type: object
  *                properties:
- *                    ok:
- *                      type: boolean
- *                    users:
- *                      type: object
- *                      example:
- *                          message: "회원가입이 완료되었습니다."
+ *                  message:
+ *                    type: string
+ *                    example: "회원탈퇴가 성공적으로 처리되었습니다. 이용해 주셔서 감사합니다."
+ *        '500':
+ *          description: 서버에서 에러가 발생한 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다.
  */
 
 /** Account Deletion API */

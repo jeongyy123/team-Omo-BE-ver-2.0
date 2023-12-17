@@ -40,26 +40,63 @@ const s3 = new S3Client({
 
 /**
  * @swagger
+ * tags:
+ *   - name: Profiles
+ *     description: Profile viewing/profile information modification/bookmark viewing/posts authored by user
+ */
+
+/**
+ * @swagger
  * paths:
- *  /api/users/self/profile:
- *    post:
- *      summary: "Edit Profile"
- *      description: "Endpoint for editing user profile"
- *      tags: [Profiles]
+ *  /users/self/profile:
+ *    get:
+ *      summary: Retrieve User Profile Information
+ *      description: Retrieves profile information for the authenticated user
+ *      tags: [Users]
+ *      security:
+ *        - BearerAuth: []
  *      responses:
- *        "200":
- *          description: 회원 가입 성공
+ *        '200':
+ *          description: Successful retrieval of user profile information
  *          content:
  *            application/json:
  *              schema:
  *                type: object
  *                properties:
- *                    ok:
- *                      type: boolean
- *                    users:
- *                      type: object
- *                      example:
- *                          message: "회원가입이 완료되었습니다."
+ *                  postsCount:
+ *                    type: integer
+ *                    description: Number of posts authored by the user
+ *                    example: 5
+ *                  data:
+ *                    type: object
+ *                    properties:
+ *                      email:
+ *                        type: string
+ *                        description: User email
+ *                      nickname:
+ *                        type: string
+ *                        description: User nickname
+ *                      imgUrl:
+ *                        type: string
+ *                        description: URL to user profile image
+ *                      Posts:
+ *                        type: array
+ *                        description: Array of user's posts
+ *                        items:
+ *                          type: object
+ *                          properties:
+ *                            postId:
+ *                              type: integer
+ *                              description: ID of the post
+ *        '500':
+ *          description: Internal server error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
  */
 
 // Profile API
@@ -146,25 +183,70 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
 /**
  * @swagger
  * paths:
- *  /api/users/self/profile/bookmark:
- *    post:
- *      summary: "Bookmark Profile"
- *      description: "Endpoint for bookmarking user profile"
- *      tags: [Profiles]
+ *  /users/self/profile/bookmark:
+ *    get:
+ *      summary: Retrieve User's Bookmarked Places
+ *      description: Retrieves bookmarked places for the authenticated user
+ *      tags: [Users]
+ *      security:
+ *        - BearerAuth: []
  *      responses:
- *        "200":
- *          description: 회원 가입 성공
+ *        '200':
+ *          description: Successful retrieval of user's bookmarked places
  *          content:
  *            application/json:
  *              schema:
  *                type: object
  *                properties:
- *                    ok:
- *                      type: boolean
- *                    users:
+ *                  bookmarkCount:
+ *                    type: integer
+ *                    description: Number of places bookmarked by the user
+ *                    example: 10
+ *                  data:
+ *                    type: array
+ *                    description: Array of user's bookmarked places
+ *                    items:
  *                      type: object
- *                      example:
- *                          message: "회원가입이 완료되었습니다."
+ *                      properties:
+ *                        Location:
+ *                          type: object
+ *                          properties:
+ *                            locationId:
+ *                              type: integer
+ *                              description: ID of the location
+ *                            storeName:
+ *                              type: string
+ *                              description: Name of the store
+ *                            address:
+ *                              type: string
+ *                              description: Address of the location
+ *                            starAvg:
+ *                              type: number
+ *                              description: Average star rating of the location
+ *                            Posts:
+ *                              type: array
+ *                              description: Array of posts associated with the location
+ *                              items:
+ *                                type: object
+ *                                properties:
+ *                                  LocationId:
+ *                                    type: integer
+ *                                    description: ID of the location
+ *                                  likeCount:
+ *                                    type: integer
+ *                                    description: Count of likes for the post
+ *                                  imgUrl:
+ *                                    type: string
+ *                                    description: URL to the image associated with the post
+ *        '500':
+ *          description: Internal server error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
  */
 
 // 마이페이지 북마크
@@ -242,25 +324,70 @@ const upload = multer({ storage: storage });
 /**
  * @swagger
  * paths:
- *  /api/users/self/profile/edit:
- *    post:
- *      summary: "Edit Profile"
- *      description: "Endpoint for editing user profile"
- *      tags: [Profiles]
+ *  /users/self/profile/edit:
+ *    patch:
+ *      summary: Update User Profile
+ *      description: Updates the authenticated user's profile information
+ *      tags: [Users]
+ *      security:
+ *        - BearerAuth: []
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          multipart/form-data:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                nickname:
+ *                  type: string
+ *                  description: New nickname of the user
+ *                newPassword:
+ *                  type: string
+ *                  description: New password of the user
+ *                confirmedPassword:
+ *                  type: string
+ *                  description: Confirmation of the new password
+ *                imgUrl:
+ *                  type: string
+ *                  format: binary
+ *                  description: New image file for user's profile picture
  *      responses:
- *        "200":
- *          description: 회원 가입 성공
+ *        '201':
+ *          description: User profile successfully updated
  *          content:
  *            application/json:
  *              schema:
  *                type: object
  *                properties:
- *                    ok:
- *                      type: boolean
- *                    users:
- *                      type: object
- *                      example:
- *                          message: "회원가입이 완료되었습니다."
+ *                  message:
+ *                    type: string
+ *        '400':
+ *          description: Bad request, invalid input data
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *        '401':
+ *          description: Unauthorized, previous password entered matches new password
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *        '500':
+ *          description: Internal server error
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
  */
 
 // 마이페이지 내 정보 수정
