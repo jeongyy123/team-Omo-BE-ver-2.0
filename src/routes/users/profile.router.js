@@ -88,13 +88,6 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
       },
     });
 
-    // 각 포스트의 댓글 갯수
-    // const numOfCommentsForEachPost = await prisma.comments.count({
-    //   where: {
-    //     postId: userPosts.Posts.Comments,
-    //   },
-    // });
-
     // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
     if (userPosts.imgUrl && userPosts.imgUrl.length === 64) {
       const getObjectParams = {
@@ -141,8 +134,6 @@ router.get(
         },
       });
 
-      // 장소에 대한 게시글의 갯수...!!!!!!!!!!!!!!!!!!!!*******************
-
       const favouritePlaces = await prisma.bookmark.findMany({
         where: {
           UserId: +userId,
@@ -182,7 +173,6 @@ router.get(
         },
       });
 
-      // 장소와 관련된 게시글 갯수
       return res
         .status(200)
         .json({ bookmarkCount: myFavouritePlacesCount, data: favouritePlaces });
