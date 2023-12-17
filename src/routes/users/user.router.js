@@ -77,10 +77,10 @@ router.post("/login", async (req, res, next) => {
   try {
     const validation = await loginSchema.validateAsync(req.body);
     const { email, password } = validation;
+    const secretKey = process.env.SECRET_TOKEN_KEY;
 
     // const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
     // const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
-    const secretKey = process.env.SECRET_TOKEN_KEY;
 
     const findUser = await prisma.users.findFirst({
       where: {
@@ -141,6 +141,7 @@ router.post("/login", async (req, res, next) => {
     );
     res.setHeader("Authorization", `Bearer ${accessToken}`);
     res.setHeader("RefreshToken", `Bearer ${refreshToken}`);
+
     //
     res.status(200).json({ message: "로그인에 성공하였습니다." });
   } catch (error) {
@@ -170,26 +171,24 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
       },
     });
 
-    console.log("isRefreshTokenExist >>>>>>>>>>>", isRefreshTokenExist);
-
     if (!isRefreshTokenExist) {
       return res.status(419).json({
         errorMessage: "Refresh token의 정보가 서버에 존재하지 않습니다.",
       });
     }
 
-    // 새로운 엑세스 토큰 발급 로직
     const newAccessToken = jwt.sign(
       {
-        purpose: "access",
+        purpose: "newaccess",
         userId: +userId,
       },
       secretKey,
       { expiresIn: "1h" },
     );
 
-    // 응답 헤더로 전달
-    res.set("Authorization", `Bearer ${newAccessToken}`);
+    console.log("새로 발급된 AccessToken: ", newAccessToken);
+
+    res.setHeader("Authorization", `Bearer ${newAccessToken}`);
 
     return res
       .status(200)
@@ -206,7 +205,8 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
 // 제공된 토큰이 유효한지 여부를 검증하는 함수
 function validateToken(token, secretKey) {
   try {
-    return jwt.verify(token, secretKey);
+    const accessToken = token.split(" ")[1]; // Bearer 제거 후 토큰 추출
+    return jwt.verify(accessToken, secretKey);
   } catch (error) {
     return null;
   }
@@ -217,36 +217,15 @@ router.post("/logout", authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
 
-    // 사용자가 가지고 있는 리프레시 토큰을 찾는다.
-    const findRefreshToken = await prisma.refreshTokens.findFirst({
-      where: {
-        UserId: +userId,
-      },
-      select: {
-        refreshToken: true,
+    await prisma.tokenBlacklist.create({
+      data: {
+        token: req.headers.authorization,
       },
     });
 
-    if (findRefreshToken) {
-      const refreshToken = findRefreshToken.refreshToken;
-
-      console.log("findRefreshToken >>>", refreshToken);
-
-      // 클라이언트가 보낸 accessToken과 refreshToken을 블랙리스트에 추가
-      await prisma.tokenBlacklist.createMany({
-        data: [{ token: refreshToken }],
-      });
-
-      // 클라이언트 측에서 로컬 스토리지 등에서 토큰을 삭제
-
-      return res.status(200).json({
-        message: "로그아웃 되었습니다.",
-      });
-    } else {
-      return res
-        .status(404)
-        .json({ errorMessage: "리프레시 토큰을 찾을 수 없습니다." });
-    }
+    return res.status(200).json({
+      message: "로그아웃 되었습니다.",
+    });
   } catch (error) {
     console.error(error);
 
@@ -261,7 +240,6 @@ router.delete("/withdraw", authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
 
-    // 사용자가 가지고 있는 리프레시 토큰을 찾는다.
     const findRefreshToken = await prisma.refreshTokens.findFirst({
       where: {
         UserId: +userId,
@@ -274,32 +252,24 @@ router.delete("/withdraw", authMiddleware, async (req, res, next) => {
     if (findRefreshToken) {
       const refreshToken = findRefreshToken.refreshToken;
 
-      console.log("findRefreshToken >>>", refreshToken);
-
-      // 블랙리스트에 해당 토큰을 추가
+      // 리프레시 토큰을 블랙리스트에 추가
       await prisma.tokenBlacklist.create({
         data: {
           token: refreshToken,
         },
       });
-
-      // 회원 삭제
-      await prisma.users.delete({
-        where: {
-          userId: +userId,
-        },
-      });
-
-      return res.status(200).json({
-        message:
-          "회원탈퇴가 성공적으로 처리되었습니다. 이용해 주셔서 감사합니다.",
-      });
-    } else {
-      // try catch로 에러핸들링
-      return res
-        .status(404)
-        .json({ errorMessage: "리프레시 토큰을 찾을 수 없습니다." });
     }
+
+    await prisma.users.delete({
+      where: {
+        userId: +userId,
+      },
+    });
+
+    return res.status(200).json({
+      message:
+        "회원탈퇴가 성공적으로 처리되었습니다. 이용해 주셔서 감사합니다.",
+    });
   } catch (error) {
     console.error(error);
 
