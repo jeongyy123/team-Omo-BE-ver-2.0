@@ -5,16 +5,14 @@ import { prisma } from "../../utils/prisma/index.js";
 import { createPosts } from "../../validations/posts.validation.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import { getImageS3, getManyImagesS3, getSingleImageS3, getProfileImageS3 } from "../../utils/getImageS3.js";
+import { fileFilter } from "../../utils/putImageS3.js";
 import {
   S3Client,
   PutObjectCommand,
-  GetObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 import crypto from "crypto";
-
 
 const router = express.Router();
 
@@ -34,7 +32,7 @@ const s3 = new S3Client({
 });
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage, fileFilter });
 
 const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
 
@@ -206,19 +204,6 @@ router.get("/posts/:postId", async (req, res, next) => {
 
     if (!posts) {
       return res.status(400).json({ message: "존재하지않는 게시글입니다." });
-    }
-
-    const getProfileImageS31 = async (posts) => {
-      posts.map(async (post) => {
-        const params = {
-          Bucket: bucketName,
-          Key: post.User.imgUrl
-        }
-        const command = new GetObjectCommand(params);
-        const imgUrl = await getSignedUrl(s3, command);
-        console.log("imgUrl", imgUrl)
-        return post.User.imgUrl = imgUrl
-      })
     }
 
     await getProfileImageS3(posts.Comments);
