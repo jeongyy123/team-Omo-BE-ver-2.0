@@ -273,7 +273,8 @@ router.get("/locations", async (req, res, next) => {
 // // commentCount, imgUrl, createdAt
 router.get("/locations/:locationId", async (req, res, next) => {
   try {
-    const { latitude, longitude } = req.params
+    const { latitude, longitude, locationId } = req.params
+    
 
     const location = await prisma.locations.findFirst({
       where: { locationId: +locationId },
