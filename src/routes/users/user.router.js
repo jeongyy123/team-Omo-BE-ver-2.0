@@ -45,9 +45,20 @@ router.post("/verify-email", async (req, res, next) => {
       return res.status(409).json({ errorMessage: "중복된 이메일입니다." });
     }
 
-    // 인증 이메일을 보내는 코드..
+    // 인증번호 생성
     // 원하는 범위 내에서 랜덤한 숫자 생성 (예: 111111부터 999999까지)
     const randomNumber = generateRandomNumber(111111, 999999);
+
+    // 인증 이메일을 보낸 후 인증번호를 데이터베이스에 저장
+    await prisma.verificationCode.create({
+      data: {
+        email: email,
+        verificationCode: String(randomNumber),
+        expiryDate: new Date(Date.now() + 10 * 60 * 1000), // 예: 10분 후 만료
+      },
+    });
+
+    // 만료시간 이후에 삭제가 되야하나...?
 
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
@@ -77,7 +88,7 @@ router.post("/verify-email", async (req, res, next) => {
         console.error("메일 전송에 실패하였습니다:", err);
         res.status(500).json({ ok: false, msg: "메일 전송에 실패하였습니다." });
       } else {
-        console.log("메일 전송에 성공하였습니다:", info);
+        console.log("인증 이메일이 전송되었습니다.", info);
         res.status(200).json({ ok: true, msg: "메일 전송에 성공하였습니다." });
       }
     });
@@ -93,7 +104,31 @@ router.post("/verify-email", async (req, res, next) => {
 // 입력받은 인증 코드가 올바른지 학인하는 API
 router.post("/verify-authentication-code", async (req, res, next) => {
   try {
-    const { authenticationCode } = req.body;
+    const { authenticationCode, email } = req.body;
+
+    // 인증번호가 일치하는지 확인
+    const checkVerificationCode = await prisma.verificationCode.findFirst({
+      where: {
+        verificationCode: String(authenticationCode),
+        email: email,
+      },
+    });
+
+    if (checkVerificationCode) {
+      // 이메일 및 인증코드가 일치하고 유효한 경우 해당 인증코드를 삭제
+      await prisma.verificationCode.delete({
+        where: {
+          verificationCodeId: checkVerificationCode.verificationCodeId,
+        },
+      });
+    } else {
+      // 인증 실패
+      return res
+        .status(404)
+        .json({ errorMessage: "인증번호가 일치하지 않습니다." });
+    }
+
+    return res.status(200).json({ message: "성공적으로 인증되었습니다" });
   } catch (error) {
     console.error(error);
 
