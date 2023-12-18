@@ -71,7 +71,7 @@ const router = express.Router();
  *               type: object
  *               properties:
  *                 errorMessage:
- *                  type: string
+ *                  type: stringnode
  *                  example: "중복된 닉네임입니다. 또는 중복된 이메일입니다."
  *       '500':
  *         description: "서버 에러가 발생했을 경우"

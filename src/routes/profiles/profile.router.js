@@ -40,9 +40,42 @@ const s3 = new S3Client({
 
 /**
  * @swagger
- * tags:
- *   - name: Profiles
- *     description: 프로필 조회/프로필 수정/유저의 북마크 조회/유저가 작성한 게시글의 목록 조회
+ * /users/self/profile:
+ *   get:
+ *     summary: 사용자 정보 조회.
+ *     description: 로그인에 성공한 사용자는 마이페이지에서 자신의 프로필 정보를 조회할 수 있다.
+ *     tags: [Profiles]
+ *     responses:
+ *       200:
+ *         description: 사용자의 프로필 정보를 성공적으로 조회했을 경우
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     email:
+ *                       type: string
+ *                       format: email
+ *                       description: 사용자의 이메일 주소
+ *                     nickname:
+ *                       type: string
+ *                       description: 사용자의 닉네임
+ *                     imgUrl:
+ *                       type: string
+ *                       description: 사용자의 프로필 이미지
+ *       '500':
+ *          description: 서버에서 에러가 발생했을 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다.
  */
 
 // 마이페이지 회원정보 확인 API
@@ -91,46 +124,84 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
 
 /**
  * @swagger
- * paths:
- *  /users/self/profile:
- *    get:
- *      summary: 프로필 조회
- *      description: 로그인에 성공한 사용자는 자신의 프로필을 조회할 수 있다
- *      tags: [Users]
- *      responses:
- *        '200':
- *          description: 사용자의 정보를 성공적으로 가져왔을 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  postsCount:
- *                    type: integer
- *                    description: 사용자 자신이 작성한 게시글의 갯수
- *                    example: 5
- *                  data:
- *                    type: object
- *                    properties:
- *                      email:
- *                        type: string
- *                        description: 사용자 이메일 주소
- *                      nickname:
- *                        type: string
- *                        description: 사용자 닉네님
- *                      imgUrl:
- *                        type: string
- *                        description: 사용자의 프로필 이미지 주소(이미지는 S3에 저장)
- *                      Posts:
- *                        type: array
- *                        description: 사용자의 게시글 목록
- *                        items:
- *                          type: object
- *                          properties:
- *                            postId:
- *                              type: integer
- *                              description: 각 게시글의 고유 번호
- *        '500':
+ * /users/self/profile/posts:
+ *   get:
+ *     summary: 마이페이지 게시글 및 댓글 목록 조회
+ *     description: 사용자의 닉네임과 함께 게시글과 댓글 목록을 조회한다
+ *     tags: [Profiles]
+ *     responses:
+ *       200:
+ *         description: 사용자가 작성한 게시글과 댓글 목록을 성공적으로 불러왔을 경우
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 postsCount:
+ *                   type: number
+ *                   description: 사용자가 작성한 게시글의 갯수
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     nickname:
+ *                       type: string
+ *                       description: 사용자의 닉네임
+ *                     Posts:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           postId:
+ *                             type: number
+ *                             description: 게시글의 고유 번호
+ *                           UserId:
+ *                             type: number
+ *                             description: 작성한 사용자의 고유 번호
+ *                           imgUrl:
+ *                             type: string
+ *                             description: 게시글 이미지
+ *                           content:
+ *                             type: string
+ *                             description: 게시글 내용
+ *                           likeCount:
+ *                             type: number
+ *                             description: 게시글 좋아요 갯수
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                             description: 게시글 작성 날짜
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                             description: 게시글이 업데이트 된 날짜
+ *                           Comments:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 UserId:
+ *                                   type: number
+ *                                   description: 댓글을 작성한 사용자의 고유 번호
+ *                                 PostId:
+ *                                   type: number
+ *                                   description: 댓글이 달린 게시글의 고유 번호
+ *                                 content:
+ *                                   type: string
+ *                                   description: 댓글 내용
+ *                                 createdAt:
+ *                                   type: string
+ *                                   format: date-time
+ *                                   description: 댓글이 작성된 날짜
+ *                                 User:
+ *                                   type: object
+ *                                   properties:
+ *                                     nickname:
+ *                                       type: string
+ *                                       description: 댓글을 작성한 사용자 닉네임.
+ *                                     imgUrl:
+ *                                       type: string
+ *                                       description: 댓글을 작성한 사용자의 닉네임
+ *       '500':
  *          description: 서버에서 에러가 발생했을 경우
  *          content:
  *            application/json:
@@ -222,7 +293,7 @@ router.get(
  *    get:
  *      summary: 사용자가 북마크한 장소들의 목록들을 불러온다
  *      description: 로그인에 성공한 사용자는 자신이 북마크한 장소들의 목록들을 조회할 수 있다
- *      tags: [Users]
+ *      tags: [Profiles]
  *      responses:
  *        '200':
  *          description: 사용자가 북마크한 장소들의 목록을 성공적으로 불러왔을 경우
@@ -362,7 +433,7 @@ const upload = multer({ storage: storage });
  *    patch:
  *      summary: 사용자 프로필 수정
  *      description: 사용자는 자신의 프로필을 수정할 수 있다
- *      tags: [Users]
+ *      tags: [Profiles]
  *      requestBody:
  *        required: true
  *        content:
