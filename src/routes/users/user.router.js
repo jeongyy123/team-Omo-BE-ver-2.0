@@ -3,6 +3,7 @@ import { prisma } from "../../utils/prisma/index.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import {
   registerSchema,
@@ -18,6 +19,60 @@ const router = express.Router();
  *   - name: Users
  *     description: 회원가입/로그인/로그아웃/회원탈퇴/엑세스 토큰 재발급
  */
+
+// 랜덤한 숫자 생성 함수
+function generateRandomNumber(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+router.post("/verify-email", async (req, res, next) => {
+  try {
+    const { email } = req.body; // 사용자가 입력한 이메일
+    const sender = process.env.EMAIL_SENDER;
+
+    // 원하는 범위 내에서 랜덤한 숫자 생성 (예: 111111부터 999999까지)
+    const randomNumber = generateRandomNumber(111111, 999999);
+
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.NODEMAILER_USER,
+        pass: process.env.NODEMAILER_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    const mailOptions = {
+      from: sender, // 발신자 이메일 주소
+      to: email, // 사용자가 입력한 이메일
+      subject: "인증 관련 메일입니다 ✔", // Subject line
+      text: `인증 코드 : ${randomNumber}를 입력해주세요.`, // plain text body
+      html: `<h1>인증번호를 입력해주세요</h1><p>${randomNumber}</p>`,
+    };
+
+    transporter.sendMail(mailOptions, (err, info) => {
+      console.log("info", info);
+      //첫번째 인자는 위에서 설정한 mailOption을 넣어주고 두번째 인자로는 콜백함수.
+      if (err) {
+        console.error("메일 전송에 실패하였습니다:", err);
+        res.status(500).json({ ok: false, msg: "메일 전송에 실패하였습니다." });
+      } else {
+        console.log("메일 전송에 성공하였습니다:", info);
+        res.status(200).json({ ok: true, msg: "메일 전송에 성공하였습니다." });
+      }
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res
+      .status(500)
+      .json({ errorMessage: "서버에서 오류가 발생하였습니다." });
+  }
+});
 
 /**
  * @swagger
