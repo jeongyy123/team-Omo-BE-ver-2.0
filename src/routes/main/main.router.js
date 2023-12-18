@@ -72,6 +72,8 @@ router.get("/main/popular", async (req, res, next) => {
         Location: {
           select: {
             storeName: true,
+            latitude: true,
+            longitude: true
           },
         },
         Category: {
@@ -219,6 +221,7 @@ router.get("/main/comments", async (req, res, next) => {
       select: {
         content: true,
         createdAt: true,
+        PostId: true,
         Post: {
           select: {
             Location: {
