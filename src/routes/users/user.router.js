@@ -30,6 +30,18 @@ router.post("/verify-email", async (req, res, next) => {
     const { email } = req.body; // 사용자가 입력한 이메일
     const sender = process.env.EMAIL_SENDER;
 
+    // 인증번호를 보내기 전에 이메일 중복을 체크하여 이미 가입된 이메일인 경우에는 인증 이메일을 보내지 않는다
+    const existEmail = await prisma.users.findFirst({
+      where: {
+        email: email,
+      },
+    });
+
+    if (existEmail) {
+      return res.status(409).json({ errorMessage: "중복된 이메일입니다." });
+    }
+
+    // 인증 이메일을 보내는 코드..
     // 원하는 범위 내에서 랜덤한 숫자 생성 (예: 111111부터 999999까지)
     const randomNumber = generateRandomNumber(111111, 999999);
 
@@ -154,16 +166,6 @@ router.post("/register", async (req, res, next) => {
 
     if (existNickname) {
       return res.status(409).json({ errorMessage: "중복된 닉네임입니다." });
-    }
-
-    const existEmail = await prisma.users.findFirst({
-      where: {
-        email: email,
-      },
-    });
-
-    if (existEmail) {
-      return res.status(409).json({ errorMessage: "중복된 이메일입니다." });
     }
 
     if (password !== confirmedPassword) {
