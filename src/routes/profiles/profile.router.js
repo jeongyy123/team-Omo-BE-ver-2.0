@@ -242,6 +242,7 @@ router.get(
               imgUrl: true,
               content: true,
               likeCount: true,
+              commentCount: true, // 각 게시글의 댓글 갯수
               createdAt: true,
               updatedAt: true,
               Comments: {
