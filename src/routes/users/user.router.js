@@ -76,9 +76,18 @@ router.post("/verify-email", async (req, res, next) => {
     const mailOptions = {
       from: sender, // 발신자 이메일 주소
       to: email, // 사용자가 입력한 이메일
-      subject: "인증 관련 메일입니다 ✔", // Subject line
+      subject: "OMO에서 온 인증 관련 메일입니다 ✔", // Subject line
       text: `인증 코드 : ${randomNumber}를 입력해주세요.`, // plain text body
-      html: `<h1>인증번호를 입력해주세요</h1><p>${randomNumber}</p>`,
+      html: `
+              <h1>안녕하세요, OMO에서 인증 관련 메일입니다!</h1>
+              <p>아래 인증 코드를 사용하여 계정을 확인해주세요:</p>
+              <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; text-align: center;">
+                <h2 style="margin-bottom: 10px;">인증 코드</h2>
+                <p style="font-size: 24px; margin-bottom: 0; padding: 10px 15px; background-color: #fff; border-radius: 3px; border: 2px solid #ccc; display: inline-block;"><strong>${randomNumber}</strong></p>
+              </div>
+              <p style="margin-top: 20px;">위의 코드를 입력하여 계정을 확인해주세요.</p>
+              <p>감사합니다.</p>
+            `,
     };
 
     transporter.sendMail(mailOptions, (err, info) => {
