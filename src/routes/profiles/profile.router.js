@@ -45,6 +45,50 @@ const s3 = new S3Client({
  *     description: 프로필 조회/프로필 수정/유저의 북마크 조회/유저가 작성한 게시글의 목록 조회
  */
 
+// 마이페이지 회원정보 확인 API
+router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+
+    const userInfo = await prisma.users.findFirst({
+      where: {
+        userId: +userId,
+      },
+      select: {
+        email: true,
+        nickname: true,
+        imgUrl: true,
+      },
+    });
+
+    // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
+    if (userInfo.imgUrl && userInfo.imgUrl.length === 64) {
+      const getObjectParams = {
+        Bucket: bucketName, // 버킷 이름
+        Key: userInfo.imgUrl, // 이미지 키
+      };
+
+      // User GetObjectCommand to create the url
+      const command = new GetObjectCommand(getObjectParams);
+      const url = await getSignedUrl(s3, command);
+      userInfo.imgUrl = url;
+    } else {
+      const defaultImageUrl =
+        "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw";
+
+      userInfo.imgUrl = defaultImageUrl;
+    }
+
+    return res.status(200).json({ data: userInfo });
+  } catch (error) {
+    console.error(error);
+
+    return res
+      .status(500)
+      .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
+  }
+});
+
 /**
  * @swagger
  * paths:
@@ -98,86 +142,78 @@ const s3 = new S3Client({
  *                    example: 서버에서 에러가 발생하였습니다.
  */
 
-// Profile API
-router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
-  try {
-    const { userId } = req.user;
+// 마이페이지 게시글 조회 API
+router.get(
+  "/users/self/profile/posts",
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      const { userId } = req.user;
 
-    // 유저가 작성한 게시글의 갯수
-    const myPostsCount = await prisma.posts.count({
-      where: {
-        UserId: +userId,
-      },
-    });
+      // 유저가 작성한 게시글의 갯수
+      const myPostsCount = await prisma.posts.count({
+        where: {
+          UserId: +userId,
+        },
+      });
 
-    const userPosts = await prisma.users.findFirst({
-      where: {
-        userId: +userId,
-      },
-      select: {
-        email: true,
-        nickname: true,
-        imgUrl: true,
-        Posts: {
-          select: {
-            postId: true,
-            UserId: true,
-            imgUrl: true,
-            content: true,
-            likeCount: true,
-            createdAt: true,
-            updatedAt: true,
-            Comments: {
-              select: {
-                UserId: true,
-                PostId: true,
-                content: true,
-                createdAt: true,
+      const userPosts = await prisma.users.findFirst({
+        where: {
+          userId: +userId,
+        },
+        select: {
+          nickname: true,
+          Posts: {
+            // 내 게시글
+            select: {
+              postId: true,
+              UserId: true,
+              imgUrl: true,
+              content: true,
+              likeCount: true,
+              createdAt: true,
+              updatedAt: true,
+              Comments: {
+                // 게시글에 있는 댓글
+                select: {
+                  UserId: true,
+                  PostId: true,
+                  content: true,
+                  createdAt: true,
+                  User: {
+                    select: {
+                      nickname: true, // 댓글 작성자의 닉네임
+                      imgUrl: true, // 댓글 작성자의 프로필 사진
+                    },
+                  },
+                },
               },
-            },
-            Location: {
-              select: {
-                address: true,
+              Location: {
+                select: {
+                  address: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
 
-    // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
-    if (userPosts.imgUrl && userPosts.imgUrl.length === 64) {
-      const getObjectParams = {
-        Bucket: bucketName, // 버킷 이름
-        Key: userPosts.imgUrl, // 이미지 키
-      };
+      return res.status(200).json({
+        postsCount: myPostsCount,
+        data: userPosts,
+      });
+    } catch (error) {
+      console.error(error);
 
-      // User GetObjectCommand to create the url
-      const command = new GetObjectCommand(getObjectParams);
-      const url = await getSignedUrl(s3, command);
-      userPosts.imgUrl = url;
-    } else {
-      const defaultImageUrl =
-        "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw";
-
-      userPosts.imgUrl = defaultImageUrl;
+      return res
+        .status(500)
+        .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
     }
-
-    return res.status(200).json({
-      postsCount: myPostsCount,
-      data: userPosts,
-    });
-  } catch (error) {
-    console.error(error);
-
-    return res
-      .status(500)
-      .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
-  }
-});
+  },
+);
 
 /**
  * @swagger
