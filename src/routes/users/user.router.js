@@ -8,6 +8,8 @@ import authMiddleware from "../../middlewares/auth.middleware.js";
 import {
   registerSchema,
   loginSchema,
+  nicknameSchema,
+  emailSchema,
 } from "../../validations/auth.validation.js";
 
 dotenv.config();
@@ -28,7 +30,8 @@ function generateRandomNumber(min, max) {
 // 이메일 인증을 요청하면 인증 이메일이 해당 이메일 주소로 전송하는 API
 router.post("/verify-email", async (req, res, next) => {
   try {
-    const { email } = req.body; // 사용자가 입력한 이메일
+    const validation = await emailSchema.validateAsync(req.body);
+    const { email } = validation; // 사용자가 입력한 이메일
     const sender = process.env.EMAIL_SENDER;
 
     // 인증번호를 보내기 전에 이메일 중복을 체크하여 이미 가입된 이메일인 경우에는 인증 이메일을 보내지 않는다
@@ -100,9 +103,10 @@ router.post("/verify-authentication-code", async (req, res, next) => {
   }
 });
 
-router.post("/users/chcek-nickname", async (req, res, next) => {
+router.post("/chcek-nickname", async (req, res, next) => {
   try {
-    const { nickname } = req.body;
+    const validation = await nicknameSchema.validateAsync(req.body);
+    const { nickname } = validation;
 
     const existNickname = await prisma.users.findFirst({
       where: {
