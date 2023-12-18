@@ -40,13 +40,6 @@ const s3 = new S3Client({
 
 /**
  * @swagger
- * tags:
- *   - name: Profiles
- *     description: 프로필 조회/프로필 수정/유저의 북마크 조회/유저가 작성한 게시글의 목록 조회
- */
-
-/**
- * @swagger
  * /users/self/profile:
  *   get:
  *     summary: 사용자 정보 조회.
@@ -300,7 +293,7 @@ router.get(
  *    get:
  *      summary: 사용자가 북마크한 장소들의 목록들을 불러온다
  *      description: 로그인에 성공한 사용자는 자신이 북마크한 장소들의 목록들을 조회할 수 있다
- *      tags: [Users]
+ *      tags: [Profiles]
  *      responses:
  *        '200':
  *          description: 사용자가 북마크한 장소들의 목록을 성공적으로 불러왔을 경우
@@ -440,7 +433,7 @@ const upload = multer({ storage: storage });
  *    patch:
  *      summary: 사용자 프로필 수정
  *      description: 사용자는 자신의 프로필을 수정할 수 있다
- *      tags: [Users]
+ *      tags: [Profiles]
  *      requestBody:
  *        required: true
  *        content:
