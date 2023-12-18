@@ -25,6 +25,7 @@ function generateRandomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+// 이메일 인증을 요청하면 인증 이메일이 해당 이메일 주소로 전송하는 API
 router.post("/verify-email", async (req, res, next) => {
   try {
     const { email } = req.body; // 사용자가 입력한 이메일
@@ -77,6 +78,46 @@ router.post("/verify-email", async (req, res, next) => {
         res.status(200).json({ ok: true, msg: "메일 전송에 성공하였습니다." });
       }
     });
+  } catch (error) {
+    console.error(error);
+
+    return res
+      .status(500)
+      .json({ errorMessage: "서버에서 오류가 발생하였습니다." });
+  }
+});
+
+// 입력받은 인증 코드가 올바른지 학인하는 API
+router.post("/verify-authentication-code", async (req, res, next) => {
+  try {
+    const { authenticationCode } = req.body;
+  } catch (error) {
+    console.error(error);
+
+    return res
+      .status(500)
+      .json({ errorMessage: "서버에서 오류가 발생하였습니다." });
+  }
+});
+
+router.post("/users/chcek-nickname", async (req, res, next) => {
+  try {
+    const { nickname } = req.body;
+
+    const existNickname = await prisma.users.findFirst({
+      where: {
+        nickname: nickname,
+      },
+    });
+
+    if (existNickname) {
+      return res.status(409).json({
+        errorMessage:
+          "이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.",
+      });
+    }
+
+    return res.status(200).json({ message: "중복검사 완료" });
   } catch (error) {
     console.error(error);
 
@@ -157,16 +198,6 @@ router.post("/register", async (req, res, next) => {
   try {
     const validation = await registerSchema.validateAsync(req.body);
     const { nickname, email, password, confirmedPassword } = validation;
-
-    const existNickname = await prisma.users.findFirst({
-      where: {
-        nickname: nickname,
-      },
-    });
-
-    if (existNickname) {
-      return res.status(409).json({ errorMessage: "중복된 닉네임입니다." });
-    }
 
     if (password !== confirmedPassword) {
       return res.status(400).json({
