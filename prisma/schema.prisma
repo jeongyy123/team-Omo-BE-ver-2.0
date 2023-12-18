@@ -162,3 +162,12 @@ model Replies {
   
   @@map("Replies")
 }
+
+model verificationCode {
+  verificationCodeId    Int @id @default(autoincrement())  @map("codeId")
+  email                 String                             @map("email")
+  verificationCode      String                             @map("verificationCode")
+  expiryDate            DateTime                           @map("expiryDate")
+
+  @@map("verificationCode")
+}

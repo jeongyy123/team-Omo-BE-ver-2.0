@@ -43,12 +43,7 @@ const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
 // });
 
 /* 게시물 목록 조회 */
-// 자치구 카테고리 선택 시 -> 조회 (없으면 전 자치구 조회)
-// (음식점, 카페, 기타) 카테고리 선택시 -> 조회 (없으면 해당 카테고리의 전체 조회)
-// lastSeenPage : 조회 전 마지막 게시글 postId
-// page : 몇 개의 게시글 조회할 지
-// 1. lastSeenPage X (첫페이지 조회) : 요청 page만큼 넘기기
-// 2. lastSeenPage O (두번째 이후 조회) : lastSeenPage보다 작은 postId 조회, 요청 page만큼 넘기기
+// 커서 기반
 router.get("/posts", async (req, res, next) => {
   try {
     const { page, lastSeenPage, categoryName, districtName } = req.query;
@@ -60,89 +55,48 @@ router.get("/posts", async (req, res, next) => {
       ? await prisma.districts.findFirst({ where: { districtName } })
       : null;
 
-    const parsedPage = parseInt(page) || 24; // 조회할 게시글 수
+    const parsedPage = parseInt(page, 10) || 1;
+    const parsedPageSize = parseInt(page, 10) || 10;
+    const startIndex = (parsedPage - 1) * parsedPageSize;
+    const endIndex = startIndex + parsedPageSize;
 
-    let posts;
-    if (!lastSeenPage) {
-      posts = await prisma.posts.findMany({
-        select: {
-          User: {
-            select: {
-              nickname: true,
-            },
-          },
-          Location: {
-            select: {
-              storeName: true,
-              address: true,
-              starAvg: true,
-            },
-          },
-          postId: true,
-          imgUrl: true,
-          content: true,
-          likeCount: true,
-          commentCount: true,
-          createdAt: true,
-        },
-        orderBy: { postId: "desc" },
-        take: parsedPage,
-        where: {
-          ...(findCategory?.categoryId && {
-            CategoryId: findCategory.categoryId,
-          }),
-          ...(findDistrict?.districtId && {
-            Location: { DistrictId: findDistrict.districtId },
-          }),
-          updatedAt: {
-            lt: new Date(), // 조회 당시 시간으로 또다른 사용자가 작성한 글 보지 않도록 하기.
+    const posts = await prisma.posts.findMany({
+      select: {
+        User: {
+          select: {
+            nickname: true,
           },
         },
-      });
-    } else {
-      posts = await prisma.posts.findMany({
-        select: {
-          User: {
-            select: {
-              nickname: true,
-            },
-          },
-          Location: {
-            select: {
-              storeName: true,
-              address: true,
-              starAvg: true,
-            },
-          },
-          postId: true,
-          imgUrl: true,
-          content: true,
-          likeCount: true,
-          commentCount: true,
-          createdAt: true,
-        },
-        orderBy: { postId: "desc" },
-        take: parsedPage,
-        where: {
-          ...(findCategory?.categoryId && {
-            CategoryId: findCategory.categoryId,
-          }),
-          ...(findDistrict?.districtId && {
-            Location: { DistrictId: findDistrict.districtId },
-          }),
-          updatedAt: {
-            lt: new Date(),
-          },
-          postId: {
-            lt: parseInt(lastSeenPage),
+        Location: {
+          select: {
+            storeName: true,
+            address: true,
+            starAvg: true,
           },
         },
-      });
-    }
-
-    if (!posts) {
-      return res.status(400).json({ message: "존재하지 않는 게시글입니다." });
-    }
+        postId: true,
+        imgUrl: true,
+        content: true,
+        likeCount: true,
+        commentCount: true,
+        createdAt: true,
+      },
+      orderBy: { postId: "desc" },
+      take: parsedPage,
+      skip: lastSeenPage ? 1 : 0,
+      ...(+lastSeenPage && { cursor: { postId: +lastSeenPage } }),
+      where: {
+        ...(findCategory?.categoryId && {
+          CategoryId: findCategory.categoryId,
+        }),
+        ...(findDistrict?.districtId && {
+          Location: { DistrictId: findDistrict.districtId },
+        }),
+        updatedAt: {
+          lt: new Date(),
+        }
+      },
+    });
 
     await getManyImagesS3(posts);
 
@@ -239,47 +193,35 @@ router.post(
         where: { userId },
       });
 
-      if (!user) {
-        return res.status(400).json({ message: "유저가 존재하지 않습니다." });
-      }
-
       const category = await prisma.categories.findFirst({
         where: { categoryName },
       });
 
-      if (!category) {
-        return res
-          .status(400)
-          .json({ message: "카테고리가 존재하지 않습니다." });
-      }
-
-      const districtName = address.split(" ")[1];
-
       const district = await prisma.districts.findFirst({
-        where: { districtName },
+        where: { districtName: address.split(" ")[1] },
       });
 
       if (!district) {
         return res.status(400).json({ message: "지역이 존재하지 않습니다." });
       }
 
-      // 같은 장소에 한 사람이 여러 개의 포스팅 올리지 않도록 하기
-      const findPosts = await prisma.posts.findFirst({
-        where: {
-          UserId: userId,
-          Location: {
-            is: {
-              address,
-            },
-          },
-        },
-      });
+      // // 같은 장소에 한 사람이 여러 개의 포스팅 올리지 않도록 하기
+      // const findPosts = await prisma.posts.findFirst({
+      //   where: {
+      //     UserId: userId,
+      //     Location: {
+      //       is: {
+      //         address,
+      //       },
+      //     },
+      //   },
+      // });
 
-      if (findPosts) {
-        return res.status(400).json({
-          message: "이미 같은 장소에 대한 유저의 포스팅이 존재합니다.",
-        });
-      }
+      // if (findPosts) {
+      //   return res.status(400).json({
+      //     message: "이미 같은 장소에 대한 유저의 포스팅이 존재합니다.",
+      //   });
+      // }
 
       //이미지 이름 나눠서 저장
       const imgPromises = req.files.map(async (file) => {
@@ -309,30 +251,33 @@ router.post(
 
       //location 정보가 기존 X => location랑 posts 생성.
       if (!location) {
-        const createLocation = await prisma.locations.create({
-          data: {
-            storeName,
-            address,
-            latitude,
-            longitude,
-            starAvg: 0,
-            Category: { connect: { categoryId: +category.categoryId } },
-            District: { connect: { districtId: +district.districtId } },
-            User: { connect: { userId: +user.userId } },
-          },
-        });
+        await prisma.$transaction(async (prisma) => {
+          const createLocation = await prisma.locations.create({
+            data: {
+              storeName,
+              address,
+              latitude,
+              longitude,
+              starAvg: 0,
+              Category: { connect: { categoryId: +category.categoryId } },
+              District: { connect: { districtId: +district.districtId } },
+              User: { connect: { userId: +user.userId } },
+            },
+          });
 
-        await prisma.posts.create({
-          data: {
-            content,
-            star,
-            likeCount: 0,
-            User: { connect: { userId: +user.userId } },
-            Category: { connect: { categoryId: +category.categoryId } },
-            Location: { connect: { locationId: +createLocation.locationId } },
-            imgUrl: imgNames.join(","),
-          },
-        });
+          await prisma.posts.create({
+            data: {
+              content,
+              star,
+              likeCount: 0,
+              User: { connect: { userId: +user.userId } },
+              Category: { connect: { categoryId: +category.categoryId } },
+              Location: { connect: { locationId: +createLocation.locationId } },
+              imgUrl: imgNames.join(","),
+            },
+          });
+        })
+
       } else {
         //location 정보가 기존 O => location 업데이트, posts 생성
         await prisma.$transaction(async (prisma) => {
