@@ -25,11 +25,24 @@ function generateRandomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+// 이메일 인증을 요청하면 인증 이메일이 해당 이메일 주소로 전송하는 API
 router.post("/verify-email", async (req, res, next) => {
   try {
     const { email } = req.body; // 사용자가 입력한 이메일
     const sender = process.env.EMAIL_SENDER;
 
+    // 인증번호를 보내기 전에 이메일 중복을 체크하여 이미 가입된 이메일인 경우에는 인증 이메일을 보내지 않는다
+    const existEmail = await prisma.users.findFirst({
+      where: {
+        email: email,
+      },
+    });
+
+    if (existEmail) {
+      return res.status(409).json({ errorMessage: "중복된 이메일입니다." });
+    }
+
+    // 인증 이메일을 보내는 코드..
     // 원하는 범위 내에서 랜덤한 숫자 생성 (예: 111111부터 999999까지)
     const randomNumber = generateRandomNumber(111111, 999999);
 
@@ -65,6 +78,46 @@ router.post("/verify-email", async (req, res, next) => {
         res.status(200).json({ ok: true, msg: "메일 전송에 성공하였습니다." });
       }
     });
+  } catch (error) {
+    console.error(error);
+
+    return res
+      .status(500)
+      .json({ errorMessage: "서버에서 오류가 발생하였습니다." });
+  }
+});
+
+// 입력받은 인증 코드가 올바른지 학인하는 API
+router.post("/verify-authentication-code", async (req, res, next) => {
+  try {
+    const { authenticationCode } = req.body;
+  } catch (error) {
+    console.error(error);
+
+    return res
+      .status(500)
+      .json({ errorMessage: "서버에서 오류가 발생하였습니다." });
+  }
+});
+
+router.post("/users/chcek-nickname", async (req, res, next) => {
+  try {
+    const { nickname } = req.body;
+
+    const existNickname = await prisma.users.findFirst({
+      where: {
+        nickname: nickname,
+      },
+    });
+
+    if (existNickname) {
+      return res.status(409).json({
+        errorMessage:
+          "이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.",
+      });
+    }
+
+    return res.status(200).json({ message: "중복검사 완료" });
   } catch (error) {
     console.error(error);
 
@@ -145,26 +198,6 @@ router.post("/register", async (req, res, next) => {
   try {
     const validation = await registerSchema.validateAsync(req.body);
     const { nickname, email, password, confirmedPassword } = validation;
-
-    const existNickname = await prisma.users.findFirst({
-      where: {
-        nickname: nickname,
-      },
-    });
-
-    if (existNickname) {
-      return res.status(409).json({ errorMessage: "중복된 닉네임입니다." });
-    }
-
-    const existEmail = await prisma.users.findFirst({
-      where: {
-        email: email,
-      },
-    });
-
-    if (existEmail) {
-      return res.status(409).json({ errorMessage: "중복된 이메일입니다." });
-    }
 
     if (password !== confirmedPassword) {
       return res.status(400).json({
