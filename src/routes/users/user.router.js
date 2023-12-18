@@ -281,7 +281,7 @@ router.post("/login", async (req, res, next) => {
       "Authorization, RefreshToken",
     );
     res.setHeader("Authorization", `Bearer ${accessToken}`);
-    res.setHeader("RefreshToken", `Bearer ${refreshToken}`);
+    res.setHeader("RefreshToken", refreshToken);
 
     //
     res.status(200).json({ message: "로그인에 성공하였습니다." });
