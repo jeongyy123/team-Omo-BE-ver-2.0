@@ -506,7 +506,7 @@ router.post("/login", async (req, res, next) => {
         userId: findUser.userId,
       },
       secretKey,
-      { expiresIn: "15s" },
+      { expiresIn: "30m" },
     );
 
     // Issue refresh token
@@ -623,7 +623,7 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
         userId: +userId,
       },
       secretKey,
-      { expiresIn: "15" },
+      { expiresIn: "30m" },
     );
 
     console.log("새로 발급된 AccessToken: ", newAccessToken);
