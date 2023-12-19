@@ -1,16 +1,18 @@
 import express from "express";
 import UsersRouter from "./routes/users/user.router.js";
-import AuthRouter from "./routes/users/auth.router.js";
+import UserProfileRouter from "./routes/profiles/profile.router.js";
+import OauthRouter from "./routes/Oauth/auth.router.js";
 import MainRouter from "./routes/main/main.router.js";
 import PostsRouter from "./routes/posts/posts.router.js";
-import ProfileRouter from "./routes/users/profile.router.js";
 import CommentsRouter from "./routes/comments/comments.router.js";
 import LocationRouter from "./routes/locations/location.router.js";
-import LikeRouter from './routes/isLike/isLike.router.js'
-import BookmarkRouter from './routes/bookmark/bookmark.router.js'
+import LikeRouter from "./routes/isLike/isLike.router.js";
+import BookmarkRouter from "./routes/bookmark/bookmark.router.js";
 import cookieParser from "cookie-parser";
 import ErrorMiddleware from "./middlewares/error.middleware.js";
 import session from "express-session";
+import swaggerConfig from "./swagger/swagger.js";
+import swaggerUi from "swagger-ui-express";
 // import configurePassport from "./passport/index.js";
 import passport from "passport";
 import cors from "cors";
@@ -47,23 +49,23 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerConfig.specs));
 
 app.get("/", (req, res) => {
   return res.status(200).json({ message: "success" });
 });
 
 app.use("/api", [
-  ProfileRouter,
+  UserProfileRouter,
   MainRouter,
   PostsRouter,
   CommentsRouter,
   LocationRouter,
   LikeRouter,
-  BookmarkRouter
+  BookmarkRouter,
 ]);
 
-app.use("/auth", [AuthRouter, UsersRouter]);
+app.use("/auth", [OauthRouter, UsersRouter]);
 app.use(ErrorMiddleware);
 
 app.listen(PORT, (req, res) => {

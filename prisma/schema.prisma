@@ -29,6 +29,15 @@ model Users {
   @@map("Users" )
 }
 
+model verificationCode {
+  verificationCodeId    Int @id @default(autoincrement())  @map("codeId")
+  email                 String                             @map("email")
+  verificationCode      String                             @map("verificationCode")
+  expiryDate            DateTime                           @map("expiryDate")
+
+  @@map("verificationCode")
+}
+
 model RefreshTokens {
   tokenId       Int      @id @default(autoincrement()) @map("tokenId")
   UserId        Int      @map("UserId")

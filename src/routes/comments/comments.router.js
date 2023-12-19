@@ -3,15 +3,14 @@ import authMiddleware from "../../middlewares/auth.middleware.js";
 import { prisma } from "../../utils/prisma/index.js";
 import multer from "multer";
 import { createComments } from "../../validations/comments.validation.js"
-import crypto from "crypto";
-
+import crypto from "crypto";  
 import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 
-//dotenv.config();
+// dotenv.config();
 
 // To get a complately unique name
 const randomImageName = (bytes = 32) =>
@@ -93,14 +92,17 @@ router.get("/posts/:postId/comments", async (req, res, next) => {
         where: { PostId: +postId },
         select: {
             User: {
+              select: {
                 nickname: true,
                 imgUrl: true
+              }
             }
         },
         orderBy: { createdAt: "desc" }
     })
-
-    const getObjectParams = {
+    // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
+    if (userPosts.imgUrl && userPosts.imgUrl.length === 64) {
+      const getObjectParams = {
         Bucket: bucketName, // 버킷 이름
         Key: userPosts.imgUrl, // 이미지 키
       };
@@ -109,6 +111,12 @@ router.get("/posts/:postId/comments", async (req, res, next) => {
       const command = new GetObjectCommand(getObjectParams);
       const url = await getSignedUrl(s3, command);
       userPosts.imgUrl = url;
+    } else {
+      const defaultImageUrl =
+        "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw";
+
+      userPosts.imgUrl = defaultImageUrl;
+    }
 
     return res.status(200).json({ data: comment })
 }catch (error) {
