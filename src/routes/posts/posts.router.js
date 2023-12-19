@@ -6,7 +6,7 @@ import { createPosts } from "../../validations/posts.validation.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import { getImageS3, getManyImagesS3, getSingleImageS3, getProfileImageS3 } from "../../utils/getImageS3.js";
 import { fileFilter } from "../../utils/putImageS3.js";
-import { setCheckCache, getChckeCache } from "../../middlewares/cache.middleware.js";
+// import { setCheckCache, getChckeCache } from "../../middlewares/cache.middleware.js";
 import {
   S3Client,
   PutObjectCommand,
@@ -14,17 +14,17 @@ import {
 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import crypto from "crypto";
-import Redis from 'ioredis';
+// import Redis from 'ioredis';
 
 const router = express.Router();
 
 dotenv.config();
 
-const redis = new Redis({
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-  password: process.env.REDIS_PASSWORD,
-});
+// const redis = new Redis({
+//   host: process.env.REDIS_HOST,
+//   port: process.env.REDIS_PORT,
+//   password: process.env.REDIS_PASSWORD,
+// });
 
 const bucketName = process.env.BUCKET_NAME;
 const region = process.env.BUCKET_REGION;
@@ -104,7 +104,7 @@ router.get("/posts", async (req, res, next) => {
 
     await getManyImagesS3(posts);
 
-    // const cacheKey = `posts:${categoryName || 'all'}:${districtName || 'all'}`;
+    // const cacheKey = `posts:${categoryName || 'all'}:${districtName || 'all'}`; //키를 ZADD로 표현합세
     // await redis.set(cacheKey, JSON.stringify(posts));
 
     return res.status(200).json(posts);
