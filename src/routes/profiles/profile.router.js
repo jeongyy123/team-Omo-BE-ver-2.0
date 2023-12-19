@@ -44,7 +44,8 @@ const s3 = new S3Client({
  *   get:
  *     summary: 사용자 정보 조회.
  *     description: 로그인에 성공한 사용자는 마이페이지에서 자신의 프로필 정보를 조회할 수 있다.
- *     tags: [Profiles]
+ *     tags:
+ *       - Profiles
  *     responses:
  *       200:
  *         description: 사용자의 프로필 정보를 성공적으로 조회했을 경우
@@ -128,7 +129,8 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
  *   get:
  *     summary: 마이페이지 게시글 및 댓글 목록 조회
  *     description: 사용자의 닉네임과 함께 게시글과 댓글 목록을 조회한다
- *     tags: [Profiles]
+ *     tags:
+ *      - Profiles
  *     responses:
  *       200:
  *         description: 사용자가 작성한 게시글과 댓글 목록을 성공적으로 불러왔을 경우
@@ -166,6 +168,9 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
  *                           likeCount:
  *                             type: number
  *                             description: 게시글 좋아요 갯수
+ *                           commentCount:
+ *                             type: number
+ *                             description: 게시글의 댓글 갯수
  *                           createdAt:
  *                             type: string
  *                             format: date-time
@@ -294,7 +299,8 @@ router.get(
  *    get:
  *      summary: 사용자가 북마크한 장소들의 목록들을 불러온다
  *      description: 로그인에 성공한 사용자는 자신이 북마크한 장소들의 목록들을 조회할 수 있다
- *      tags: [Profiles]
+ *      tags:
+ *        - Profiles
  *      responses:
  *        '200':
  *          description: 사용자가 북마크한 장소들의 목록을 성공적으로 불러왔을 경우
@@ -434,7 +440,8 @@ const upload = multer({ storage: storage, fileFilter });
  *    patch:
  *      summary: 사용자 프로필 수정
  *      description: 사용자는 자신의 프로필을 수정할 수 있다
- *      tags: [Profiles]
+ *      tags:
+ *        - Profiles
  *      requestBody:
  *        required: true
  *        content:
