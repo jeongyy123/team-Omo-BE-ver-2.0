@@ -5,6 +5,10 @@ export default function (err, req, res, next) {
   if (err.name === "ValidationError") {
     return res.status(400).json({ errorMessage: err.message });
   }
+  if (err.code === "INCORRECT_FILETYPE") {
+    return res.status(400).json({ errorMessage: err.message });
+  }
+
 
   // 그 외의 에러가 발생하면, 서버 에러로 처리합니다.
   return res
