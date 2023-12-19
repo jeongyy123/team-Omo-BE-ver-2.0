@@ -57,9 +57,6 @@ router.get("/posts", async (req, res, next) => {
       : null;
 
     const parsedPage = parseInt(page, 10) || 1;
-    const parsedPageSize = parseInt(page, 10) || 10;
-    const startIndex = (parsedPage - 1) * parsedPageSize;
-    const endIndex = startIndex + parsedPageSize;
 
     const posts = await prisma.posts.findMany({
       select: {
@@ -67,6 +64,11 @@ router.get("/posts", async (req, res, next) => {
           select: {
             nickname: true,
           },
+        },
+        Category: {
+          select: {
+            categoryName: true
+          }
         },
         Location: {
           select: {
@@ -105,7 +107,6 @@ router.get("/posts", async (req, res, next) => {
     // const cacheKey = `posts:${categoryName || 'all'}:${districtName || 'all'}`;
     // await redis.set(cacheKey, JSON.stringify(posts));
 
-    // await redis.set('posts', JSON.stringify(posts))
     return res.status(200).json(posts);
   } catch (error) {
     next(error);
