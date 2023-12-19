@@ -225,6 +225,11 @@ router.get(
   async (req, res, next) => {
     try {
       const { userId } = req.user;
+      const pageSize = req.query.pageSize || 10; // 한 페이지에 표시할 데이터의 갯수
+
+      // https://tonadus.shop/api/users/self/profile/posts?lastPostId=5&pageSize=10
+
+      console.log("pageSize >>>", pageSize);
 
       // 유저가 작성한 게시글의 갯수
       const myPostsCount = await prisma.posts.count({
@@ -233,48 +238,54 @@ router.get(
         },
       });
 
-      const userPosts = await prisma.users.findFirst({
+      // 이전 페이지의 마지막 postId를 쿼리스트링을 통해 받아옴
+      const lastPostId = req.query.lastPostId || null;
+
+      const userPosts = await prisma.posts.findMany({
         where: {
-          userId: +userId,
+          UserId: +userId,
+          // 이전 페이지의 마지막 lastPostId보다 큰 값일 경우에만 추가 필터링
+          postId: lastPostId ? { gt: +lastPostId } : undefined,
         },
+        // 내 게시글
         select: {
-          nickname: true,
-          Posts: {
-            // 내 게시글
+          postId: true,
+          UserId: true,
+          User: {
             select: {
-              postId: true,
+              nickname: true, // 현재 유저 네임!
+            },
+          },
+          imgUrl: true,
+          content: true,
+          likeCount: true,
+          commentCount: true, // 각 게시글의 댓글 갯수
+          createdAt: true,
+          updatedAt: true,
+          Comments: {
+            // 게시글에 있는 댓글
+            select: {
               UserId: true,
-              imgUrl: true,
+              PostId: true,
               content: true,
-              likeCount: true,
-              commentCount: true, // 각 게시글의 댓글 갯수
               createdAt: true,
-              updatedAt: true,
-              Comments: {
-                // 게시글에 있는 댓글
+              User: {
                 select: {
-                  UserId: true,
-                  PostId: true,
-                  content: true,
-                  createdAt: true,
-                  User: {
-                    select: {
-                      nickname: true, // 댓글 작성자의 닉네임
-                      imgUrl: true, // 댓글 작성자의 프로필 사진
-                    },
-                  },
-                },
-              },
-              Location: {
-                select: {
-                  address: true,
+                  nickname: true, // 댓글 작성자의 닉네임
+                  imgUrl: true, // 댓글 작성자의 프로필 사진
                 },
               },
             },
           },
+          Location: {
+            select: {
+              address: true,
+            },
+          },
         },
+        take: +pageSize, // 가져올 데이터의 갯수
         orderBy: {
-          createdAt: "desc",
+          postId: "asc", // 커서 기반 정렬
         },
       });
 
@@ -368,6 +379,12 @@ router.get(
   async (req, res, next) => {
     try {
       const { userId } = req.user;
+      // const page = req.query.page || 1; // 페이지 번호, 쿼리 스트링을 통해서 전달
+      const pageSize = req.query.pageSize || 10; // 한 페이지에 표시할 데이터의 갯수
+
+      // https://tonadus.shop/api/users/self/profile/bookmark?lastBookmarkId=5&pageSize=20
+
+      console.log("pageSize >>>", pageSize);
 
       // 유저가 북마크한 장소들의 갯수
       const myFavouritePlacesCount = await prisma.bookmark.count({
@@ -376,11 +393,19 @@ router.get(
         },
       });
 
+      // 이전 페이지의 마지막 bookmarkId를 쿼리스트링을 통해 받아옴
+      const lastBookmarkId = req.query.lastBookmarkId || null;
+
+      console.log("lastBookmarkId >>>", lastBookmarkId);
+
       const favouritePlaces = await prisma.bookmark.findMany({
         where: {
           UserId: +userId,
+          // 이전 페이지의 마지막 bookmarkId보다 큰 값일 경우에만 추가 필터링
+          bookmarkId: lastBookmarkId ? { gt: +lastBookmarkId } : undefined,
         },
         select: {
+          bookmarkId: true,
           Location: {
             select: {
               locationId: true,
@@ -408,8 +433,9 @@ router.get(
                 },
               },
             },
-          },
+          }, // Location
         },
+        take: +pageSize, // 가져올 데이터의 갯수
         orderBy: {
           createdAt: "desc",
         },

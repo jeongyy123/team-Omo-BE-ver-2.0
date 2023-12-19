@@ -506,7 +506,7 @@ router.post("/login", async (req, res, next) => {
         userId: findUser.userId,
       },
       secretKey,
-      { expiresIn: "1h" },
+      { expiresIn: "30m" },
     );
 
     // Issue refresh token
@@ -537,7 +537,7 @@ router.post("/login", async (req, res, next) => {
       "Authorization, RefreshToken",
     );
     res.setHeader("Authorization", `Bearer ${accessToken}`);
-    res.setHeader("RefreshToken", refreshToken);
+    res.setHeader("RefreshToken", `Bearer ${refreshToken}`);
 
     //
     res.status(200).json({ message: "로그인에 성공하였습니다." });
@@ -623,7 +623,7 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
         userId: +userId,
       },
       secretKey,
-      { expiresIn: "1h" },
+      { expiresIn: "30m" },
     );
 
     console.log("새로 발급된 AccessToken: ", newAccessToken);
