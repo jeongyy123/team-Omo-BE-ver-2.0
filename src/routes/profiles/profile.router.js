@@ -368,6 +368,13 @@ router.get(
   async (req, res, next) => {
     try {
       const { userId } = req.user;
+      const page = req.query.page || 1; // 페이지 번호, 쿼리 스트링을 통해서 전달
+      const pageSize = 10; // 한 페이지에 표시할 데이터의 갯수
+
+      // https://tonadus.shop/api/users/self/profile/bookmark?lastBookmarkId=12345&pageSize=10
+
+      console.log("page >>>", page);
+      console.log("pageSize >>>", pageSize);
 
       // 유저가 북마크한 장소들의 갯수
       const myFavouritePlacesCount = await prisma.bookmark.count({
@@ -376,11 +383,20 @@ router.get(
         },
       });
 
+      // 이전 페이지의 마지막 bookmarkId를 쿼리스트링을 통해 받아옴
+      const lastBookmarkId = req.query.lastBookmarkId || null;
+      const cursor = lastBookmarkId
+        ? { bookmarkId: +lastBookmarkId }
+        : undefined;
+
       const favouritePlaces = await prisma.bookmark.findMany({
         where: {
           UserId: +userId,
+          // 이전 페이지의 마지막 bookmarkId보다 큰 값일 경우에만 추가 필터링
+          ...cursor,
         },
         select: {
+          bookmarkId: true,
           Location: {
             select: {
               locationId: true,
@@ -408,7 +424,10 @@ router.get(
                 },
               },
             },
-          },
+          }, // Location
+          take: pageSize, // 가져올 데이터의 갯수
+          // 이전 페이지의 마지막 bookmarkId가 있으면 해당 아이디를 제외하고 다음페이지 데이터를 가져옴
+          skip: lastBookmarkId ? pageSize * (page - 1) : 0,
         },
         orderBy: {
           createdAt: "desc",
