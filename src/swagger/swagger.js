@@ -23,4 +23,4 @@ const specs = swaggerJsdoc(options);
 
 export default { swaggerUi, specs };
 
-// http://localhost:5000/api-docs/
+// https://tonadus.shop/api-docs/
