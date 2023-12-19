@@ -1,4 +1,4 @@
-import Redis from 'ioredis';
+import Redis from "ioredis";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -13,7 +13,7 @@ const redis = new Redis({
 export const getChckeCache = async (req, res, next) => {
   let value = await redis.hgetall(req.key);
   if (value) {
-    return res.status(200).json(value)
+    return res.status(200).json(value);
   } else {
     next();
   }
@@ -33,4 +33,4 @@ const removeCache = async (key) => {
   } catch (error) {
     return null;
   }
-}
+};

@@ -4,9 +4,17 @@ import jimp from "jimp";
 import { prisma } from "../../utils/prisma/index.js";
 import { createPosts } from "../../validations/posts.validation.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
-import { getImageS3, getManyImagesS3, getSingleImageS3, getProfileImageS3 } from "../../utils/getImageS3.js";
+import {
+  getImageS3,
+  getManyImagesS3,
+  getSingleImageS3,
+  getProfileImageS3,
+} from "../../utils/getImageS3.js";
 import { fileFilter } from "../../utils/putImageS3.js";
-import { setCheckCache, getChckeCache } from "../../middlewares/cache.middleware.js";
+import {
+  setCheckCache,
+  getChckeCache,
+} from "../../middlewares/cache.middleware.js";
 import {
   S3Client,
   PutObjectCommand,
@@ -14,7 +22,7 @@ import {
 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import crypto from "crypto";
-import Redis from 'ioredis';
+import Redis from "ioredis";
 
 const router = express.Router();
 
@@ -96,7 +104,7 @@ router.get("/posts", async (req, res, next) => {
         }),
         updatedAt: {
           lt: new Date(),
-        }
+        },
       },
     });
 
@@ -126,7 +134,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         User: {
           select: {
             nickname: true,
-            imgUrl: true
+            imgUrl: true,
           },
         },
         Location: {
@@ -138,9 +146,9 @@ router.get("/posts/:postId", async (req, res, next) => {
             Category: {
               select: {
                 categoryId: true,
-                categoryName: true
-              }
-            }
+                categoryName: true,
+              },
+            },
           },
         },
         Comments: {
@@ -151,9 +159,9 @@ router.get("/posts/:postId", async (req, res, next) => {
             User: {
               select: {
                 imgUrl: true,
-                nickname: true
-              }
-            }
+                nickname: true,
+              },
+            },
           },
         },
       },
@@ -231,8 +239,14 @@ router.post(
         const imgName = randomImgName();
 
         // 이미지 사이즈 조정
-        const buffer = await jimp.read(file.buffer)
-          .then(image => image.resize(jimp.AUTO, 350).quality(70).getBufferAsync(jimp.MIME_JPEG));
+        const buffer = await jimp
+          .read(file.buffer)
+          .then((image) =>
+            image
+              .resize(jimp.AUTO, 350)
+              .quality(70)
+              .getBufferAsync(jimp.MIME_JPEG),
+          );
 
         const params = {
           Bucket: bucketName,
@@ -279,8 +293,7 @@ router.post(
               imgUrl: imgNames.join(","),
             },
           });
-        })
-
+        });
       } else {
         //location 정보가 기존 O => location 업데이트, posts 생성
         await prisma.$transaction(async (prisma) => {
@@ -341,7 +354,7 @@ router.patch("/posts/:postId", authMiddleware, async (req, res, next) => {
         where: { postId: +postId, UserId: +userId },
         data: {
           content,
-          star
+          star,
         },
       });
 
@@ -358,15 +371,17 @@ router.patch("/posts/:postId", authMiddleware, async (req, res, next) => {
           locationId: createPost.LocationId,
         },
         data: {
-          starAvg: starAvg._avg.star, address, storeName
+          starAvg: starAvg._avg.star,
+          address,
+          storeName,
         },
       });
-    })
+    });
 
     return res.status(200).json({ message: "게시물을 수정하였습니다." });
   } catch (error) {
     next(error);
-    throw new Error("게시글 수정에서 에러가 발생했습니다.")
+    throw new Error("게시글 수정에서 에러가 발생했습니다.");
   }
 });
 
