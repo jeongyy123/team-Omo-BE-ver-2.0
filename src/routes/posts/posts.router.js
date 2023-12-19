@@ -76,6 +76,7 @@ router.get("/posts", async (req, res, next) => {
             storeName: true,
             address: true,
             starAvg: true,
+            postCount: true
           },
         },
         postId: true,
@@ -139,6 +140,7 @@ router.get("/posts/:postId", async (req, res, next) => {
             storeName: true,
             latitude: true,
             longitude: true,
+            postCount: true,
             Category: {
               select: {
                 categoryId: true,
@@ -266,6 +268,7 @@ router.post(
               latitude,
               longitude,
               starAvg: 0,
+              postCount: 1,
               Category: { connect: { categoryId: +category.categoryId } },
               District: { connect: { districtId: +district.districtId } },
               User: { connect: { userId: +user.userId } },
@@ -279,7 +282,9 @@ router.post(
               likeCount: 0,
               User: { connect: { userId: +user.userId } },
               Category: { connect: { categoryId: +category.categoryId } },
-              Location: { connect: { locationId: +createLocation.locationId } },
+              Location: {
+                connect: { locationId: +createLocation.locationId }
+              },
               imgUrl: imgNames.join(","),
             },
           });
@@ -313,6 +318,9 @@ router.post(
             },
             data: {
               starAvg: starsAvg._avg.star,
+              postCount: {
+                increment: 1
+              }
             },
           });
         });
