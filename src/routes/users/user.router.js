@@ -74,12 +74,12 @@ router.post("/verify-email", async (req, res, next) => {
     });
 
     const mailOptions = {
-      from: sender, // 발신자 이메일 주소
+      from: "OMO <sender>", // 발신자 이메일 주소
       to: email, // 사용자가 입력한 이메일
       subject: "OMO에서 온 인증 관련 메일입니다 ✔", // Subject line
       text: `인증 코드 : ${randomNumber}를 입력해주세요.`, // plain text body
       html: `
-              <h1>안녕하세요, OMO에서 인증 관련 메일입니다!</h1>
+              <h1 style="color: black;">안녕하세요, <span style="font-family: 'Pacifico', cursive; font-size: 48px; font-weight: bold; color: #62a4c4; letter-spacing: 5px;">OMO</span>에서 온 인증 관련 메일입니다!</h1>
               <p>아래 인증 코드를 사용하여 계정을 확인해주세요:</p>
               <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; text-align: center;">
                 <h2 style="margin-bottom: 10px;">인증 코드</h2>
