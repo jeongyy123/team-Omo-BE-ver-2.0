@@ -21,19 +21,27 @@ router.post("/posts/:locationId/bookmark", authMiddleware, async (req, res, next
     const bookmark = await prisma.bookmark.findFirst({
       where: { LocationId: +locationId, UserId: +userId }
     })
-
+    let bookmarkLocation;
     if (!bookmark) {
-      await prisma.bookmark.create({
+      const bookmark = await prisma.bookmark.create({
         data: {
           LocationId: +locationId,
           UserId: +userId
+        }
+      })
+      bookmarkLocation = await prisma.locations.findFirst({
+        where: { locationId: bookmark.LocationId },
+        select: {
+          locationId: true,
+          latitude: true,
+          longitude: true
         }
       })
     } else {
       return res.status(400).json({ message: "이미 북마크한 장소입니다." })
     }
 
-    return res.status(200).json({ message: "북마크 완료" })
+    return res.status(200).json(bookmarkLocation)
   } catch (error) {
     next(error)
   }
@@ -70,5 +78,28 @@ router.delete("/posts/:locationId/bookmark", authMiddleware, async (req, res, ne
     next(error)
   }
 })
+
+// 유저의 북마크 지도 표시
+router.get("/posts/user/bookmark", authMiddleware, async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+
+    const userBookmark = await prisma.bookmark.findMany({
+      where: { UserId: +userId },
+      select: {
+        Location: {
+          select: {
+            locationId: true,
+            latitude: true,
+            longitude: true
+          }
+        }
+      }
+    })
+    return res.status(200).json(userBookmark)
+  } catch (error) {
+    next(error)
+  }
+});
 
 export default router;

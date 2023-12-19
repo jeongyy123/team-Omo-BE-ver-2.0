@@ -6,6 +6,7 @@ import { createPosts } from "../../validations/posts.validation.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import { getImageS3, getManyImagesS3, getSingleImageS3, getProfileImageS3 } from "../../utils/getImageS3.js";
 import { fileFilter } from "../../utils/putImageS3.js";
+import { setCheckCache, getChckeCache } from "../../middlewares/cache.middleware.js";
 import {
   S3Client,
   PutObjectCommand,
@@ -13,10 +14,17 @@ import {
 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import crypto from "crypto";
+import Redis from 'ioredis';
 
 const router = express.Router();
 
 dotenv.config();
+
+const redis = new Redis({
+  host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
+  password: process.env.REDIS_PASSWORD,
+});
 
 const bucketName = process.env.BUCKET_NAME;
 const region = process.env.BUCKET_REGION;
@@ -36,14 +44,7 @@ const upload = multer({ storage: storage, fileFilter });
 
 const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
 
-// const redisClient = new Redis({
-//   host: process.env.REDIS_HOST, // Redis 서버 호스트
-//   port: process.env.REDIS_PORT,         // Redis 포트 번호
-//   password: process.env.REDIS_PASSWORD,         // Redis 포트 번호
-// });
-
 /* 게시물 목록 조회 */
-// 커서 기반
 router.get("/posts", async (req, res, next) => {
   try {
     const { page, lastSeenPage, categoryName, districtName } = req.query;
@@ -69,6 +70,7 @@ router.get("/posts", async (req, res, next) => {
         },
         Location: {
           select: {
+            locationId: true,
             storeName: true,
             address: true,
             starAvg: true,
@@ -100,6 +102,7 @@ router.get("/posts", async (req, res, next) => {
 
     await getManyImagesS3(posts);
 
+    // await redis.hmset(req.query, posts)
     return res.status(200).json({ posts });
   } catch (error) {
     next(error);
@@ -205,23 +208,23 @@ router.post(
         return res.status(400).json({ message: "지역이 존재하지 않습니다." });
       }
 
-      // // 같은 장소에 한 사람이 여러 개의 포스팅 올리지 않도록 하기
-      // const findPosts = await prisma.posts.findFirst({
-      //   where: {
-      //     UserId: userId,
-      //     Location: {
-      //       is: {
-      //         address,
-      //       },
-      //     },
-      //   },
-      // });
+      // 같은 장소에 한 사람이 여러 개의 포스팅 올리지 않도록 하기
+      const findPosts = await prisma.posts.findFirst({
+        where: {
+          UserId: userId,
+          Location: {
+            is: {
+              address,
+            },
+          },
+        },
+      });
 
-      // if (findPosts) {
-      //   return res.status(400).json({
-      //     message: "이미 같은 장소에 대한 유저의 포스팅이 존재합니다.",
-      //   });
-      // }
+      if (findPosts) {
+        return res.status(400).json({
+          message: "이미 같은 장소에 대한 유저의 포스팅이 존재합니다.",
+        });
+      }
 
       //이미지 이름 나눠서 저장
       const imgPromises = req.files.map(async (file) => {
