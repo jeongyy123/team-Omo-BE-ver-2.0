@@ -11,9 +11,10 @@ const redis = new Redis({
 
 // 저장 된 데이터 redis에서 가져오기
 export const getChckeCache = async (req, res, next) => {
-  let value = await redis.hgetall(req.key);
+  let value = await redis.get('posts');
   if (value) {
-    return res.status(200).json(value)
+    const posts = JSON.parse(value)
+    return res.status(200).json(posts)
   } else {
     next();
   }

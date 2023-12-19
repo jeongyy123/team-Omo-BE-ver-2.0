@@ -102,8 +102,11 @@ router.get("/posts", async (req, res, next) => {
 
     await getManyImagesS3(posts);
 
-    // await redis.hmset(req.query, posts)
-    return res.status(200).json({ posts });
+    // const cacheKey = `posts:${categoryName || 'all'}:${districtName || 'all'}`;
+    // await redis.set(cacheKey, JSON.stringify(posts));
+
+    // await redis.set('posts', JSON.stringify(posts))
+    return res.status(200).json(posts);
   } catch (error) {
     next(error);
   }
