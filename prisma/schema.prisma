@@ -29,13 +29,13 @@ model Users {
   @@map("Users" )
 }
 
-model verificationCode {
+model VerificationCode {
   verificationCodeId    Int @id @default(autoincrement())  @map("codeId")
   email                 String                             @map("email")
   verificationCode      String                             @map("verificationCode")
   expiryDate            DateTime                           @map("expiryDate")
 
-  @@map("verificationCode")
+  @@map("VerificationCode")
 }
 
 model RefreshTokens {
@@ -119,6 +119,7 @@ model Locations {
   latitude    String  @map("latitude")
   longitude   String  @map("longitude")
   starAvg     Int     @map("starAvg")
+  postCount   Int     @default(0) @map("postCount")
 
   Category Categories @relation(fields: [CategoryId], references: [categoryId], onDelete: Cascade)
   District Districts  @relation(fields: [DistrictId], references: [districtId], onDelete: Cascade)
