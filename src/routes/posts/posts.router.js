@@ -11,10 +11,7 @@ import {
   getProfileImageS3,
 } from "../../utils/getImageS3.js";
 import { fileFilter } from "../../utils/putImageS3.js";
-import {
-  setCheckCache,
-  getChckeCache,
-} from "../../middlewares/cache.middleware.js";
+// import { setCheckCache, getChckeCache } from "../../middlewares/cache.middleware.js";
 import {
   S3Client,
   PutObjectCommand,
@@ -22,17 +19,17 @@ import {
 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import crypto from "crypto";
-import Redis from "ioredis";
+// import Redis from 'ioredis';
 
 const router = express.Router();
 
 dotenv.config();
 
-const redis = new Redis({
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-  password: process.env.REDIS_PASSWORD,
-});
+// const redis = new Redis({
+//   host: process.env.REDIS_HOST,
+//   port: process.env.REDIS_PORT,
+//   password: process.env.REDIS_PASSWORD,
+// });
 
 const bucketName = process.env.BUCKET_NAME;
 const region = process.env.BUCKET_REGION;
@@ -65,9 +62,6 @@ router.get("/posts", async (req, res, next) => {
       : null;
 
     const parsedPage = parseInt(page, 10) || 1;
-    const parsedPageSize = parseInt(page, 10) || 10;
-    const startIndex = (parsedPage - 1) * parsedPageSize;
-    const endIndex = startIndex + parsedPageSize;
 
     const posts = await prisma.posts.findMany({
       select: {
@@ -75,6 +69,11 @@ router.get("/posts", async (req, res, next) => {
           select: {
             nickname: true,
           },
+        },
+        Category: {
+          select: {
+            categoryName: true
+          }
         },
         Location: {
           select: {
@@ -110,8 +109,10 @@ router.get("/posts", async (req, res, next) => {
 
     await getManyImagesS3(posts);
 
-    // await redis.hmset(req.query, posts)
-    return res.status(200).json({ posts });
+    // const cacheKey = `posts:${categoryName || 'all'}:${districtName || 'all'}`; //키를 ZADD로 표현합세
+    // await redis.set(cacheKey, JSON.stringify(posts));
+
+    return res.status(200).json(posts);
   } catch (error) {
     next(error);
   }
