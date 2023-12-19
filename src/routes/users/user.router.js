@@ -17,9 +17,44 @@ const router = express.Router();
 
 /**
  * @swagger
- * tags:
- *   - name: Users
- *     description: 회원가입/로그인/로그아웃/회원탈퇴/엑세스 토큰 재발급
+ * paths:
+ *  /auth/verify-email:
+ *    post:
+ *     summary: 이메일 인증 요청
+ *     description: 회원가입할 때 이메일 인증을 요청하면 인증 이메일이 해당 이메일 주소로 전송한다
+ *     tags:
+ *       - Users
+ *     responses:
+ *      '200':
+ *        description: 이메일 유효성 검증 후 해당 이메일로 인증번호를 성공적으로 전송한 경우
+ *        content:
+ *         applicaiton/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 example: 메일 전송에 성공하였습니다.
+ *      '409':
+ *        description: 입력한 이메일이 이미 존재하는 경우
+ *        content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               errorMessage:
+ *                 type: string
+ *                 example: 중복된 이메일입니다.
+ *      '500':
+ *        description: 이메일 전송에 실패한 경우
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                errorMessage:
+ *                  type: string
+ *                  example: 메일 전송에 실패하였습니다..
  */
 
 // 랜덤한 숫자 생성 함수
@@ -27,7 +62,7 @@ function generateRandomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
-// 이메일 인증을 요청하면 인증 이메일이 해당 이메일 주소로 전송하는 API
+// 이메일 인증 요청 API
 router.post("/verify-email", async (req, res, next) => {
   try {
     const validation = await emailSchema.validateAsync(req.body);
@@ -110,7 +145,48 @@ router.post("/verify-email", async (req, res, next) => {
   }
 });
 
-// 입력받은 인증 코드가 올바른지 학인하는 API
+/**
+ * @swagger
+ * paths:
+ *  /auth/verify-authentication-code:
+ *   post:
+ *    summary: 인증코드 확인
+ *    description: 입력받은 인증 코드가 올바른지 확인한다
+ *    tags:
+ *      - Users
+ *    responses:
+ *      '200':
+ *        description: 입력한 인증코드가 서버에서 발급한 인증코드와 일치하는 경우
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                message:
+ *                  type: string
+ *                  example: 성공적으로 인증되었습니다
+ *      '404':
+ *        description: 입력한 인증번호가 서버에서 발급한 인증코드와 일치하지 않는 경우
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                errorMessage:
+ *                  type: string
+ *                  example: 인증번호가 일치하지 않습니다
+ *      '500':
+ *        description: 서버에서 에러가 발생한 경우
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                errorMessage:
+ *                  type: string
+ *                  example: 서버에서 에러가 발생하였습니다.
+ */
+
 router.post("/verify-authentication-code", async (req, res, next) => {
   try {
     const { authenticationCode, email } = req.body;
@@ -147,6 +223,48 @@ router.post("/verify-authentication-code", async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * paths:
+ *  /auth/chcek-nickname:
+ *   post:
+ *    summary: 닉네임 중복확인
+ *    description: 닉네임이 이미 사용중인 닉네임인지 확인한다
+ *    tags:
+ *      - Users
+ *    responses:
+ *     '200':
+ *       description: 입력받은 닉네임이 유효한 경우
+ *       content:
+ *        application/json:
+ *         schema:
+ *          type: object
+ *          properties:
+ *           message:
+ *            type: string
+ *            example: 중복검사 완료
+ *        '409':
+ *          description: 다른 사용자가 이미 같은 닉네임을 사용중인 경우
+ *          content:
+ *           application/json:
+ *            schema:
+ *             type: object
+ *             properties:
+ *              errorMessage:
+ *               type: string
+ *               example: 이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.
+ *        '500':
+ *          description: 서버에서 에러가 발생한 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다.
+ */
+
 router.post("/chcek-nickname", async (req, res, next) => {
   try {
     const validation = await nicknameSchema.validateAsync(req.body);
@@ -181,7 +299,8 @@ router.post("/chcek-nickname", async (req, res, next) => {
  *   post:
  *     summary: 사용자 등록
  *     description: POST 방식으로 사용자를 등록한다
- *     tags: [Users]
+ *     tags:
+ *       - Users
  *     requestBody:
  *       description: 사용자가 서버에 전달하는 값에 따라 결과 값이 다르다 (사용자 등록)
  *       required: true
@@ -288,7 +407,8 @@ router.post("/register", async (req, res, next) => {
  *    post:
  *      summary: 로그인
  *      description: 이메일 주소와 비밀번호로 로그인
- *      tags: [Users]
+ *      tags:
+ *        - Users
  *      requestBody:
  *        required: true
  *        content:
@@ -441,7 +561,8 @@ router.post("/login", async (req, res, next) => {
  *    post:
  *      summary: 엑세스 토큰 재발급
  *      description: 유효한 리프레시 토큰을 가지고 엑세스 토큰을 재발급 받는다
- *      tags: [Users]
+ *      tags:
+ *        - Users
  *      responses:
  *        '200':
  *          description: 성공적으로 엑세스 토큰이 재발급된 경우
@@ -538,7 +659,8 @@ function validateToken(token, secretKey) {
  *    post:
  *      summary: 로그아웃
  *      description: 유저를 로그아웃 시키고 토큰을 무효화시킨다
- *      tags: [Users]
+ *      tags:
+ *       - Users
  *      responses:
  *        '200':
  *          description: 성공적으로 로그아웃이 된 경우
