@@ -5,9 +5,9 @@ import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import jimp from "jimp";
 import { profileEditSchema } from "../../validations/auth.validation.js";
-
 import multer from "multer";
 import crypto from "crypto";
+import { fileFilter } from "../../utils/putImageS3.js";
 
 import {
   S3Client,
@@ -425,7 +425,7 @@ router.get(
 // 매모리 저장 객체 생성
 const storage = multer.memoryStorage();
 // multer로 업로드 기능을 생성. 항상 이미지를 메모리에 저장하도록 하기 위함이다.
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage, fileFilter });
 
 /**
  * @swagger
