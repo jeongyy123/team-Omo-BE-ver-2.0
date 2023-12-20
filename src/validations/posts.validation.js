@@ -28,7 +28,7 @@ const createPosts = joi.object({
   }),
   star: joi.number().min(1).max(5).messages({
     "any.only": "별점을 입력해주세요.",
-  }),
-});
+  })
+}).unknown();
 
 export { createPosts };
