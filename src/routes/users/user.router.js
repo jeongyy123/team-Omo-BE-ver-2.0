@@ -194,7 +194,7 @@ router.post("/verify-authentication-code", async (req, res, next) => {
     // 인증번호가 일치하는지 확인
     const checkVerificationCode = await prisma.verificationCode.findFirst({
       where: {
-        verificationCode: String(authenticationCode),
+        verificationCode: authenticationCode,
         email: email,
       },
     });
