@@ -8,6 +8,7 @@ import CommentsRouter from "./routes/comments/comments.router.js";
 import LocationRouter from "./routes/locations/location.router.js";
 import LikeRouter from './routes/isLike/isLike.router.js'
 import BookmarkRouter from './routes/bookmark/bookmark.router.js'
+import RepliesRouter from './routes/replies/replies.ruter.js'
 import cookieParser from "cookie-parser";
 import ErrorMiddleware from "./middlewares/error.middleware.js";
 import session from "express-session";
@@ -20,7 +21,7 @@ dotenv.config();
 
 //
 const app = express();
-const PORT = 5000;
+const PORT = 5001;
 
 // express-session을 passport 설정 전에 먼저 사용하도록 설정
 app.use(
@@ -60,7 +61,8 @@ app.use("/api", [
   CommentsRouter,
   LocationRouter,
   LikeRouter,
-  BookmarkRouter
+  BookmarkRouter,
+  RepliesRouter
 ]);
 
 app.use("/auth", [AuthRouter, UsersRouter]);

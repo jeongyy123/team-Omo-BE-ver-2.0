@@ -68,6 +68,7 @@ model Comments {
   UserId      Int       @map("UserId")
   PostId      Int       @map("PostId")
   content     String    @map("content")
+  replyCount  Int       @default(0) @map("replyCount")
   createdAt   DateTime  @default(now()) @map("createdAt")
 
   Post Posts @relation(fields: [PostId], references: [postId], onDelete: Cascade)
@@ -110,6 +111,7 @@ model Locations {
   latitude    String  @map("latitude")
   longitude   String  @map("longitude")
   starAvg     Int     @map("starAvg")
+  postCount   Int     @default(0) @map("postCount")
 
   Category Categories @relation(fields: [CategoryId], references: [categoryId], onDelete: Cascade)
   District Districts  @relation(fields: [DistrictId], references: [districtId], onDelete: Cascade)

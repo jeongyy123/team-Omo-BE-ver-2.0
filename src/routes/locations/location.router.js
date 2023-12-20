@@ -23,6 +23,9 @@ const s3 = new S3Client({
 });
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+
+
+//둘러보기
 router.get("/locations", async (req, res, next) => {
   try {
     const { categoryName } = req.query;
@@ -52,6 +55,7 @@ router.get("/locations", async (req, res, next) => {
         latitude: true,
         longitude: true,
         starAvg: true,
+        postCount: true,
         Category: {
           select: {
             categoryName: true,
@@ -77,9 +81,6 @@ router.get("/locations", async (req, res, next) => {
       // 게시글 개수, 거리차 추가
       const locationsWithDistance = await Promise.all(
         location.map(async (loc) => {
-          const postCount = await prisma.posts.count({
-            where: { LocationId: loc.locationId },
-          });
           const distance = haversine(
             start,
             { latitude: loc.latitude, longitude: loc.longitude },
@@ -88,7 +89,6 @@ router.get("/locations", async (req, res, next) => {
           return {
             ...loc,
             distance,
-            postCount,
           };
         }),
       );
@@ -142,130 +142,6 @@ router.get("/locations", async (req, res, next) => {
     next(error);
   }
 });
-// router.get("/locations", async (req, res, next) => {
-//   try {
-//     const { categoryName } = req.query;
-//     const { latitude, longitude, ha, oa, pa, qa } = req.query;
-//     // const { districtName } = req.query;
-
-//     const category = await prisma.categories.findFirst({
-//       where: { categoryName }
-//     })
-//     console.log("4>>>>>>", category)
-//     // 위치 정보 가져오기
-//     const location = await prisma.locations.findMany({
-//       where: {
-//         latitude: {
-//           gte: qa,
-//           lte: pa
-//         },
-//         longitude: {
-//           gte: ha,
-//           lte: oa
-//         },
-//         ...(category?.categoryId && { CategoryId: category.categoryId }
-//         )
-//       },
-//       select: {
-//         locationId: true,
-//         storeName: true,
-//         address: true,
-//         latitude: true,
-//         longitude: true,
-//         starAvg: true,
-//         Category: {
-//           select: {
-//             categoryName: true,
-//           },
-//         },
-//         Posts: {
-//           select: {
-//             postId: true,
-//             star: true,
-//             imgUrl: true,
-//           }
-//         },
-//       },
-//       // take: 5
-//     });
-// console.log("9>>>>", latitude, longitude)
-//     if (latitude || longitude) {
-//       const start = {
-//         latitude: +latitude,
-//         longitude: +longitude,
-//       };
-//       console.log("8>>>>>>>>>>", start)
-
-//       const locationsWithDistance = await Promise.all(location.map(async (loc) => {
-//         const postCount = await prisma.posts.count({
-//           where: { LocationId: loc.locationId },
-//         });
-      
-
-//         const distance = haversine(
-//           start,
-//           { latitude: loc.latitude, longitude: loc.longitude },
-//           { unit: "meter" }
-//         );
-//         console.log("2>>>>>>", distance)
-
-//         return {
-//           ...loc,
-//           distance,
-//           postCount,
-//         }
-//       }));
-
-//       // 이미지 배열로 반환하는 로직
-//       const imgUrlsArray = locationsWithDistance.sort((a, b) => a.distance - b.distance)
-//         .flatMap((location) =>
-//           location.Posts.map((post) => post.imgUrl)
-//         );
-
-//         console.log(">>>>>>>>", imgUrlsArray)
-
-//       const paramsArray = imgUrlsArray.flatMap((urls) =>
-//         urls.split(",").map((url) => ({
-//           Bucket: bucketName,
-//           Key: url
-//         }))
-//       );
-//       console.log("5>>>>>>>>>", paramsArray)
-
-//       const signedUrlsArray = await Promise.all(
-//         paramsArray.map(async (params) => {
-//           const commands = new GetObjectCommand(params);
-//           const urls = await getSignedUrl(s3, commands);
-//           return urls;
-//         })
-//       )
-//       console.log("6>>>>>>.", signedUrlsArray)
-
-//       const locationsWithSignedUrls = locationsWithDistance.map(
-//         (location) => ({
-//           ...location,
-//           Posts: location.Posts.map((post, postIndex) => ({
-//             ...post,
-//             // imgUrl: signedUrlsArray[0]
-//             imgUrl: signedUrlsArray[postIndex],
-//           })),
-//         })
-//       );
-//       console.log("7>>>>>>>.", locationsWithSignedUrls)
-
-//       for (const p of locationsWithSignedUrls) {
-//         console.log("이걸확인해봐", p.Posts)
-//       }
-
-//       return res.status(200).json({ location: locationsWithSignedUrls });
-//     }
-
-//     return res.status(200).json({ location });
-
-//   } catch (error) {
-//     next(error);
-//   }
-// });
 
 
 // // 인기게시글 
@@ -273,22 +149,45 @@ router.get("/locations", async (req, res, next) => {
 // // commentCount, imgUrl, createdAt
 router.get("/locations/:locationId", async (req, res, next) => {
   try {
-    const { latitude, longitude, locationId } = req.params
+    const { latitude, longitude } = req.query
+    const { locationId } = req.params
     
 
     const location = await prisma.locations.findFirst({
       where: { locationId: +locationId },
       select: {
+        locationId: true,
         address: true,
         starAvg: true,
+        postCount: true,
         storeName: true,
         Posts: {
           select: {
             imgUrl: true
-          }
+          },
+          skip: 1,
+          take: 1
         }
       }
     })
+    // 16진수로 바꾼 imgUrl 을 , 기준으로 split 해주기
+    const locationImgUrlsArray = location.Posts[0].imgUrl.split(",")
+    
+    const locationParamsArray = locationImgUrlsArray.map((imgUrl) => ({
+      Bucket: bucketName,
+      Key: imgUrl
+    }))
+
+    const locationSignedUrlsArray = await Promise.all(
+      locationParamsArray.map(async (params) => {
+        const command = new GetObjectCommand(params);
+        const signedUrl = await getSignedUrl(s3, command);
+        return signedUrl;
+      }),
+    );
+    
+    location.Posts[0].imgUrl = locationSignedUrlsArray[0]
+
     const posts = await prisma.posts.findMany({
       where: {
         LocationId: +locationId
@@ -300,41 +199,61 @@ router.get("/locations/:locationId", async (req, res, next) => {
             imgUrl: true
           }
         },
-        // Category: {
-        //   select: {
-        //     categoryName: true
-        //   }
-      },
-      imgUrl: true,
-      content: true,
-      commentCount: true,
-      likeCount: true,
-      star: true,
-      createdAt: true
+        postId: true,
+        imgUrl: true,
+        content: true,
+        commentCount: true,
+        likeCount: true,
+        star: true,
+        createdAt: true
+      }
     })
+    // console.log("posts>>>>>>>>>>", posts)
 
     // 좋아요 순서로 정렬
     const sortedPosts = posts.sort((a, b) => b.likeCount - a.likeCount)
 
-    const imgUrlsArray = sortedPosts.flatMap((post) => post.imgUrl.split(","));
-    const paramsArray = imgUrlsArray.map((url) => ({
-      Bucket: bucketName,
-      Key: url,
-    }));
+    await getManyImagesS3(sortedPosts)
 
-    const signedUrlsArray = await Promise.all(
-      paramsArray.map(async (params) => {
-        const command = new GetObjectCommand(params);
-        const signedUrl = await getSignedUrl(s3, command);
-        return signedUrl;
-      })
-    );
-    // imgUrl을 signedUrlsArray로 교체
-    sortedPosts.forEach((post, index) => {
-      post.imgUrl = signedUrlsArray[index];
-    });
 
-    return res.status(200).json({ location, posts: sortedPosts });
+    for (const post of sortedPosts) { // 이해 안됨... for...of 의 존재는 암 검색ㄱㄱ
+      const params = {
+        Bucket: bucketName,
+        Key: post.User.imgUrl
+      }
+      console.log("params?>>>>>>>>>", params)
+      const command = new GetObjectCommand(params);
+      console.log("command>>>>", command)
+      const imgUrl = await getSignedUrl(s3, command);
+      console.log("imgUrl>>>>>>...", imgUrl)
+      post.User.imgUrl = imgUrl
+    }
+
+    
+  //   console.log("sortedPosts>>>", sortedPosts)
+  //   const imgUrlsArray = sortedPosts.flatMap((post) => post.imgUrl.split(","));
+  //   console.log("imgUrlsArray>>>>>>", imgUrlsArray)
+  //   const paramsArray = imgUrlsArray.map((arr) =>
+  //   arr.imgUrl.split(",").flatMap((url) => ({
+  //     Bucket: bucketName,
+  //     Key: url,
+  //   })),
+  //   console.log("paramsArray>>>>", paramsArray)
+  // );
+
+  //   const signedUrlsArray = await Promise.all(
+  //     paramsArray.map(async (params) => {
+  //       const command = new GetObjectCommand(params);
+  //       const signedUrl = await getSignedUrl(s3, command);
+  //       return signedUrl;
+  //     })
+  //   );
+  //   // imgUrl을 signedUrlsArray로 교체
+  //   location.Posts.forEach((post, index) => {
+  //     post.imgUrl = signedUrlsArray[index];
+  //   });
+
+    return res.status(200).json({ location, posts: posts });
   } catch (error) {
     next(error)
   }

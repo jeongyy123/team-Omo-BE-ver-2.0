@@ -78,6 +78,7 @@ router.get("/posts", async (req, res, next) => {
               storeName: true,
               address: true,
               starAvg: true,
+              postCount: true
             },
           },
           postId: true,
@@ -166,6 +167,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         content: true,
         createdAt: true,
         likeCount: true,
+        commentCount: true,
         imgUrl: true,
         star: true,
         User: {
