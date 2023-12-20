@@ -141,6 +141,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         },
         Location: {
           select: {
+            locationId: true,
             address: true,
             storeName: true,
             latitude: true,
