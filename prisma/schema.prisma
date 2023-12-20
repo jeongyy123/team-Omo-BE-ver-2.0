@@ -8,15 +8,15 @@ datasource db {
 }
 
 model Users {
-  userId     Int       @id @default(autoincrement()) @map("userId")
-  email      String    @map("email")
-  password   String    @map("password")
-  nickname   String    @map("nickname")
-  imgUrl     String    @map("imgUrl") 
-  snsId      String?   @map("snsId")
-  provider   String?   @map("provider")
-  createdAt  DateTime  @default(now()) @map("createdAt")
-  updatedAt  DateTime  @updatedAt @map("updatedAt")
+  userId    Int      @id @default(autoincrement()) @map("userId")
+  email     String   @map("email")
+  password  String   @map("password")
+  nickname  String   @map("nickname")
+  imgUrl    String   @map("imgUrl")
+  snsId     String?  @map("snsId")
+  provider  String?  @map("provider")
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt @map("updatedAt")
 
   Posts         Posts[]
   Comments      Comments[]
@@ -26,24 +26,24 @@ model Users {
   Location      Locations[]
   Replies       Replies[]
 
-  @@map("Users" )
+  @@map("Users")
 }
 
 model VerificationCode {
-  verificationCodeId    Int @id @default(autoincrement())  @map("codeId")
-  email                 String                             @map("email")
-  verificationCode      String                             @map("verificationCode")
-  expiryDate            DateTime                           @map("expiryDate")
+  verificationCodeId Int      @id @default(autoincrement()) @map("codeId")
+  email              String   @map("email")
+  verificationCode   String   @map("verificationCode")
+  expiryDate         DateTime @map("expiryDate")
 
   @@map("VerificationCode")
 }
 
 model RefreshTokens {
-  tokenId       Int      @id @default(autoincrement()) @map("tokenId")
-  UserId        Int      @map("UserId")
-  refreshToken  String   @map("refreshToken")
-  expiresAt     DateTime @map("expiresAt")
-  createdAt     DateTime @default(now()) @map("createdAt")
+  tokenId      Int      @id @default(autoincrement()) @map("tokenId")
+  UserId       Int      @map("UserId")
+  refreshToken String   @map("refreshToken")
+  expiresAt    DateTime @map("expiresAt")
+  createdAt    DateTime @default(now()) @map("createdAt")
 
   User Users @relation(fields: [UserId], references: [userId], onDelete: Cascade)
 
@@ -51,17 +51,17 @@ model RefreshTokens {
 }
 
 model Posts {
-  postId       Int       @id @default(autoincrement()) @map("postId")
-  UserId       Int       @map("UserId")
-  CategoryId   Int       @map("CategoryId")
-  LocationId   Int       @map("LocationId")
-  content      String    @map("content") @db.Text
-  imgUrl       String    @map("imgUrl") @db.Text
-  likeCount    Int       @default(0) @map("likeCount")
-  commentCount Int       @default(0) @map("commentCount")
-  star         Int       @map("star")
-  createdAt    DateTime  @default(now()) @map("createdAt")
-  updatedAt    DateTime  @updatedAt @map("updatedAt")
+  postId       Int      @id @default(autoincrement()) @map("postId")
+  UserId       Int      @map("UserId")
+  CategoryId   Int      @map("CategoryId")
+  LocationId   Int      @map("LocationId")
+  content      String   @map("content") @db.Text
+  imgUrl       String   @map("imgUrl") @db.Text
+  likeCount    Int      @default(0) @map("likeCount")
+  commentCount Int      @default(0) @map("commentCount")
+  star         Int      @map("star")
+  createdAt    DateTime @default(now()) @map("createdAt")
+  updatedAt    DateTime @updatedAt @map("updatedAt")
 
   User     Users      @relation(fields: [UserId], references: [userId], onDelete: Cascade)
   Category Categories @relation(fields: [CategoryId], references: [categoryId], onDelete: Cascade)
@@ -73,12 +73,12 @@ model Posts {
 }
 
 model Comments {
-  commentId   Int       @id @default(autoincrement()) @map("commentId")
-  UserId      Int       @map("UserId")
-  PostId      Int       @map("PostId")
-  content     String    @map("content")
-  replyCount  Int       @default(0) @map("replyCount")
-  createdAt   DateTime  @default(now()) @map("createdAt")
+  commentId  Int      @id @default(autoincrement()) @map("commentId")
+  UserId     Int      @map("UserId")
+  PostId     Int      @map("PostId")
+  content    String   @map("content")
+  replyCount Int      @default(0) @map("replyCount")
+  createdAt  DateTime @default(now()) @map("createdAt")
 
   Post Posts @relation(fields: [PostId], references: [postId], onDelete: Cascade)
   User Users @relation(fields: [UserId], references: [userId], onDelete: Cascade)
@@ -89,11 +89,11 @@ model Comments {
 }
 
 model Bookmark {
-  bookmarkId  Int @id @default(autoincrement()) @map("bookmarkId")
-  UserId      Int @map("UserId")
-  LocationId  Int @map("LocationId")
-  createdAt   DateTime @default(now()) @map("createdAt")
-  
+  bookmarkId Int      @id @default(autoincrement()) @map("bookmarkId")
+  UserId     Int      @map("UserId")
+  LocationId Int      @map("LocationId")
+  createdAt  DateTime @default(now()) @map("createdAt")
+
   User     Users     @relation(fields: [UserId], references: [userId], onDelete: Cascade)
   Location Locations @relation(fields: [LocationId], references: [locationId], onDelete: Cascade)
 
@@ -104,27 +104,27 @@ model Categories {
   categoryId   Int    @id @default(autoincrement()) @map("categoryId")
   categoryName String @map("categoryName")
 
-  Posts Posts[]
+  Posts     Posts[]
   Locations Locations[]
 
   @@map("Categories")
 }
 
 model Locations {
-  locationId  Int     @id @default(autoincrement()) @map("locationId")
-  CategoryId  Int     @map("CategoryId")
-  DistrictId  Int     @map("DistrictId")
-  UserId      Int     @map("UserId")
-  storeName   String  @map("storeName")
-  address     String  @map("address")
-  latitude    String  @map("latitude")
-  longitude   String  @map("longitude")
-  starAvg     Int     @map("starAvg")
-  postCount   Int     @default(0) @map("postCount")
+  locationId Int    @id @default(autoincrement()) @map("locationId")
+  CategoryId Int    @map("CategoryId")
+  DistrictId Int    @map("DistrictId")
+  UserId     Int    @map("UserId")
+  storeName  String @map("storeName")
+  address    String @map("address")
+  latitude   String @map("latitude")
+  longitude  String @map("longitude")
+  starAvg    Int    @map("starAvg")
+  postCount  Int    @default(0) @map("postCount")
 
   Category Categories @relation(fields: [CategoryId], references: [categoryId], onDelete: Cascade)
   District Districts  @relation(fields: [DistrictId], references: [districtId], onDelete: Cascade)
-  User Users  @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+  User     Users      @relation(fields: [UserId], references: [userId], onDelete: Cascade)
 
   Posts    Posts[]
   Bookmark Bookmark[]
@@ -133,7 +133,6 @@ model Locations {
 }
 
 model Likes {
-
   likeId Int @id @default(autoincrement()) @map("likeId")
   UserId Int @map("UserId")
   PostId Int @map("PostId")
@@ -145,7 +144,7 @@ model Likes {
 }
 
 model Districts {
-  districtId     Int @id @default(autoincrement()) @map("districtId")
+  districtId   Int    @id @default(autoincrement()) @map("districtId")
   districtName String @map("districtName")
 
   Location Locations[]
@@ -170,6 +169,6 @@ model Replies {
 
   User    Users    @relation(fields: [UserId], references: [userId], onDelete: Cascade)
   Comment Comments @relation(fields: [CommentId], references: [commentId], onDelete: Cascade)
-  
+
   @@map("Replies")
 }
