@@ -207,7 +207,7 @@ router.post(
       const { userId } = req.user;
 
       const user = await prisma.users.findFirst({
-        where: { userId },
+        where: { userId: +userId },
       });
 
       const category = await prisma.categories.findFirst({
@@ -411,6 +411,7 @@ router.delete("/posts/:postId", authMiddleware, async (req, res, next) => {
         return s3.send(new DeleteObjectCommand(bucket));
       });
 
+
       await prisma.posts.delete({
         where: { postId: +postId },
       });
@@ -419,10 +420,10 @@ router.delete("/posts/:postId", authMiddleware, async (req, res, next) => {
       where: { locationId: post.LocationId },
       data: {
         postCount: {
-          decrement: 1,
-        },
-      },
-    });
+          decrement: 1
+        }
+      }
+    })
 
     return res.status(200).json({ message: "게시글을 삭제하였습니다." });
   } catch (error) {
