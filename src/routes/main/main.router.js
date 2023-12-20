@@ -126,7 +126,7 @@ router.get("/main/popular", async (req, res, next) => {
 // 자치구별 최신순 게시물
 router.get("/main/recent", async (req, res, next) => {
   try {
-    const { districtName, limit } = req.query;
+    const { districtName, limit, categoryName } = req.query;
 
     const findLocations = await checkAddress(districtName);
 
@@ -136,9 +136,14 @@ router.get("/main/recent", async (req, res, next) => {
       return res.status(400).json({ message: "limit값을 입력해주세요" });
     }
 
+    const category = await prisma.categories.findFirst({
+      where: { categoryName }
+    })
+
     const findPosts = await prisma.posts.findMany({
       where: {
         ...(findLocations?.locationId && { LocationId: findLocations.locationId }),
+        ...(category?.categoryId && { CategoryId: category.categoryId }),
         Location: {
           ...(districtName && {
             District: {
