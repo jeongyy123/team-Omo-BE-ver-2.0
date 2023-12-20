@@ -72,8 +72,8 @@ router.get("/posts", async (req, res, next) => {
         },
         Category: {
           select: {
-            categoryName: true
-          }
+            categoryName: true,
+          },
         },
         Location: {
           select: {
@@ -108,7 +108,7 @@ router.get("/posts", async (req, res, next) => {
       },
     });
 
-    console.log("하나", posts[0])
+    console.log("하나", posts[0]);
 
     await getManyImagesS3(posts);
 
@@ -279,7 +279,7 @@ router.post(
               User: { connect: { userId: +userId } },
               Category: { connect: { categoryId: +category.categoryId } },
               Location: {
-                connect: { locationId: +createLocation.locationId }
+                connect: { locationId: +createLocation.locationId },
               },
               imgUrl: imgNames.join(","),
             },
@@ -314,8 +314,8 @@ router.post(
             data: {
               starAvg: starsAvg._avg.star,
               postCount: {
-                increment: 1
-              }
+                increment: 1,
+              },
             },
           });
         });
@@ -414,6 +414,14 @@ router.delete("/posts/:postId", authMiddleware, async (req, res, next) => {
       await prisma.posts.delete({
         where: { postId: +postId },
       });
+    });
+    await prisma.locations.update({
+      where: { locationId: post.LocationId },
+      data: {
+        postCount: {
+          decrement: 1,
+        },
+      },
     });
 
     return res.status(200).json({ message: "게시글을 삭제하였습니다." });
