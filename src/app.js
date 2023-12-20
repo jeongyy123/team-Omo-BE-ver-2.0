@@ -6,9 +6,10 @@ import MainRouter from "./routes/main/main.router.js";
 import PostsRouter from "./routes/posts/posts.router.js";
 import CommentsRouter from "./routes/comments/comments.router.js";
 import LocationRouter from "./routes/locations/location.router.js";
-import LikeRouter from "./routes/isLike/isLike.router.js";
-import BookmarkRouter from "./routes/bookmark/bookmark.router.js";
-import SearchingRouter from "./routes/searching/searching.router.js";
+import LikeRouter from './routes/isLike/isLike.router.js'
+import SearchingRouter from './routes/searching/searching.router.js'
+import BookmarkRouter from './routes/bookmark/bookmark.router.js'
+import RepliesRouter from './routes/replies/replies.ruter.js'
 import cookieParser from "cookie-parser";
 import ErrorMiddleware from "./middlewares/error.middleware.js";
 import session from "express-session";
@@ -63,6 +64,7 @@ app.use("/api", [
   LocationRouter,
   LikeRouter,
   BookmarkRouter,
+  RepliesRouter,
   SearchingRouter,
 ]);
 

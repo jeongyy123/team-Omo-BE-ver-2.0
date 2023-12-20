@@ -107,6 +107,84 @@ router.get("/posts", async (req, res, next) => {
         },
       },
     });
+    let posts;
+    if (!lastSeenPage) {
+      posts = await prisma.posts.findMany({
+        select: {
+          User: {
+            select: {
+              nickname: true,
+            },
+          },
+          Location: {
+            select: {
+              storeName: true,
+              address: true,
+              starAvg: true,
+              postCount: true
+            },
+          },
+          postId: true,
+          imgUrl: true,
+          content: true,
+          likeCount: true,
+          commentCount: true,
+          createdAt: true,
+        },
+        orderBy: { postId: "desc" },
+        take: parsedPage,
+        where: {
+          ...(findCategory?.categoryId && {
+            CategoryId: findCategory.categoryId,
+          }),
+          ...(findDistrict?.districtId && {
+            Location: { DistrictId: findDistrict.districtId },
+          }),
+          updatedAt: {
+            lt: new Date(), // 조회 당시 시간으로 또다른 사용자가 작성한 글 보지 않도록 하기.
+          },
+        },
+      });
+    } else {
+      posts = await prisma.posts.findMany({
+        select: {
+          User: {
+            select: {
+              nickname: true,
+            },
+          },
+          Location: {
+            select: {
+              storeName: true,
+              address: true,
+              starAvg: true,
+            },
+          },
+          postId: true,
+          imgUrl: true,
+          content: true,
+          likeCount: true,
+          commentCount: true,
+          createdAt: true,
+        },
+        orderBy: { postId: "desc" },
+        take: parsedPage,
+        where: {
+          ...(findCategory?.categoryId && {
+            CategoryId: findCategory.categoryId,
+          }),
+          ...(findDistrict?.districtId && {
+            Location: { DistrictId: findDistrict.districtId },
+          }),
+          updatedAt: {
+            lt: new Date(),
+          },
+          postId: {
+            lt: parseInt(lastSeenPage),
+          },
+        },
+      });
+    }
 
     console.log("하나", posts[0]);
 
@@ -133,6 +211,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         content: true,
         createdAt: true,
         likeCount: true,
+        commentCount: true,
         imgUrl: true,
         star: true,
         User: {
