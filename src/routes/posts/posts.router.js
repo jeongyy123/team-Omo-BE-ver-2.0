@@ -81,6 +81,7 @@ router.get("/posts", async (req, res, next) => {
             storeName: true,
             address: true,
             starAvg: true,
+            postCount: true,
           },
         },
         postId: true,
@@ -216,24 +217,6 @@ router.post(
 
       if (!district) {
         return res.status(400).json({ message: "지역이 존재하지 않습니다." });
-      }
-
-      // 같은 장소에 한 사람이 여러 개의 포스팅 올리지 않도록 하기
-      const findPosts = await prisma.posts.findFirst({
-        where: {
-          UserId: userId,
-          Location: {
-            is: {
-              address,
-            },
-          },
-        },
-      });
-
-      if (findPosts) {
-        return res.status(400).json({
-          message: "이미 같은 장소에 대한 유저의 포스팅이 존재합니다.",
-        });
       }
 
       //이미지 이름 나눠서 저장
