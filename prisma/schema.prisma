@@ -32,7 +32,7 @@ model Users {
 model VerificationCode {
   verificationCodeId    Int @id @default(autoincrement())  @map("codeId")
   email                 String                             @map("email")
-  verificationCode      String                             @map("verificationCode")
+  verificationCode      Int                                @map("verificationCode")
   expiryDate            DateTime                           @map("expiryDate")
 
   @@map("VerificationCode")
@@ -77,6 +77,7 @@ model Comments {
   UserId      Int       @map("UserId")
   PostId      Int       @map("PostId")
   content     String    @map("content")
+  replyCount  Int       @default(0) @map("replyCount")
   createdAt   DateTime  @default(now()) @map("createdAt")
 
   Post Posts @relation(fields: [PostId], references: [postId], onDelete: Cascade)

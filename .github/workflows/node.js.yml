@@ -27,9 +27,6 @@ jobs:
           cache: "yarn"
       - run: yarn install
 
-      - name: Check npm -v
-        run: npm -v
-
       - name: Create .env file
         working-directory: ./
         run: |
@@ -51,8 +48,10 @@ jobs:
           echo EMAIL_SENDER=${{ secrets.EMAIL_SENDER }} >> .env
           cat .env
 
-      - name: Update database
-        run: npx prisma db push
+      # - name: Apply all pending migrations to the database
+      - name: Database Migration
+        run: |
+          npx prisma migrate deploy
 
       # S3로 보낼 압축 파일 생성
       - name: zip file
