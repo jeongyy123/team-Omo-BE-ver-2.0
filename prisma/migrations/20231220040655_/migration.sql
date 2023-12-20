@@ -17,7 +17,7 @@ CREATE TABLE `Users` (
 CREATE TABLE `VerificationCode` (
     `codeId` INTEGER NOT NULL AUTO_INCREMENT,
     `email` VARCHAR(191) NOT NULL,
-    `verificationCode` INTEGER NOT NULL,
+    `verificationCode` VARCHAR(191) NOT NULL,
     `expiryDate` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`codeId`)
