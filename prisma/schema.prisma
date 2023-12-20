@@ -79,6 +79,7 @@ model Comments {
   content     String    @map("content")
   replyCount  Int       @default(0) @map("replyCount")
   createdAt   DateTime  @default(now()) @map("createdAt")
+  replyCount  Int       @default(0) @map("replyCount")
 
   Post Posts @relation(fields: [PostId], references: [postId], onDelete: Cascade)
   User Users @relation(fields: [UserId], references: [userId], onDelete: Cascade)
