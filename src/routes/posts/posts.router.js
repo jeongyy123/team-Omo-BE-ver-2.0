@@ -108,6 +108,8 @@ router.get("/posts", async (req, res, next) => {
       },
     });
 
+    console.log("하나", posts[0])
+
     await getManyImagesS3(posts);
 
     // const cacheKey = `posts:${categoryName || 'all'}:${districtName || 'all'}`; //키를 ZADD로 표현합세
@@ -141,6 +143,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         },
         Location: {
           select: {
+            locationId: true,
             address: true,
             storeName: true,
             latitude: true,
@@ -264,7 +267,7 @@ router.post(
               postCount: 1,
               Category: { connect: { categoryId: +category.categoryId } },
               District: { connect: { districtId: +district.districtId } },
-              User: { connect: { userId: +user.userId } },
+              User: { connect: { userId: +userId } },
             },
           });
 
@@ -273,7 +276,7 @@ router.post(
               content,
               star,
               likeCount: 0,
-              User: { connect: { userId: +user.userId } },
+              User: { connect: { userId: +userId } },
               Category: { connect: { categoryId: +category.categoryId } },
               Location: {
                 connect: { locationId: +createLocation.locationId }
@@ -290,7 +293,7 @@ router.post(
               content,
               star,
               likeCount: 0,
-              User: { connect: { userId: +user.userId } },
+              User: { connect: { userId: +userId } },
               Category: { connect: { categoryId: +category.categoryId } },
               Location: { connect: { locationId: +location.locationId } },
               imgUrl: imgNames.join(","),
