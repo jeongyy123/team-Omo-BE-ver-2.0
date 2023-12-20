@@ -11,7 +11,6 @@ import {
   getProfileImageS3,
 } from "../../utils/getImageS3.js";
 import { fileFilter } from "../../utils/putImageS3.js";
-// import { setCheckCache, getChckeCache } from "../../middlewares/cache.middleware.js";
 import {
   S3Client,
   PutObjectCommand,
@@ -19,6 +18,7 @@ import {
 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import crypto from "crypto";
+// import { setCheckCache, getChckeCache } from "../../middlewares/cache.middleware.js";
 // import Redis from 'ioredis';
 
 const router = express.Router();
@@ -144,6 +144,7 @@ router.get("/posts/:postId", async (req, res, next) => {
             storeName: true,
             latitude: true,
             longitude: true,
+            postCount: true,
             Category: {
               select: {
                 categoryId: true,
@@ -277,7 +278,7 @@ router.post(
               latitude,
               longitude,
               starAvg: 0,
-              // postCount: 1,
+              postCount: 1,
               Category: { connect: { categoryId: +category.categoryId } },
               District: { connect: { districtId: +district.districtId } },
               User: { connect: { userId: +user.userId } },
@@ -326,9 +327,9 @@ router.post(
             },
             data: {
               starAvg: starsAvg._avg.star,
-              // postCount: {
-              //   increment: 1
-              // }
+              postCount: {
+                increment: 1
+              }
             },
           });
         });

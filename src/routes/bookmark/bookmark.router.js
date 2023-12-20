@@ -21,27 +21,19 @@ router.post("/posts/:locationId/bookmark", authMiddleware, async (req, res, next
     const bookmark = await prisma.bookmark.findFirst({
       where: { LocationId: +locationId, UserId: +userId }
     })
-    let bookmarkLocation;
+
     if (!bookmark) {
-      const bookmark = await prisma.bookmark.create({
+      await prisma.bookmark.create({
         data: {
           LocationId: +locationId,
           UserId: +userId
-        }
-      })
-      bookmarkLocation = await prisma.locations.findFirst({
-        where: { locationId: bookmark.LocationId },
-        select: {
-          locationId: true,
-          latitude: true,
-          longitude: true
         }
       })
     } else {
       return res.status(400).json({ message: "이미 북마크한 장소입니다." })
     }
 
-    return res.status(200).json(bookmarkLocation)
+    return res.status(200).json({ message: "북마크" })
   } catch (error) {
     next(error)
   }
