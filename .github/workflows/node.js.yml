@@ -56,8 +56,11 @@ jobs:
           echo EMAIL_SENDER=${{ secrets.EMAIL_SENDER }} >> .env
           cat .env
 
-      # - name: Apply all pending migrations to the database
-      - name: Database Migration
+      - name: Prisma Migrate Dev
+        run: |
+          npx prisma migrate dev
+
+      - name: Apply migrations to production database
         run: |
           npx prisma migrate deploy
 

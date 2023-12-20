@@ -83,6 +83,7 @@ router.post("/verify-email", async (req, res, next) => {
     // 인증번호 생성
     // 원하는 범위 내에서 랜덤한 숫자 생성 (예: 111111부터 999999까지)
     const randomNumber = generateRandomNumber(111111, 999999);
+    console.log(typeof randomNumber); // number
 
     // 인증 이메일을 보낸 후 인증번호를 데이터베이스에 저장
     await prisma.verificationCode.create({
