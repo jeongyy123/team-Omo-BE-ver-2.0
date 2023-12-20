@@ -72,6 +72,8 @@ router.get("/main/popular", async (req, res, next) => {
         Location: {
           select: {
             storeName: true,
+            latitude: true,
+            longitude: true
           },
         },
         Category: {
@@ -124,7 +126,7 @@ router.get("/main/popular", async (req, res, next) => {
 // 자치구별 최신순 게시물
 router.get("/main/recent", async (req, res, next) => {
   try {
-    const { districtName, limit } = req.query;
+    const { districtName, limit, categoryName } = req.query;
 
     const findLocations = await checkAddress(districtName);
 
@@ -134,9 +136,15 @@ router.get("/main/recent", async (req, res, next) => {
       return res.status(400).json({ message: "limit값을 입력해주세요" });
     }
 
+    const category = await prisma.categories.findFirst({
+      where: { categoryName }
+    })
+
+
     const findPosts = await prisma.posts.findMany({
       where: {
         ...(findLocations?.locationId && { LocationId: findLocations.locationId }),
+        ...(category?.categoryId && { CategoryId: category.categoryId }),
         Location: {
           ...(districtName && {
             District: {
@@ -164,6 +172,7 @@ router.get("/main/recent", async (req, res, next) => {
       take: +limit,
     });
 
+    console.log("하하", findPosts)
     if (!findPosts || findPosts === 0) {
       return res.status(400).json({ message: "해당 최신글이 없어요" });
     }
@@ -219,6 +228,7 @@ router.get("/main/comments", async (req, res, next) => {
       select: {
         content: true,
         createdAt: true,
+        PostId: true,
         Post: {
           select: {
             Location: {

@@ -27,8 +27,13 @@ jobs:
           cache: "yarn"
       - run: yarn install
 
-      - name: Check npm -v
-        run: npm -v
+      # - name: Clear Yarn Cache
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ~/.cache/yarn
+      #     key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-yarn-
 
       - name: Create .env file
         working-directory: ./
@@ -46,10 +51,14 @@ jobs:
           echo REFRESH_TOKEN_SECRET_KEY=${{ secrets.REFRESH_TOKEN_SECRET_KEY }} >> .env
           echo COOKIE_SECRET=${{ secrets.COOKIE_SECRET }} >> .env
           echo SECRET_TOKEN_KEY=${{ secrets.SECRET_TOKEN_KEY }} >> .env
+          echo NODEMAILER_USER=${{ secrets.NODEMAILER_USER }} >> .env
+          echo NODEMAILER_PASS=${{ secrets.NODEMAILER_PASS }} >> .env
+          echo EMAIL_SENDER=${{ secrets.EMAIL_SENDER }} >> .env
           cat .env
 
-      - name: Update database
-        run: npx prisma db push
+      - name: Apply migrations to production database
+        run: |
+          npx prisma migrate deploy
 
       # S3로 보낼 압축 파일 생성
       - name: zip file
