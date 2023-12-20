@@ -72,8 +72,8 @@ router.get("/posts", async (req, res, next) => {
         },
         Category: {
           select: {
-            categoryName: true
-          }
+            categoryName: true,
+          },
         },
         Location: {
           select: {
@@ -273,10 +273,10 @@ router.post(
               content,
               star,
               likeCount: 0,
-              User: { connect: { userId: +user.userId } },
+              User: { connect: { userId: +userId } },
               Category: { connect: { categoryId: +category.categoryId } },
               Location: {
-                connect: { locationId: +createLocation.locationId }
+                connect: { locationId: +createLocation.locationId },
               },
               imgUrl: imgNames.join(","),
             },
@@ -311,8 +311,8 @@ router.post(
             data: {
               starAvg: starsAvg._avg.star,
               postCount: {
-                increment: 1
-              }
+                increment: 1,
+              },
             },
           });
         });
