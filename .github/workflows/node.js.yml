@@ -27,13 +27,13 @@ jobs:
           cache: "yarn"
       - run: yarn install
 
-      - name: Clear Cache
+      - name: Clear Yarn Cache
         uses: actions/cache@v2
         with:
-          path: ~/.npm # 캐시 경로 설정
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-yarn-
 
       - name: Create .env file
         working-directory: ./
