@@ -198,7 +198,7 @@ router.post("/verify-authentication-code", async (req, res, next) => {
     // 인증번호가 일치하는지 확인
     const checkVerificationCode = await prisma.verificationCode.findFirst({
       where: {
-        verificationCode: authenticationCode,
+        verificationCode: parseInt(authenticationCode),
         email: email,
       },
     });
@@ -281,6 +281,8 @@ router.post("/check-nickname", async (req, res, next) => {
         nickname: nickname,
       },
     });
+
+    console.log("existNickname >>>>>", existNickname);
 
     if (existNickname) {
       return res.status(409).json({
