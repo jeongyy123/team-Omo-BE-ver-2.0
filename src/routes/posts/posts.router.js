@@ -135,6 +135,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         star: true,
         User: {
           select: {
+            UserId: true,
             nickname: true,
             imgUrl: true,
           },
@@ -146,7 +147,7 @@ router.get("/posts/:postId", async (req, res, next) => {
             storeName: true,
             latitude: true,
             longitude: true,
-            // postCount: true,
+            postCount: true,
             Category: {
               select: {
                 categoryId: true,
