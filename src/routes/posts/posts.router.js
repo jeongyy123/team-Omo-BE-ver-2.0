@@ -81,7 +81,7 @@ router.get("/posts", async (req, res, next) => {
             storeName: true,
             address: true,
             starAvg: true,
-            postCount: true,
+            // postCount: true,
           },
         },
         postId: true,
