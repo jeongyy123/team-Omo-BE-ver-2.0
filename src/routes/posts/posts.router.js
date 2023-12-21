@@ -81,7 +81,7 @@ router.get("/posts", async (req, res, next) => {
             storeName: true,
             address: true,
             starAvg: true,
-            // postCount: true,
+            postCount: true,
           },
         },
         postId: true,
@@ -135,7 +135,6 @@ router.get("/posts/:postId", async (req, res, next) => {
         star: true,
         User: {
           select: {
-            UserId: true,
             nickname: true,
             imgUrl: true,
           },
@@ -263,7 +262,7 @@ router.post(
               latitude,
               longitude,
               starAvg: 0,
-              // postCount: 1,
+              postCount: 1,
               Category: { connect: { categoryId: +category.categoryId } },
               District: { connect: { districtId: +district.districtId } },
               User: { connect: { userId: +userId } },
@@ -312,9 +311,9 @@ router.post(
             },
             data: {
               starAvg: starsAvg._avg.star,
-              // postCount: {
-              //   increment: 1,
-              // },
+              postCount: {
+                increment: 1,
+              },
             },
           });
         });
@@ -415,14 +414,14 @@ router.delete("/posts/:postId", authMiddleware, async (req, res, next) => {
         where: { postId: +postId },
       });
     });
-    // await prisma.locations.update({
-    //   where: { locationId: post.LocationId },
-    //   data: {
-    //     postCount: {
-    //       decrement: 1
-    //     }
-    //   }
-    // })
+    await prisma.locations.update({
+      where: { locationId: post.LocationId },
+      data: {
+        postCount: {
+          decrement: 1
+        }
+      }
+    })
 
     return res.status(200).json({ message: "게시글을 삭제하였습니다." });
   } catch (error) {
