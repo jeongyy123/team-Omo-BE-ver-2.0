@@ -309,17 +309,17 @@ router.get(
             try {
               const command = new GetObjectCommand(getObjectParams);
               const url = await getSignedUrl(s3, command);
-              signedUrls.push(url); // 서명된 URL을 배열에 추가
+              imgUrl.push(url); // 서명된 URL을 배열에 추가
             } catch (error) {
               console.error(`Error fetching URL for ${currentImgUrl}:`, error);
               // 에러 처리 로직 추가
             }
           } else {
-            signedUrls.push(currentImgUrl); // 서명되지 않은 URL은 그대로 유지
+            imgUrl.push(currentImgUrl); // 서명되지 않은 URL은 그대로 유지
           }
         }
 
-        userPosts[i].signedImgUrls = signedUrls; // 서명된 URL을 signedImgUrls 속성에 할당
+        userPosts[i].imgUrl = imgUrl; // 서명된 URL을 signedImgUrls 속성에 할당
       }
 
       //-------------------------------------------------------
