@@ -29,10 +29,10 @@ const s3 = new S3Client({
 
 const router = express.Router();
 
-// 매모리 저장 객체 생성
-const storage = multer.memoryStorage();
-// multer로 업로드 기능을 생성. 항상 이미지를 메모리에 저장하도록 하기 위함이다.
-const upload = multer({ storage: storage, fileFilter });
+// // 매모리 저장 객체 생성
+// const storage = multer.memoryStorage();
+// // multer로 업로드 기능을 생성. 항상 이미지를 메모리에 저장하도록 하기 위함이다.
+// const upload = multer({ storage: storage, fileFilter });
 
 // comment POST API
 router.post(
