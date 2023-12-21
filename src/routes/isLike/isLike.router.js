@@ -31,11 +31,11 @@ router.post("/posts/:postId/like", authMiddleware, async (req, res, next) => {
       data: { likeCount: { increment: 1 } }
     })
 
-    const like = await prisma.likes.create({
+    await prisma.likes.create({
       data: { PostId: +postId, UserId: +userId }
     })
 
-    return res.status(200).json({ message: "좋아요", like })
+    return res.status(200).json({ message: "좋아요" })
   } catch (error) {
     next(error)
   }
@@ -68,16 +68,34 @@ router.delete("/posts/:postId/like", authMiddleware, async (req, res, next) => {
       data: { likeCount: { decrement: 1 } }
     })
 
-    const like = await prisma.likes.delete({
+    await prisma.likes.delete({
       where: { likeId: findLike.likeId }
     })
 
 
-    return res.status(200).json({ message: "좋아요 취소", like })
+    return res.status(200).json({ message: "좋아요 취소" })
   } catch (error) {
     next(error)
   }
-}) 
+})
+
+// 유저별 좋아요한 게시글 조회
+router.get("/users/posts/like", authMiddleware, async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+
+    const likes = await prisma.likes.findMany({
+      where: { UserId: +userId }
+    })
+
+    if (!likes) {
+      return res.status(400).json({ message: "좋아요한 게시글이 없습니다." })
+    }
+
+    return res.status(200).json(likes)
+  } catch (error) {
+    next(error)
+  }
+})
 
 export default router;
-// dd
