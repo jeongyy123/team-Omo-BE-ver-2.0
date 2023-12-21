@@ -172,7 +172,7 @@ router.get("/main/recent", async (req, res, next) => {
       take: +limit,
     });
 
-    console.log("하하", findPosts)
+    // console.log("하하", findPosts)
     if (!findPosts || findPosts === 0) {
       return res.status(400).json({ message: "해당 최신글이 없어요" });
     }
