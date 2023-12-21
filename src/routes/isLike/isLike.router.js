@@ -77,6 +77,7 @@ router.delete("/posts/:postId/like", authMiddleware, async (req, res, next) => {
   } catch (error) {
     next(error)
   }
-})
+}) 
 
 export default router;
+// dd

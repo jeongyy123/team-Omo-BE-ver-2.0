@@ -69,6 +69,8 @@ router.post("/verify-email", async (req, res, next) => {
     const { email } = validation; // 사용자가 입력한 이메일
     const sender = process.env.EMAIL_SENDER;
 
+    console.log("사용자가 입력한 이메일 주소  >>>", email);
+
     // 인증번호를 보내기 전에 이메일 중복을 체크하여 이미 가입된 이메일인 경우에는 인증 이메일을 보내지 않는다
     const existEmail = await prisma.users.findFirst({
       where: {
@@ -191,30 +193,33 @@ router.post("/verify-email", async (req, res, next) => {
 router.post("/verify-authentication-code", async (req, res, next) => {
   try {
     const { authenticationCode, email } = req.body;
+    console.log("authenticationCode >>>", authenticationCode);
 
     // 인증번호가 일치하는지 확인
     const checkVerificationCode = await prisma.verificationCode.findFirst({
       where: {
-        verificationCode: authenticationCode,
+        verificationCode: parseInt(authenticationCode),
         email: email,
       },
     });
 
-    if (checkVerificationCode) {
-      // 이메일 및 인증코드가 일치하고 유효한 경우 해당 인증코드를 삭제
-      await prisma.verificationCode.delete({
-        where: {
-          verificationCodeId: checkVerificationCode.verificationCodeId,
-        },
+    // 클라이언트가 인증 정보를 제공하지 않으면
+    if (!checkVerificationCode) {
+      return res.status(404).json({
+        errorMessage: "인증번호가 일치하지 않습니다.",
       });
-    } else {
-      // 인증 실패
-      return res
-        .status(404)
-        .json({ errorMessage: "인증번호가 일치하지 않습니다." });
     }
 
-    return res.status(200).json({ message: "성공적으로 인증되었습니다" });
+    // 인증번호가 일치하는 경우에만 삭제
+    await prisma.verificationCode.delete({
+      where: {
+        verificationCodeId: checkVerificationCode.verificationCodeId,
+      },
+    });
+
+    return res
+      .status(200)
+      .json({ message: "인증번호가 성공적으로 확인되었습니다." });
   } catch (error) {
     console.error(error);
 
@@ -266,7 +271,7 @@ router.post("/verify-authentication-code", async (req, res, next) => {
  *                    example: 서버에서 에러가 발생하였습니다.
  */
 
-router.post("/chcek-nickname", async (req, res, next) => {
+router.post("/check-nickname", async (req, res, next) => {
   try {
     const validation = await nicknameSchema.validateAsync(req.body);
     const { nickname } = validation;
@@ -276,6 +281,8 @@ router.post("/chcek-nickname", async (req, res, next) => {
         nickname: nickname,
       },
     });
+
+    console.log("existNickname >>>>>", existNickname);
 
     if (existNickname) {
       return res.status(409).json({
@@ -541,7 +548,7 @@ router.post("/login", async (req, res, next) => {
     res.setHeader("RefreshToken", `Bearer ${refreshToken}`);
 
     //
-    res.status(200).json({ message: "로그인에 성공하였습니다." });
+    res.status(200).json({ userId: findUser.userId });
   } catch (error) {
     console.error(error);
 

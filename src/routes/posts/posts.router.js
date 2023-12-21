@@ -131,6 +131,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         content: true,
         createdAt: true,
         likeCount: true,
+        commentCount: true,
         imgUrl: true,
         star: true,
         User: {
