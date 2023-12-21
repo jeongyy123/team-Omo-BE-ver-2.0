@@ -266,7 +266,7 @@ router.post("/verify-authentication-code", async (req, res, next) => {
  *                    example: 서버에서 에러가 발생하였습니다.
  */
 
-router.post("/chcek-nickname", async (req, res, next) => {
+router.post("/check-nickname", async (req, res, next) => {
   try {
     const validation = await nicknameSchema.validateAsync(req.body);
     const { nickname } = validation;
