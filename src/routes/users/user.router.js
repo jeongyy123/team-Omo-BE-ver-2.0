@@ -89,7 +89,7 @@ router.post("/verify-email", async (req, res, next) => {
     await prisma.verificationCode.create({
       data: {
         email: email,
-        verificationCode: randomNumber,
+        verificationCode: String(randomNumber),
         expiryDate: new Date(Date.now() + 10 * 60 * 1000), // 예: 10분 후 만료
       },
     });
@@ -195,7 +195,7 @@ router.post("/verify-authentication-code", async (req, res, next) => {
     // 인증번호가 일치하는지 확인
     const checkVerificationCode = await prisma.verificationCode.findFirst({
       where: {
-        verificationCode: authenticationCode,
+        verificationCode: String(authenticationCode),
         email: email,
       },
     });
