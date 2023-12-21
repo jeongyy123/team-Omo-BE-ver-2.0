@@ -108,8 +108,6 @@ router.get("/posts", async (req, res, next) => {
       },
     });
 
-    console.log("하나", posts[0]);
-
     await getManyImagesS3(posts);
 
     // const cacheKey = `posts:${categoryName || 'all'}:${districtName || 'all'}`; //키를 ZADD로 표현합세
