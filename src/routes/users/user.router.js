@@ -69,6 +69,8 @@ router.post("/verify-email", async (req, res, next) => {
     const { email } = validation; // 사용자가 입력한 이메일
     const sender = process.env.EMAIL_SENDER;
 
+    console.log("사용자가 입력한 이메일 주소  >>>", email);
+
     // 인증번호를 보내기 전에 이메일 중복을 체크하여 이미 가입된 이메일인 경우에는 인증 이메일을 보내지 않는다
     const existEmail = await prisma.users.findFirst({
       where: {
@@ -543,7 +545,7 @@ router.post("/login", async (req, res, next) => {
     res.setHeader("RefreshToken", `Bearer ${refreshToken}`);
 
     //
-    res.status(200).json({ message: "로그인에 성공하였습니다." });
+    res.status(200).json({ userId: findUser.userId });
   } catch (error) {
     console.error(error);
 
