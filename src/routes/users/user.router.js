@@ -91,7 +91,7 @@ router.post("/verify-email", async (req, res, next) => {
     await prisma.verificationCode.create({
       data: {
         email: email,
-        verificationCode: String(randomNumber),
+        verificationCode: randomNumber,
         expiryDate: new Date(Date.now() + 10 * 60 * 1000), // 예: 10분 후 만료
       },
     });
