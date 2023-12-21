@@ -164,9 +164,7 @@ router.get("/locations/:locationId", async (req, res, next) => {
         Posts: {
           select: {
             imgUrl: true
-          },
-          skip: 1,
-          take: 1
+          }
         }
       }
     })
@@ -208,7 +206,6 @@ router.get("/locations/:locationId", async (req, res, next) => {
         createdAt: true
       }
     })
-    // console.log("posts>>>>>>>>>>", posts)
 
     // 좋아요 순서로 정렬
     const sortedPosts = posts.sort((a, b) => b.likeCount - a.likeCount)
@@ -228,30 +225,6 @@ router.get("/locations/:locationId", async (req, res, next) => {
       console.log("imgUrl>>>>>>...", imgUrl)
       post.User.imgUrl = imgUrl
     }
-
-    
-  //   console.log("sortedPosts>>>", sortedPosts)
-  //   const imgUrlsArray = sortedPosts.flatMap((post) => post.imgUrl.split(","));
-  //   console.log("imgUrlsArray>>>>>>", imgUrlsArray)
-  //   const paramsArray = imgUrlsArray.map((arr) =>
-  //   arr.imgUrl.split(",").flatMap((url) => ({
-  //     Bucket: bucketName,
-  //     Key: url,
-  //   })),
-  //   console.log("paramsArray>>>>", paramsArray)
-  // );
-
-  //   const signedUrlsArray = await Promise.all(
-  //     paramsArray.map(async (params) => {
-  //       const command = new GetObjectCommand(params);
-  //       const signedUrl = await getSignedUrl(s3, command);
-  //       return signedUrl;
-  //     })
-  //   );
-  //   // imgUrl을 signedUrlsArray로 교체
-  //   location.Posts.forEach((post, index) => {
-  //     post.imgUrl = signedUrlsArray[index];
-  //   });
 
     return res.status(200).json({ location, posts: posts });
   } catch (error) {
