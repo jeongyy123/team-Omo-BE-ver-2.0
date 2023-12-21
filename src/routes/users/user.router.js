@@ -200,21 +200,23 @@ router.post("/verify-authentication-code", async (req, res, next) => {
       },
     });
 
-    if (checkVerificationCode) {
-      // 이메일 및 인증코드가 일치하고 유효한 경우 해당 인증코드를 삭제
-      await prisma.verificationCode.delete({
-        where: {
-          verificationCodeId: checkVerificationCode.verificationCodeId,
-        },
+    // 클라이언트가 인증 정보를 제공하지 않으면
+    if (!checkVerificationCode) {
+      return res.status(404).json({
+        errorMessage: "인증번호가 일치하지 않습니다.",
       });
-    } else {
-      // 인증 실패
-      return res
-        .status(404)
-        .json({ errorMessage: "인증번호가 일치하지 않습니다." });
     }
 
-    return res.status(200).json({ message: "성공적으로 인증되었습니다" });
+    // 인증번호가 일치하는 경우에만 삭제
+    await prisma.verificationCode.delete({
+      where: {
+        verificationCodeId: checkVerificationCode.verificationCodeId,
+      },
+    });
+
+    return res
+      .status(200)
+      .json({ message: "인증번호가 성공적으로 확인되었습니다." });
   } catch (error) {
     console.error(error);
 
