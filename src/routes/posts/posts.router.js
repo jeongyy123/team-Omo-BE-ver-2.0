@@ -166,6 +166,19 @@ router.get("/posts/:postId", async (req, res, next) => {
                 nickname: true,
               },
             },
+            Replies: {
+              select: {
+                replyId: true,
+                content: true,
+                createdAt: true,
+                User: {
+                  select: {
+                    imgUrl: true,
+                    nickname: true
+                  }
+                }
+              }
+            }
           },
         },
       },
@@ -175,6 +188,7 @@ router.get("/posts/:postId", async (req, res, next) => {
       return res.status(400).json({ message: "존재하지않는 게시글입니다." });
     }
 
+    //Replies 유저 이미지 S3 조회 추가해야함.
     await getProfileImageS3(posts.Comments);
     await getSingleImageS3(posts.User);
     await getImageS3(posts);
