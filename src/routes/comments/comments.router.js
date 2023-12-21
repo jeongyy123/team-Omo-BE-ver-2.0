@@ -127,7 +127,7 @@ router.get("/posts/:postId/comments", async (req, res, next) => {
 
       post.imgUrl = defaultImageUrl;
     }
-    post.imgUrl = decodeURIComponent(url);
+    // post.imgUrl = decodeURIComponent(url);
 
     return res.status(200).json({ data: comment });
   } catch (error) {
@@ -148,7 +148,7 @@ router.delete(
     const comment = await prisma.comments.findFirst({
       where: { commentId: +commentId },
     });
-    await prisma.$transaction( async (prisma) => {
+    // await prisma.$transaction( async (prisma) => {
       const deleteComment = await prisma.comments.delete({
         where: { UserId: userId, commentId: +commentId },
       }); 
@@ -162,12 +162,12 @@ router.delete(
          },
       });
       
-    })
+    // })
 
     return res.status(200).json({ data: deleteComment });
   }catch (error) {
     next(error)
-    throw new Error ("댓글 작성에 실패 하였습니다.")
+    // throw new Error ("댓글 작성에 실패 하였습니다.")
   }
 });
 

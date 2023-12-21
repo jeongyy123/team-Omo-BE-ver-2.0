@@ -141,7 +141,7 @@ router.delete(
         where: { replyId: +replyId },
       });
 
-      await prisma.$transaction(async (prisma) => {
+      // await prisma.$transaction(async (prisma) => {
         const deleteReply = await prisma.replies.delete({
           where: {
             UserId: userId,
@@ -159,12 +159,12 @@ router.delete(
             },
           },
         });
-      });
+      // });
 
       return res.status(200).json({ data: deleteReply });
     } catch (error) {
       next(error);
-      throw new Error("대댓글 작성을 실패 하였습니다.");
+      // throw new Error("대댓글 작성을 실패 하였습니다.");
     }
   },
 );
