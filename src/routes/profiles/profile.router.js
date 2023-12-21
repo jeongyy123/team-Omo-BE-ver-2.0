@@ -289,6 +289,41 @@ router.get(
         },
       });
 
+      //-------------------------------------------------------
+      for (let i = 0; i < userPosts.length; i++) {
+        const imgUrls = userPosts[i].imgUrl.split(","); // 게시물의 이미지 URL 배열
+        console.log("imgUrls >>>", imgUrls);
+
+        const imgUrl = [];
+
+        for (let j = 0; j < imgUrls.length; j++) {
+          const currentImgUrl = imgUrls[j];
+          console.log("currentImgUrl >>>>", currentImgUrl);
+
+          if (currentImgUrl.length === 64) {
+            const getObjectParams = {
+              Bucket: bucketName,
+              Key: currentImgUrl,
+            };
+
+            try {
+              const command = new GetObjectCommand(getObjectParams);
+              const url = await getSignedUrl(s3, command);
+              signedUrls.push(url); // 서명된 URL을 배열에 추가
+            } catch (error) {
+              console.error(`Error fetching URL for ${currentImgUrl}:`, error);
+              // 에러 처리 로직 추가
+            }
+          } else {
+            signedUrls.push(currentImgUrl); // 서명되지 않은 URL은 그대로 유지
+          }
+        }
+
+        userPosts[i].signedImgUrls = signedUrls; // 서명된 URL을 signedImgUrls 속성에 할당
+      }
+
+      //-------------------------------------------------------
+
       return res.status(200).json({
         postsCount: myPostsCount,
         data: userPosts,
@@ -392,6 +427,18 @@ router.get(
           UserId: +userId,
         },
       });
+
+      //-----------------------------------------------------
+      const getObjectParams = {
+        Bucket: bucketName, // 버킷 이름
+        Key: myPostsCount.imgUrl, // 이미지 키
+      };
+
+      // User GetObjectCommand to create the url
+      const command = new GetObjectCommand(getObjectParams);
+      const url = await getSignedUrl(s3, command);
+      userInfo.imgUrl = url;
+      // ------------------------------------------------------
 
       // 이전 페이지의 마지막 bookmarkId를 쿼리스트링을 통해 받아옴
       const lastBookmarkId = req.query.lastBookmarkId || null;
