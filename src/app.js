@@ -23,7 +23,7 @@ import morgan from "morgan";
 dotenv.config();
 //
 const app = express();
-const PORT = 5001;
+const PORT = 5002;
 
 app.use(morgan("dev"));
 // express-session을 passport 설정 전에 먼저 사용하도록 설정
