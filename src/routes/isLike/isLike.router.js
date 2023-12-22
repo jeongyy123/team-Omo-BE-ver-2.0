@@ -85,7 +85,19 @@ router.get("/users/posts/like", authMiddleware, async (req, res, next) => {
     const { userId } = req.user;
 
     const likes = await prisma.likes.findMany({
-      where: { UserId: +userId }
+      where: { UserId: +userId },
+      select: {
+        likeId: true,
+        PostId: true,
+        UserId: true,
+        Post: {
+          select: {
+            Location: {
+              select: { locationId: true }
+            }
+          }
+        }
+      }
     })
 
     if (!likes) {
