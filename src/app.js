@@ -19,12 +19,14 @@ import swaggerUi from "swagger-ui-express";
 // import passport from "passport";
 import cors from "cors";
 import dotenv from "dotenv";
+import morgan from "morgan";
 
 dotenv.config();
 
 const app = express();
 const PORT = 5001;
 
+app.use(morgan("dev"));
 // express-session을 passport 설정 전에 먼저 사용하도록 설정
 app.use(
   session({
