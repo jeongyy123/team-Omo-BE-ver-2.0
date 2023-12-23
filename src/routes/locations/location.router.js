@@ -32,6 +32,8 @@ router.get("/locations", async (req, res, next) => {
   try {
     const { categoryName } = req.query;
     const { qa, pa, ha, oa } = req.query;
+
+
     const category = await prisma.categories.findFirst({
 
       where: { categoryName },
@@ -56,7 +58,7 @@ router.get("/locations", async (req, res, next) => {
         latitude: true,
         longitude: true,
         starAvg: true,
-        postCount: true,
+        // postCount: true,
         Category: {
           select: {
             categoryName: true,
@@ -74,6 +76,7 @@ router.get("/locations", async (req, res, next) => {
 
     const latitude = ((Number(qa) + Number(pa)) / 2).toFixed(10)
     const longitude = ((Number(ha) + Number(oa)) / 2).toFixed(10)
+    console.log(">>>>>>>>>>>", latitude)
 
     // 거리 계산 및 정렬
     const start = {
@@ -84,11 +87,12 @@ router.get("/locations", async (req, res, next) => {
     // 게시글 개수, 거리차 추가
     const locationsWithDistance = await Promise.all(
       location.map(async (loc) => {
-        const distance = haversine(
+        const distance = +haversine(
           start,
           { latitude: loc.latitude, longitude: loc.longitude },
           { unit: "meter" },
-        );
+        ).toFixed(10);
+        console.log("distance>>>>>>>>>>>", distance)
         return {
           ...loc
         };
@@ -128,10 +132,10 @@ router.get("/locations", async (req, res, next) => {
         })),
       }));
       const imgUrlfirstindex = locationsWithSignedUrls
-      console.log(start)
+      console.log("start", start)
       console.log("Category:", category);
       console.log("Location:", location);
-      console.log("Locations with Distance:", locationsWithDistance);
+      console.log("Locations with Distance>>>>>>>>>>", locationsWithDistance);
       console.log("Img URLs Array:", imgUrlsArray);
       console.log("Params Array:", paramsArray);
       console.log("Signed URLs Array:", signedUrlsArray);
