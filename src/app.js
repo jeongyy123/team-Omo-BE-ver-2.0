@@ -24,7 +24,6 @@ import dotenv from "dotenv";
 dotenv.config();
 //
 const app = express();
-const app2 = express();
 
 const PORT = 3003;
 const PORT2 = 3004;
@@ -85,6 +84,6 @@ app.listen(PORT, (req, res) => {
   console.log(PORT, `포트 ${PORT}번이 열렸습니다.`);
 });
 
-app2.listen(PORT2, (req, res) => {
+app.listen(PORT2, (req, res) => {
   console.log(PORT2, `포트 ${PORT2}번이 열렸습니다.`);
 });
