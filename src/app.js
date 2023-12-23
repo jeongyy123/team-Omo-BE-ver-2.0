@@ -16,18 +16,17 @@ import ErrorMiddleware from "./middlewares/error.middleware.js";
 import session from "express-session";
 import swaggerConfig from "./swagger/swagger.js";
 import swaggerUi from "swagger-ui-express";
+import morgan from "morgan";
 // import configurePassport from "./passport/index.js";
 // import passport from "passport";
 import cors from "cors";
 import dotenv from "dotenv";
-import morgan from "morgan";
 
 dotenv.config();
 //
 const app = express();
 const PORT = 3003;
 
-app.use(morgan("dev"));
 // express-session을 passport 설정 전에 먼저 사용하도록 설정
 app.use(morgan('dev'));
 app.use(
