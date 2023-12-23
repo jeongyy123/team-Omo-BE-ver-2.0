@@ -61,10 +61,6 @@ app.get("/", (req, res) => {
   res.send("첫번째 서버");
 });
 
-app2.get("/", (req, res) => {
-  res.send("두번째 서버");
-});
-
 app.use("/api", [
   UserProfileRouter,
   MainRouter,
