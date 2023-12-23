@@ -45,7 +45,8 @@ const s3 = new S3Client({
 });
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage, fileFilter });
+// const upload = multer({ storage: storage, fileFilter });
+const upload = multer({ storage: storage });
 
 const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
 
@@ -239,20 +240,20 @@ router.post(
       const imgPromises = req.files.map(async (file) => {
         const imgName = randomImgName();
 
-        // 이미지 사이즈 조정
-        const buffer = await jimp
-          .read(file.buffer)
-          .then((image) =>
-            image
-              .resize(jimp.AUTO, 350)
-              .quality(70)
-              .getBufferAsync(jimp.MIME_JPEG),
-          );
+        // // 이미지 사이즈 조정
+        // const buffer = await jimp
+        //   .read(file.buffer)
+        //   .then((image) =>
+        //     image
+        //       .resize(jimp.AUTO, 350)
+        //       .quality(70)
+        //       .getBufferAsync(jimp.MIME_JPEG),
+        //   );
 
         const params = {
           Bucket: bucketName,
           Key: imgName,
-          Body: buffer,
+          Body: file.buffer,
           ContentType: file.mimetype,
         };
         const command = new PutObjectCommand(params);
