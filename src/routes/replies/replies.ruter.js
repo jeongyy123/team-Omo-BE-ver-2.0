@@ -115,11 +115,6 @@ router.get(
         const command = new GetObjectCommand(getObjectParams);
         const url = await getSignedUrl(s3, command);
         reply.imgUrl = url;
-      } else {
-        const defaultImageUrl =
-          "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw";
-
-        reply.imgUrl = defaultImageUrl;
       }
 
       return res.status(200).json({ data: reply });
