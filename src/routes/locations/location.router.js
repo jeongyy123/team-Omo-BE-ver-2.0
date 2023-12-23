@@ -7,6 +7,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 import { getManyImagesS3, getSingleImageS3, getImageS3 } from "../../utils/getImageS3.js"
 
+
+// const morgan = require('morgan');
 // import authMiddleware from "../../middlewares/auth.middleware.js";
 const router = express.Router();
 dotenv.config();
@@ -72,10 +74,10 @@ router.get("/locations", async (req, res, next) => {
     });
 
     // 거리 계산 및 정렬
-    if (latitude && longitude) {
+    if (pa && qa && ha && oa) {
       const start = {
-        latitude: +latitude,
-        longitude: +longitude,
+        latitude: +((qa + pa) / 2),
+        longitude: +((ha + oa) / 2),
       };
 
       // 게시글 개수, 거리차 추가

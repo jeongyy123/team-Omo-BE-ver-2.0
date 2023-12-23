@@ -11,6 +11,7 @@ import SearchingRouter from './routes/searching/searching.router.js'
 import BookmarkRouter from './routes/bookmark/bookmark.router.js'
 import RepliesRouter from './routes/replies/replies.ruter.js'
 import cookieParser from "cookie-parser";
+import morgan from "morgan";
 import ErrorMiddleware from "./middlewares/error.middleware.js";
 import session from "express-session";
 import swaggerConfig from "./swagger/swagger.js";
@@ -28,6 +29,7 @@ const PORT = 3003;
 
 app.use(morgan("dev"));
 // express-session을 passport 설정 전에 먼저 사용하도록 설정
+app.use(morgan('dev'));
 app.use(
   session({
     resave: false,
@@ -49,6 +51,7 @@ app.use(
 // passport.session()이 실행되면, 세션쿠키 정보를 바탕으로 해서 passport/index.js의 deserializeUser()가 실행하게 한다.
 
 app.use(cors());
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
