@@ -82,6 +82,6 @@ app.listen(PORT, (req, res) => {
   console.log(PORT, `포트 ${PORT}번이 열렸습니다.`);
 });
 
-app.listen(PORT2, (req, res) => {
+app2.listen(PORT2, (req, res) => {
   console.log(PORT2, `포트 ${PORT2}번이 열렸습니다.`);
 });
