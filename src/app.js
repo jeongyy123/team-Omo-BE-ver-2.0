@@ -24,7 +24,10 @@ import dotenv from "dotenv";
 dotenv.config();
 //
 const app = express();
+const app2 = express();
+
 const PORT = 3003;
+const PORT2 = 3004;
 
 // express-session을 passport 설정 전에 먼저 사용하도록 설정
 app.use(morgan('dev'));
@@ -56,7 +59,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerConfig.specs));
 
 app.get("/", (req, res) => {
-  return res.status(200).json({ message: "success" });
+  res.send("첫번째 서버");
+});
+
+app2.get("/", (req, res) => {
+  res.send("두번째 서버");
 });
 
 app.use("/api", [
@@ -76,4 +83,8 @@ app.use(ErrorMiddleware);
 
 app.listen(PORT, (req, res) => {
   console.log(PORT, `포트 ${PORT}번이 열렸습니다.`);
+});
+
+app.listen(PORT2, (req, res) => {
+  console.log(PORT2, `포트 ${PORT2}번이 열렸습니다.`);
 });
