@@ -8,8 +8,9 @@ import dotenv from "dotenv";
 import { getManyImagesS3, getSingleImageS3, getImageS3 } from "../../utils/getImageS3.js"
 
 
-const router = express.Router();
 dotenv.config();
+
+const router = express.Router();
 const bucketName = process.env.BUCKET_NAME;
 const region = process.env.BUCKET_REGION;
 const accessKeyId = process.env.ACCESS_KEY;
@@ -21,6 +22,7 @@ const s3 = new S3Client({
   },
   region,
 });
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -29,9 +31,9 @@ const upload = multer({ storage: storage });
 router.get("/locations", async (req, res, next) => {
   try {
     const { categoryName } = req.query;
-    const { latitude, longitude, qa, pa, ha, oa } = req.query;
+    const { qa, pa, ha, oa } = req.query;
     const category = await prisma.categories.findFirst({
-      // 이거
+
       where: { categoryName },
     });
     // 위치 정보 가져오기
@@ -39,11 +41,11 @@ router.get("/locations", async (req, res, next) => {
       where: {
         latitude: {
           gte: qa,
-          lte: pa,
+          lte: pa
         },
         longitude: {
           gte: ha,
-          lte: oa,
+          lte: oa
         },
         ...(category?.categoryId && { CategoryId: category.categoryId }),
       },
@@ -70,27 +72,28 @@ router.get("/locations", async (req, res, next) => {
       },
     });
 
+    const latitude = ((Number(qa) + Number(pa)) / 2).toFixed(10)
+    const longitude = ((Number(ha) + Number(oa)) / 2).toFixed(10)
+
     // 거리 계산 및 정렬
-      const start = {
-        latitude: +latitude || qa,
-        longitude: +longitude || ha
-      }
+    const start = {
+      latitude: +latitude || qa,
+      longitude: +longitude || ha
+    }
 
-      // 게시글 개수, 거리차 추가
-      const locationsWithDistance = await Promise.all(
-        location.map(async (loc) => {
-          const distance = haversine(
-            start,
-            { latitude: loc.latitude, longitude: loc.longitude },
-            { unit: "meter" },
-          );
-          return {
-            ...loc,
-            distance,
-          };
-        }),
-      );
-
+    // 게시글 개수, 거리차 추가
+    const locationsWithDistance = await Promise.all(
+      location.map(async (loc) => {
+        const distance = haversine(
+          start,
+          { latitude: loc.latitude, longitude: loc.longitude },
+          { unit: "meter" },
+        );
+        return {
+          ...loc
+        };
+      }),
+    );
 
 
       // 이미지 배열로 반환하는 로직
@@ -125,9 +128,18 @@ router.get("/locations", async (req, res, next) => {
         })),
       }));
       const imgUrlfirstindex = locationsWithSignedUrls
-
+      console.log(start)
+      console.log("Category:", category);
+      console.log("Location:", location);
+      console.log("Locations with Distance:", locationsWithDistance);
+      console.log("Img URLs Array:", imgUrlsArray);
+      console.log("Params Array:", paramsArray);
+      console.log("Signed URLs Array:", signedUrlsArray);
+      console.log("Locations with Signed URLs:", locationsWithSignedUrls);
+  
       return res.status(200).json(locationsWithSignedUrls);
   } catch (error) {
+    console.log(error)
     next(error);
   }
 });
@@ -157,6 +169,7 @@ router.get("/locations/:locationId", async (req, res, next) => {
         }
       }
     })
+
     // 16진수로 바꾼 imgUrl 을 , 기준으로 split 해주기
     const locationImgUrlsArray = location.Posts[0].imgUrl.split(",")
     
@@ -202,7 +215,7 @@ router.get("/locations/:locationId", async (req, res, next) => {
     await getManyImagesS3(sortedPosts)
 
 
-    for (const post of sortedPosts) { // 이해 안됨... for...of 의 존재는 암 검색ㄱㄱ
+    for (const post of sortedPosts) {
       const params = {
         Bucket: bucketName,
         Key: post.User.imgUrl
