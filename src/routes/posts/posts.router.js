@@ -10,7 +10,7 @@ import {
   getSingleImageS3,
   getProfileImageS3,
 } from "../../utils/getImageS3.js";
-import { fileFilter } from "../../utils/putImageS3.js";
+// import { fileFilter } from "../../utils/putImageS3.js";
 import {
   S3Client,
   PutObjectCommand,
@@ -148,7 +148,7 @@ router.get("/posts/:postId", async (req, res, next) => {
             storeName: true,
             latitude: true,
             longitude: true,
-            postCount: true,
+            // postCount: true,
             Category: {
               select: {
                 categoryId: true,
