@@ -8,8 +8,6 @@ import dotenv from "dotenv";
 import { getManyImagesS3, getSingleImageS3, getImageS3 } from "../../utils/getImageS3.js"
 
 
-// const morgan = require('morgan');
-// import authMiddleware from "../../middlewares/auth.middleware.js";
 const router = express.Router();
 dotenv.config();
 const bucketName = process.env.BUCKET_NAME;
@@ -32,7 +30,6 @@ router.get("/locations", async (req, res, next) => {
   try {
     const { categoryName } = req.query;
     const { latitude, longitude, qa, pa, ha, oa } = req.query;
-    // const { districtName } = req.query;
     const category = await prisma.categories.findFirst({
       // 이거
       where: { categoryName },
@@ -74,11 +71,10 @@ router.get("/locations", async (req, res, next) => {
     });
 
     // 거리 계산 및 정렬
-    if (pa && qa && ha && oa) {
       const start = {
-        latitude: +((qa + pa) / 2),
-        longitude: +((ha + oa) / 2),
-      };
+        latitude: +latitude || qa,
+        longitude: +longitude || ha
+      }
 
       // 게시글 개수, 거리차 추가
       const locationsWithDistance = await Promise.all(
@@ -100,19 +96,14 @@ router.get("/locations", async (req, res, next) => {
       // 이미지 배열로 반환하는 로직
       const imgUrlsArray = locationsWithDistance
         .sort((a, b) => a.distance - b.distance);
-      // .flatMap((location) => location.Posts.map((post) => post.imgUrl));
-
-      // console.log("0번째 인덱스", imgUrlsArray)
 
       const paramsArray = imgUrlsArray.map((arr) =>
-        // console.log("허이허이", arr.Posts[0].imgUrl)
-        arr.Posts[0].imgUrl.split(",").flatMap((url) => ({
-          Bucket: bucketName,
-          Key: url,
-        })),
+      arr.Posts[0].imgUrl.split(",").flatMap((url) => ({
+        Bucket: bucketName,
+        Key: url,
+      })),
       );
 
-      console.log("0 >>>>>>>>>>>", paramsArray);
       const signedUrlsArray = await Promise.all(
         paramsArray.map(async (locationParams) => {
           const locationSignedUrls = await Promise.all(
@@ -126,8 +117,6 @@ router.get("/locations", async (req, res, next) => {
         }),
       );
 
-      console.log("1 >>>>>>>>>>>", signedUrlsArray);
-
       const locationsWithSignedUrls = locationsWithDistance.map((location, locationIndex) => ({
         ...location,
         Posts: location.Posts.map((post, postIndex) => ({
@@ -138,8 +127,6 @@ router.get("/locations", async (req, res, next) => {
       const imgUrlfirstindex = locationsWithSignedUrls
 
       return res.status(200).json(locationsWithSignedUrls);
-    }
-    return res.status(200).json({ location });
   } catch (error) {
     next(error);
   }
@@ -220,11 +207,8 @@ router.get("/locations/:locationId", async (req, res, next) => {
         Bucket: bucketName,
         Key: post.User.imgUrl
       }
-      console.log("params?>>>>>>>>>", params)
       const command = new GetObjectCommand(params);
-      console.log("command>>>>", command)
       const imgUrl = await getSignedUrl(s3, command);
-      console.log("imgUrl>>>>>>...", imgUrl)
       post.User.imgUrl = imgUrl
     }
 
