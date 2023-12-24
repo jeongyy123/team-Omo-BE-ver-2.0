@@ -33,11 +33,24 @@ router.get("/locations", async (req, res, next) => {
     const { categoryName } = req.query;
     const { qa, pa, ha, oa } = req.query;
 
+    if (!categoryName || !['음식점', '카페', '기타', '전체'].includes(categoryName)) {
+      return res.status(400).json({ message: "올바른 카테고리를 입력하세요." });
+    }
 
-    const category = await prisma.categories.findFirst({
+    let category;
+    if (categoryName !== '전체') {
+      category = await prisma.categories.findFirst({
+        where: { categoryName },
+      });
+    } else {
+      category = { categoryId: null };
+    }
 
-      where: { categoryName },
-    });
+    // const categories = await prisma.categories.findFirst({
+
+    //   where: { categoryName },
+      
+    // });
     // 위치 정보 가져오기
     const location = await prisma.locations.findMany({
       where: {
@@ -73,10 +86,13 @@ router.get("/locations", async (req, res, next) => {
         },
       },
     });
+    
+    
+
 
     const latitude = ((Number(qa) + Number(pa)) / 2).toFixed(10)
     const longitude = ((Number(ha) + Number(oa)) / 2).toFixed(10)
-    console.log(">>>>>>>>>>>", latitude)
+    // console.log(">>>>>>>>>>>", latitude)
 
     // 거리 계산 및 정렬
     const start = {
@@ -132,14 +148,14 @@ router.get("/locations", async (req, res, next) => {
         })),
       }));
       const imgUrlfirstindex = locationsWithSignedUrls
-      console.log("start", start)
-      console.log("Category:", category);
-      console.log("Location:", location);
-      console.log("Locations with Distance>>>>>>>>>>", locationsWithDistance);
-      console.log("Img URLs Array:", imgUrlsArray);
-      console.log("Params Array:", paramsArray);
-      console.log("Signed URLs Array:", signedUrlsArray);
-      console.log("Locations with Signed URLs:", locationsWithSignedUrls);
+      // console.log("start", start)
+      // console.log("Category:", category);
+      // console.log("Location:", location);
+      // console.log("Locations with Distance>>>>>>>>>>", locationsWithDistance);
+      // console.log("Img URLs Array:", imgUrlsArray);
+      // console.log("Params Array:", paramsArray);
+      // console.log("Signed URLs Array:", signedUrlsArray);
+      // console.log("Locations with Signed URLs:", locationsWithSignedUrls);
   
       return res.status(200).json(locationsWithSignedUrls);
   } catch (error) {
