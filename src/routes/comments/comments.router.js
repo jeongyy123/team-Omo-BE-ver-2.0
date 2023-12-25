@@ -111,21 +111,26 @@ router.get("/posts/:postId/comments", async (req, res, next) => {
       orderBy: { createdAt: "desc" },
     });
 
-    // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
-    if (post.imgUrl && post.imgUrl.length === 64) {
+// 각 댓글의 사용자 이미지를 S3에서 불러오기
+const commentsWithImages = await Promise.all(
+  comment.map(async (comment) => {
+    if (comment.User.imgUrl && comment.User.imgUrl.length === 64) {
       const getObjectParams = {
-
         Bucket: bucketName, // 버킷 이름
-        Key: post.imgUrl, // 이미지 키
+        Key: comment.User.imgUrl, // 이미지 키
       };
 
-      // User GetObjectCommand to create the url
+      // GetObjectCommand를 사용하여 이미지 URL을 생성
       const command = new GetObjectCommand(getObjectParams);
       const url = await getSignedUrl(s3, command);
-      post.imgUrl = url;
-    }
-    // post.imgUrl = decodeURIComponent(url);
 
+      // 불러온 이미지 URL로 대체
+      comment.User.imgUrl = url;
+    }
+
+    return comment;
+  })
+);
     return res.status(200).json({ data: comment });
   } catch (error) {
     next(error);
