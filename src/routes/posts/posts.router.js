@@ -9,15 +9,19 @@ import {
   getManyImagesS3,
   getSingleImageS3,
   getProfileImageS3,
+  getRepliesImageS3
 } from "../../utils/getImageS3.js";
-// import { fileFilter } from "../../utils/putImageS3.js";
+import { fileFilter } from "../../utils/putImageS3.js";
 import {
   S3Client,
   PutObjectCommand,
+  GetObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 import crypto from "crypto";
+// // 💥💥💥 redis 주석처리하기 💥💥💥
 // import { setCheckCache, getChckeCache } from "../../middlewares/cache.middleware.js";
 // import Redis from 'ioredis';
 
@@ -25,6 +29,7 @@ const router = express.Router();
 
 dotenv.config();
 
+// // 💥💥💥 redis 주석처리하기 💥💥💥
 // const redis = new Redis({
 //   host: process.env.REDIS_HOST,
 //   port: process.env.REDIS_PORT,
@@ -45,8 +50,7 @@ const s3 = new S3Client({
 });
 
 const storage = multer.memoryStorage();
-// const upload = multer({ storage: storage, fileFilter });
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage, fileFilter });
 
 const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
 
@@ -148,7 +152,7 @@ router.get("/posts/:postId", async (req, res, next) => {
             storeName: true,
             latitude: true,
             longitude: true,
-            // postCount: true,
+            postCount: true,
             Category: {
               select: {
                 categoryId: true,
@@ -190,7 +194,7 @@ router.get("/posts/:postId", async (req, res, next) => {
       return res.status(400).json({ message: "존재하지않는 게시글입니다." });
     }
 
-    //Replies 유저 이미지 S3 조회 추가해야함.
+    await getRepliesImageS3(posts.Comments);
     await getProfileImageS3(posts.Comments);
     await getSingleImageS3(posts.User);
     await getImageS3(posts);
@@ -240,20 +244,20 @@ router.post(
       const imgPromises = req.files.map(async (file) => {
         const imgName = randomImgName();
 
-        // // 이미지 사이즈 조정
-        // const buffer = await jimp
-        //   .read(file.buffer)
-        //   .then((image) =>
-        //     image
-        //       .resize(jimp.AUTO, 350)
-        //       .quality(70)
-        //       .getBufferAsync(jimp.MIME_JPEG),
-        //   );
+        // 이미지 사이즈 조정
+        const buffer = await jimp
+          .read(file.buffer)
+          .then((image) =>
+            image
+              .resize(jimp.AUTO, 350)
+              .quality(70)
+              .getBufferAsync(jimp.MIME_JPEG),
+          );
 
         const params = {
           Bucket: bucketName,
           Key: imgName,
-          Body: file.buffer,
+          Body: buffer,
           ContentType: file.mimetype,
         };
         const command = new PutObjectCommand(params);
