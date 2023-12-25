@@ -4,6 +4,7 @@ import { prisma } from "../../utils/prisma/index.js";
 import multer from "multer";
 import crypto from "crypto";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -128,7 +129,6 @@ const commentsWithImages = await Promise.all(
       comment.User.imgUrl = url;
     }
 
-    return comment;
   })
 );
     return res.status(200).json({ data: comment });

@@ -2,6 +2,7 @@ import express from "express";
 import { prisma } from "../../utils/prisma/index.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import crypto from "crypto";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
 // dotenv.config();
@@ -104,18 +105,24 @@ router.get(
           createdAt: true,
         },
       });
-      // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
-      if (reply.imgUrl && reply.imgUrl.length === 64) {
-        const getObjectParams = {
-          Bucket: bucketName, // 버킷 이름
-          Key: reply.imgUrl, // 이미지 키
-        };
-
-        // User GetObjectCommand to create the url
-        const command = new GetObjectCommand(getObjectParams);
-        const url = await getSignedUrl(s3, command);
-        reply.imgUrl = url;
-      }
+      const replysWithImages = await Promise.all(
+        reply.map(async (reply) => {
+          if (reply.User.imgUrl && reply.User.imgUrl.length === 64) {
+            const getObjectParams = {
+              Bucket: bucketName, // 버킷 이름
+              Key: reply.User.imgUrl, // 이미지 키
+            };
+      
+            // GetObjectCommand를 사용하여 이미지 URL을 생성
+            const command = new GetObjectCommand(getObjectParams);
+            const url = await getSignedUrl(s3, command);
+      
+            // 불러온 이미지 URL로 대체
+            reply.User.imgUrl = url;
+          }
+      
+        })
+      );
 
       return res.status(200).json({ data: reply });
     } catch (error) {
