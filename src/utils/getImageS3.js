@@ -104,3 +104,19 @@ export const getProfileImageS3 = async (posts) => {
     return post.User.imgUrl = imgUrl
   })
 }
+
+// 대댓글 유저의 프로필 이미지
+export const getRepliesImageS3 = async (comments) => {
+  for (const comment of comments) {
+    for (const reply of comment.Replies) {
+      const params = {
+        Bucket: bucketName,
+        Key: reply.User.imgUrl
+      };
+      const command = new GetObjectCommand(params);
+      const imgUrl = await getSignedUrl(s3, command);
+
+      reply.User.imgUrl = imgUrl;
+    }
+  }
+};
