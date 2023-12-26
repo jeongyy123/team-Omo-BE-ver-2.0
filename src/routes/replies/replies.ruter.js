@@ -40,10 +40,16 @@ router.post(
       const posts = await prisma.posts.findFirst({
         where: { postId: +postId },
       });
+      if (!posts) {
+        return res.status(404).json({ message: "이미 삭제되었거나, 변경된 댓글 입니다."})
+      }
 
       const comments = await prisma.comments.findFirst({
         where: { commentId: +commentId, PostId: +postId },
       });
+      if (!comments) {
+        return res.status(404).json({ message: "이미 삭제되었거나, 변경된 댓글 입니다."})
+      }
 
       const reply = await prisma.replies.create({
         data: {

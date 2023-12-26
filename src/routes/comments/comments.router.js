@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
+import { getProfileImageS3 } from "../../utils/getImageS3.js";
 
 dotenv.config();
 
@@ -112,6 +113,8 @@ router.get("/posts/:postId/comments", async (req, res, next) => {
       orderBy: { createdAt: "desc" },
     });
 
+    // const commentImgUrl = await getProfileImageS3(comment)
+    // comment.User.imgUrl = url
 // 각 댓글의 사용자 이미지를 S3에서 불러오기
 const commentsWithImages = await Promise.all(
   comment.map(async (comment) => {
