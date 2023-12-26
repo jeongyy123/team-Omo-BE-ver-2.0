@@ -96,7 +96,8 @@ router.post("/verify-email", async (req, res, next) => {
       },
     });
 
-    // 만료시간 이후에 삭제가 되야하나...?
+    // 만료시간 이후에 삭제가 되어야함.
+    // 인증번호를 확인하는 api에서 삭제요청 들어감
 
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
@@ -194,6 +195,28 @@ router.post("/verify-authentication-code", async (req, res, next) => {
   try {
     const { authenticationCode, email } = req.body;
     console.log("authenticationCode >>>", authenticationCode);
+
+    // ==========================================================================
+    // 이미 만료기간이 지난 인증번호를 db에서 지우자
+    // 현재 시간보다 expiryDate가 이전인 인증번호를 조회.
+    // 만약 클라이언트가 이전에 발급받은 만료된 인증번호를 사용할 수도 있으니까!
+    const expiredVerificationCodes = await prisma.verificationCode.findMany({
+      where: {
+        expiryDate: {
+          lt: new Date(), // 현재 시간보다 이전인 데이터를 찾는다.
+        },
+      },
+    });
+
+    // 만료된 인증번호를 삭제.
+    for (const code of expiredVerificationCodes) {
+      await prisma.verificationCode.delete({
+        where: {
+          id: code.id,
+        },
+      });
+    }
+    // ============================================================================
 
     // 인증번호가 일치하는지 확인
     const checkVerificationCode = await prisma.verificationCode.findFirst({
