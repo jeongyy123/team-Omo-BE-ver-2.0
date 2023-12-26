@@ -212,7 +212,7 @@ router.post("/verify-authentication-code", async (req, res, next) => {
     for (const code of expiredVerificationCodes) {
       await prisma.verificationCode.delete({
         where: {
-          id: code.id,
+          verificationCodeId: code.verificationCodeId,
         },
       });
     }
