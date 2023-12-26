@@ -2,9 +2,9 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /home/ubuntu/Omo-Web-Server
+    destination: /home/ubuntu/Omo-2nd-Web-Server
     overwrite: yes
-    filter: ["/Omo-Web-Server/*"]
+    filter: ["/Omo-2nd-Web-Server/*"]
 
 file_exists_behavior: OVERWRITE
 
@@ -16,9 +16,9 @@ permissions:
 
 hooks:
   BeforeInstall:
-    - location: scripts/before_deploy_first.sh
+    - location: scripts/before_deploy_second.sh
       runas: ubuntu
   AfterInstall:
-    - location: scripts/after_deploy_first.sh
+    - location: scripts/after_deploy_second.sh
       timeout: 120
       runas: ubuntu
