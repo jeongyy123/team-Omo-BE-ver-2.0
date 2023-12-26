@@ -62,7 +62,7 @@ jobs:
 
       # S3로 보낼 압축 파일 생성
       - name: zip file
-        run: zip -r CI.zip ./src/* ./prisma/* ./.yarn/* ./.env ./scripts/* ./appspec.yml ./.eslintrc.js ./.prettierrc.json ./.yarnrc ./package.json ./package-lock.json ./yarn.lock
+        run: zip -r CI.zip ./src/* ./prisma/* ./.yarn/* ./.env ./scripts/* ./appspec.yml ./appspec2.yml ./.eslintrc.js ./.prettierrc.json ./.yarnrc ./package.json ./package-lock.json ./yarn.lock
 
       # AWS 인증하기
       - name: AWS configure credentials
