@@ -40,6 +40,7 @@ app.use(
   }),
 );
 
+// 
 // Passport 설정 초기화
 // configurePassport(); // configurePassport 함수 호출  // passport 불러온다.
 
