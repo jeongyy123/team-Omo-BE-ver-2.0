@@ -240,6 +240,10 @@ router.post(
         return res.status(400).json({ message: "지역이 존재하지 않습니다." });
       }
 
+      if (!req.file || req.file.length === 0) {
+        return res.status(400).json({ message: "사진을 등록해주세요." })
+      }
+
       //이미지 이름 나눠서 저장
       const imgPromises = req.files.map(async (file) => {
         const imgName = randomImgName();
@@ -253,6 +257,7 @@ router.post(
               .quality(70)
               .getBufferAsync(jimp.MIME_JPEG),
           );
+
 
         const params = {
           Bucket: bucketName,
