@@ -30,9 +30,9 @@ model Users {
 }
 
 model VerificationCode {
-  verificationCodeId Int      @id @default(autoincrement()) @map("codeId")
+  verificationCodeId Int      @id @default(autoincrement()) @map("verificationCodeId")
   email              String   @map("email")
-  verificationCode   Int   @map("verificationCode")
+  verificationCode   Int      @map("verificationCode")
   expiryDate         DateTime @map("expiryDate")
 
   @@map("VerificationCode")
@@ -111,16 +111,17 @@ model Categories {
 }
 
 model Locations {
-  locationId Int    @id @default(autoincrement()) @map("locationId")
-  CategoryId Int    @map("CategoryId")
-  DistrictId Int    @map("DistrictId")
-  UserId     Int    @map("UserId")
-  storeName  String @map("storeName")
-  address    String @map("address")
-  latitude   String @map("latitude")
-  longitude  String @map("longitude")
-  starAvg    Int    @map("starAvg")
-  postCount  Int    @default(0) @map("postCount")
+  locationId  Int     @id @default(autoincrement()) @map("locationId")
+  CategoryId  Int     @map("CategoryId")
+  DistrictId  Int     @map("DistrictId")
+  UserId      Int     @map("UserId")
+  storeName   String  @map("storeName")
+  address     String  @map("address")
+  latitude    String  @map("latitude")
+  longitude   String  @map("longitude")
+  starAvg     Int     @map("starAvg")
+  postCount   Int     @default(0) @map("postCount")
+  placeInfoId String? @map("placeInfoId") 
 
   Category Categories @relation(fields: [CategoryId], references: [categoryId], onDelete: Cascade)
   District Districts  @relation(fields: [DistrictId], references: [districtId], onDelete: Cascade)

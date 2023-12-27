@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
+// import { redisClient } from "../../utils/redis.util.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import {
   registerSchema,
@@ -550,6 +551,20 @@ router.post("/login", async (req, res, next) => {
       { expiresIn: "7d" },
     );
 
+    // =======================================================
+    // 레디스에 리프레시 토큰 저장
+    // 리프레시 토큰을 키로 사용하면 해당 토큰에 대한 사용자 ID를 빠르게 찾을 수 있다.
+    // 특정 리프레시 토큰에 대응하는 사용자를 신속하게 확인할 수 있다
+    // await redisClient.set(findUser.userId, refreshToken);
+
+    // 만료 시간 설정 (7일)
+    // const TTL = 7 * 24 * 60 * 60; // 초 단위
+    // expire 메서드를 호출하여 findUser.userId 키의 만료 시간을 TTL 변수에 지정된 만큼으로 설정
+    // expire 명령어에는 두 개의 인자(키와 TTL)만 필요하다
+    // await redisClient.expire(findUser.userId, TTL);
+
+    // =======================================================
+
     const sevenDaysLater = new Date(); // 현재 시간
     sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
 
@@ -639,12 +654,15 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
     const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
       where: {
         refreshToken: refreshToken, // 전달받은 토큰
+        expiresAt: {
+          gte: new Date(), // 만료되지 않은 토큰인지 확인
+        },
       },
     });
 
     if (!isRefreshTokenExist) {
       return res.status(419).json({
-        errorMessage: "Refresh token의 정보가 서버에 존재하지 않습니다.",
+        errorMessage: "리프레시 토큰이 유효하지 않습니다.",
       });
     }
 
