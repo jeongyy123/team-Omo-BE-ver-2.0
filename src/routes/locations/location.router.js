@@ -409,6 +409,7 @@ router.get("/locations/:locationId", async (req, res, next) => {
         starAvg: true,
         postCount: true, // postcount -> postCount로 수정
         storeName: true,
+        placeInfoId: true,
         Posts: {
           select: {
             imgUrl: true
