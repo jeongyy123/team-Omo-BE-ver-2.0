@@ -177,6 +177,7 @@ router.get("/main/popular", async (req, res, next) => {
             address: true,
             starAvg: true,
             postCount: true,
+            placeInfoId: true,
           },
         },
         Category: {
