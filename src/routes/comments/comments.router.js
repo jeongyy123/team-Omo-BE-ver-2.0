@@ -402,7 +402,6 @@ router.delete(
       });
     } catch (error) {
       next(error);
-      throw new Error("댓글 삭제에 실패 하였습니다.");
     }
   },
 );
