@@ -611,11 +611,12 @@ router.post(
       if (!req.files || req.files.length === 0) {
         return res.status(400).json({ message: "사진을 등록해주세요." });
       }
+      console.log("req.files", req.files)
 
       //이미지 이름 나눠서 저장
       const imgPromises = req.files.map(async (file) => {
-        if (file.size > 60000) {
-          return res.status(400).json({ message: "50KB이하의 이미지파일만 넣어주세요." })
+        if (file.size > 1500000) {
+          return res.status(400).json({ message: "900KB이하의 이미지파일만 넣어주세요." })
         }
 
         const imgName = randomImgName();
