@@ -39,4 +39,4 @@ const fileFilter = (req, file, next) => {
   next(null, true);
 };
 
-export { fileFilter }
+export { fileFilter };
