@@ -6,6 +6,9 @@ import bookmark from "./bookmark/bookmark.router.js";
 import isLike from "./isLike/isLike.router.js";
 import posts from "./posts/posts.router.js";
 import searching from "./searching/searching.router.js";
+import location from "./locations/location.router.js"
+import comments from "./comments/comments.router.js"
+import replies from "./replies/replies.ruter.js"
 
 const router = express.Router();
 
@@ -58,6 +61,25 @@ const router = express.Router();
  *     description: 유저이름/가게이름으로 검색
  */
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Locations
+ *     description: 프로필 조회/프로필 수정/유저의 북마크 조회/유저가 작성한 게시글의 목록 조회
+ */
+/**
+ * @swagger
+ * tags:
+ *   - name: Comments
+ *     description: 댓글 등록/조회/삭제
+ */
+/**
+ * @swagger
+ * tags:
+ *   - name: replies
+ *     description: 대댓글 등록/조회/삭제
+ */
+
 router.use("/users", users);
 router.use("/profiles", profiles);
 router.use("/main", main);
@@ -65,5 +87,8 @@ router.use("/bookmark", bookmark);
 router.use("/isLike", isLike);
 router.use("/posts", posts);
 router.use("/searching", searching);
+router.use("/location", location);
+router.use("/comments", comments);
+router.use("/replies", replies);
 
 export default router;
