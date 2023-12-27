@@ -30,7 +30,7 @@ model Users {
 }
 
 model VerificationCode {
-  verificationCodeId Int      @id @default(autoincrement()) @map("codeId")
+  verificationCodeId Int      @id @default(autoincrement()) @map("verificationCodeId")
   email              String   @map("email")
   verificationCode   Int   @map("verificationCode")
   expiryDate         DateTime @map("expiryDate")
