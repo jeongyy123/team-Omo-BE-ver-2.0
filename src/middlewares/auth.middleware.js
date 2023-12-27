@@ -8,7 +8,8 @@ export default async function (req, res, next) {
   try {
     // 토큰의 payload의 type을 통해 ATK인지 RTK인지 구분한다.
     const { authorization, refreshToken } = req.headers;
-    const secretKey = process.env.SECRET_TOKEN_KEY;
+    const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
+    const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
 
     // 받은 토큰이 엑세스 토큰이라면
     // ==========================================================================
@@ -25,7 +26,7 @@ export default async function (req, res, next) {
         return res.status(400).json({ errorMessage: "Bearer형식이 아닙니다." });
       }
 
-      const decodedToken = validateToken(token, secretKey);
+      const decodedToken = validateToken(token, accessKey);
 
       if (!decodedToken) {
         return res
@@ -69,7 +70,7 @@ export default async function (req, res, next) {
         return res.status(400).json({ errorMessage: "Bearer형식이 아닙니다." });
       }
 
-      const decodedToken = validateToken(token, secretKey);
+      const decodedToken = validateToken(token, refreshKey);
 
       if (!decodedToken) {
         return res
