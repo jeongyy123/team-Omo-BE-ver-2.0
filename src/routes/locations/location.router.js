@@ -167,6 +167,8 @@ router.get("/locations", async (req, res, next) => {
       category = { categoryId: null };
     }
 
+    console.log("category >>>>>>>> ", category)
+
     // 위치 정보 가져오기
     const location = await prisma.locations.findMany({
       where: {
@@ -202,6 +204,8 @@ router.get("/locations", async (req, res, next) => {
         },
       },
     });
+
+    console.log("location >>>>>>>> ", location)
 
     const latitude = ((Number(qa) + Number(pa)) / 2).toFixed(10)
     const longitude = ((Number(ha) + Number(oa)) / 2).toFixed(10)
@@ -243,6 +247,8 @@ router.get("/locations", async (req, res, next) => {
       });
     });
 
+    console.log("paramsArray >>>>>>>> ", paramsArray)
+
     const signedUrlsArray = await Promise.all(
       paramsArray.map(async (params) => {
         const commands = params.map((param) => new GetObjectCommand(param));
@@ -255,11 +261,15 @@ router.get("/locations", async (req, res, next) => {
       }),
     );
 
+    console.log("signedUrlsArray >>>>>>>> ", signedUrlsArray)
+
     for (let i = 0; i < imgUrlsArray.length; i++) {
       imgUrlsArray[i].Posts.map((post) => {
         post.imgUrl = signedUrlsArray[i]
       })
     }
+
+    console.log("imgUrlsArray >>>>>>>> ", imgUrlsArray)
 
     return res.status(200).json(imgUrlsArray);
   } catch (error) {
