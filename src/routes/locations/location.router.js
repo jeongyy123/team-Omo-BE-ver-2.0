@@ -26,6 +26,127 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 
+/**
+ * @swagger
+ * /locations:
+ *   get:
+ *     summary: 지도페이지에서 주변 둘러보기
+ *     description: 화면에서 보여지는 지도에서 가운데 기준으로 가까운 게시글을 조회한다.
+ *     tags:
+ *      - Locations
+ *     parameters:
+ *       - in: query
+ *         name: categoryName
+ *         schema:
+ *           type: string
+ *         description: 조회할 카테고리 이름 ('음식점', '카페', '기타', '전체')
+ *       - in: query
+ *         name: qa
+ *         schema:
+ *           type: string
+ *         description: latitude의 최소값
+ *       - in: query
+ *         name: pa
+ *         schema:
+ *           type: string
+ *         description: latitude의 최대값
+ *       - in: query
+ *         name: ha
+ *         schema:
+ *           type: string
+ *         description: longitude의 최소값
+ *       - in: query
+ *         name: oa
+ *         schema:
+ *           type: string
+ *         description: longitude의 최대값
+ *     responses:
+ *       200:
+ *         description: 사용자가 지도에서 성공적으로 주변 게시물을 불러왔을 경우
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 postsCount:
+ *                   type: number
+ *                   description: 사용자가 보고있는 화면에서 나타나는 게시글의 갯수
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     nickname:
+ *                       type: string
+ *                       description: 사용자가 해당하는 게시물을 클릭했을 경우
+ *                     Posts:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           postId:
+ *                             type: number
+ *                             description: 게시글의 고유 번호
+ *                           UserId:
+ *                             type: number
+ *                             description: 작성한 사용자의 고유 번호
+ *                           imgUrl:
+ *                             type: string
+ *                             description: 게시글 이미지
+ *                           content:
+ *                             type: string
+ *                             description: 게시글 내용
+ *                           likeCount:
+ *                             type: number
+ *                             description: 게시글 좋아요 갯수
+ *                           commentCount:
+ *                             type: number
+ *                             description: 게시글의 댓글 갯수
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                             description: 게시글 작성 날짜
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                             description: 게시글이 업데이트 된 날짜
+ *                           Comments:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 UserId:
+ *                                   type: number
+ *                                   description: 댓글을 작성한 사용자의 고유 번호
+ *                                 PostId:
+ *                                   type: number
+ *                                   description: 댓글이 달린 게시글의 고유 번호
+ *                                 content:
+ *                                   type: string
+ *                                   description: 댓글 내용
+ *                                 createdAt:
+ *                                   type: string
+ *                                   format: date-time
+ *                                   description: 댓글이 작성된 날짜
+ *                                 User:
+ *                                   type: object
+ *                                   properties:
+ *                                     nickname:
+ *                                       type: string
+ *                                       description: 댓글을 작성한 사용자 닉네임.
+ *                                     imgUrl:
+ *                                       type: string
+ *                                       description: 댓글을 작성한 사용자의 닉네임
+ *       '500':
+ *          description: 서버에서 에러가 발생했을 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다.
+ */
+
 //둘러보기
 router.get("/locations", async (req, res, next) => {
   try {
@@ -34,8 +155,6 @@ router.get("/locations", async (req, res, next) => {
     const { categoryName } = req.query;
     const { qa, pa, ha, oa } = req.query;
 
-    console.log("1 >>>>>>>", categoryName)
-    console.log("2 >>>>>>>", qa, pa, ha, oa)
 
     if (!categoryName || !['음식점', '카페', '기타', '전체'].includes(categoryName)) {
       console.log("3 >>>>>>>", "올바른 카테고리를 입력하세요.")
@@ -43,7 +162,6 @@ router.get("/locations", async (req, res, next) => {
     }
 
     let category;
-    console.log("4 >>>>>>>", categoryName)
     if (categoryName !== '전체') {
       category = await prisma.categories.findFirst({
         where: { categoryName },
@@ -51,7 +169,6 @@ router.get("/locations", async (req, res, next) => {
     } else {
       category = { categoryId: null };
     }
-    console.log("4-2 >>>>>>>", categoryName)
 
     // 위치 정보 가져오기
     const location = await prisma.locations.findMany({
@@ -88,19 +205,15 @@ router.get("/locations", async (req, res, next) => {
         },
       },
     });
-    console.log("5 >>>>>>>", location)
 
     const latitude = ((Number(qa) + Number(pa)) / 2).toFixed(10)
     const longitude = ((Number(ha) + Number(oa)) / 2).toFixed(10)
-    console.log("6 >>>>>>>", latitude)
-    console.log("7 >>>>>>>", longitude)
 
     // // // 거리 계산 및 정렬
     const start = {
       latitude: +latitude || qa,
       longitude: +longitude || ha
     }
-    console.log("8 >>>>>>>", start)
 
     // 게시글 개수, 거리차 추가
     const locationsWithDistance = await Promise.all(
@@ -121,7 +234,6 @@ router.get("/locations", async (req, res, next) => {
     const imgUrlsArray = locationsWithDistance
       .sort((a, b) => a.distance - b.distance);
 
-    console.log("10 >>>>>>>", imgUrlsArray)
 
     const paramsArray = imgUrlsArray.map((arr) =>
       arr.Posts[0].imgUrl.split(",").flatMap((url) => ({
@@ -160,6 +272,124 @@ router.get("/locations", async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /locations/locationId:
+ *   get:
+ *     summary: 인기 게시글 조회
+ *     description: 특정 위치의 인기 게시글과 위치 정보를 조회한다.
+ *     tags:
+ *      - Locations
+ *     parameters:
+ *       - in: path
+ *         name: locationId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 조회할 위치의 고유 식별자
+ *       - in: query
+ *         name: latitude
+ *         schema:
+ *           type: string
+ *         description: 선택적으로 조회할 위치의 latitude
+ *       - in: query
+ *         name: longitude
+ *         schema:
+ *           type: string
+ *         description: 선택적으로 조회할 위치의 longitude
+ *     responses:
+ *       200:
+ *         description: 성공적으로 위치와 게시글 정보를 불러왔을 경우
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 location:
+ *                   type: object
+ *                   properties:
+ *                     locationId:
+ *                       type: number
+ *                       description: 위치의 고유 식별자
+ *                     address:
+ *                       type: string
+ *                       description: 위치의 주소
+ *                     starAvg:
+ *                       type: number
+ *                       description: 위치에 대한 별점 평균
+ *                     postCount:
+ *                       type: number
+ *                       description: 위치에 속한 게시글의 수
+ *                     storeName:
+ *                       type: string
+ *                       description: 위치의 상점 이름
+ *                     Posts:
+ *                       type: object
+ *                       properties:
+ *                         imgUrl:
+ *                           type: string
+ *                           description: 위치에 속한 게시글의 이미지 URL (첫 번째 이미지만 사용)
+ *                 posts:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       User:
+ *                         type: object
+ *                         properties:
+ *                           nickname:
+ *                             type: string
+ *                             description: 게시글 작성자의 닉네임
+ *                           imgUrl:
+ *                             type: string
+ *                             description: 게시글 작성자의 이미지 URL
+ *                       postId:
+ *                         type: number
+ *                         description: 게시글의 고유 식별자
+ *                       imgUrl:
+ *                         type: string
+ *                         description: 게시글의 이미지 URL
+ *                       content:
+ *                         type: string
+ *                         description: 게시글의 내용
+ *                       commentCount:
+ *                         type: number
+ *                         description: 게시글의 댓글 수
+ *                       likeCount:
+ *                         type: number
+ *                         description: 게시글의 좋아요 수
+ *                       star:
+ *                         type: number
+ *                         description: 게시글의 평점
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         description: 게시글 작성 날짜
+ *       400:
+ *         description: 요청이 잘못된 경우
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "locationId 요청 송신에 오류가 있습니다."
+ *       500:
+ *          description: 서버에서 에러가 발생했을 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다.
+ */
+
+
+
+
 // // 인기게시글 
 // // 해당 하는 지역에 postId, latitude, longitude, 별점, content, likeCount
 // // commentCount, imgUrl, createdAt
@@ -167,12 +397,10 @@ router.get("/locations/:locationId", async (req, res, next) => {
   try {
     const { latitude, longitude } = req.query
     const { locationId } = req.params
-    console.log("인1 >>>>>>>", locationId)
 
     if (!locationId) {
       return res.status(400).json({ message: "locationId 요청 송신에 오류가 있습니다." })
     }
-    console.log("인2 >>>>>>>", locationId)
 
     const location = await prisma.locations.findFirst({
       where: {
@@ -195,7 +423,6 @@ router.get("/locations/:locationId", async (req, res, next) => {
 
     // 16진수로 바꾼 imgUrl 을 , 기준으로 split 해주기
     const locationImgUrlsArray = location.Posts[0].imgUrl.split(",")
-    console.log("인4 >>>>>>>", locationImgUrlsArray)
 
     const locationParamsArray = locationImgUrlsArray.map((imgUrl) => ({
       Bucket: bucketName,
@@ -232,7 +459,6 @@ router.get("/locations/:locationId", async (req, res, next) => {
         createdAt: true
       }
     })
-    console.log("인5 >>>>>>>", posts)
 
     // 좋아요 순서로 정렬
     const sortedPosts = posts.sort((a, b) => b.likeCount - a.likeCount)
@@ -250,7 +476,6 @@ router.get("/locations/:locationId", async (req, res, next) => {
       post.User.imgUrl = imgUrl
     }
 
-    console.log("인6 >>>>>>>", location, posts)
     return res.status(200).json({ location, posts: posts });
   } catch (error) {
     next(error)

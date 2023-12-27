@@ -12,11 +12,18 @@ const options = {
     },
     servers: [
       {
-        url: "https://tonadus.shop",
+        // url: "https://tonadus.shop",
+        url: "localhost:3003",
       },
     ],
   },
-  apis: ["./src/routes/users/*.js", "./src/routes/profiles/*.js"],
+  apis: [
+    "./src/routes/users/*.js",
+    "./src/routes/profiles/*.js",
+    "./src/routes/locations/*.js",
+    "./src/routes/comments/*.js",
+    "./src/routes/replies/*.js"
+  ],
 };
 
 const specs = swaggerJsdoc(options);

@@ -1,6 +1,7 @@
 import express from "express";
 import users from "./users/user.router.js";
 import profiles from "./profiles/profile.router.js";
+import location from "./locations/location.router.js"
 
 const router = express.Router();
 
@@ -18,7 +19,15 @@ const router = express.Router();
  *     description: 프로필 조회/프로필 수정/유저의 북마크 조회/유저가 작성한 게시글의 목록 조회
  */
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Locations
+ *     description: 프로필 조회/프로필 수정/유저의 북마크 조회/유저가 작성한 게시글의 목록 조회
+ */
+
 router.use("/users", users);
 router.use("/profiles", profiles);
+router.use("/locations", location);
 
 export default router;
