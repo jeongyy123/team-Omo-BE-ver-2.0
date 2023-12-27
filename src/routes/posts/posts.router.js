@@ -436,6 +436,7 @@ router.get("/posts/:postId", async (req, res, next) => {
             latitude: true,
             longitude: true,
             postCount: true,
+            placeInfoId: true,
             Category: {
               select: {
                 categoryId: true,
