@@ -12,8 +12,7 @@ const options = {
     },
     servers: [
       {
-        // url: "https://tonadus.shop",
-        url: "localhost:3003",
+        url: "https://tonadus.shop",
       },
     ],
   },
