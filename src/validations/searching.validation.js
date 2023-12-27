@@ -8,7 +8,7 @@ const searchingSchema = joi.object({
   storeName: joi.string().min(1).messages({
     "string.min": "storeName을 1자 이상으로 작성해주세요.",
     "string.empty": "storeName을 입력해주세요.",
-  })
+  }),
 });
 
 export { searchingSchema };
