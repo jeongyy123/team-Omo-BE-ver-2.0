@@ -240,6 +240,10 @@ router.get("/locations", async (req, res, next) => {
       })),
     );
 
+    if (!paramsArray || paramsArray.length === 0) {
+      return res.status(400).json({ message: "해당 사진이 없거나 로딩이 안되거나 합니다." })
+    }
+
     const signedUrlsArray = await Promise.all(
       paramsArray.map(async (locationParams) => {
         const locationSignedUrls = await Promise.all(
@@ -401,7 +405,7 @@ router.get("/locations/:locationId", async (req, res, next) => {
 
     const location = await prisma.locations.findFirst({
       where: {
-        locationId: { equals: +locationId, } // locationId를 정수로 변환하는 것은 필요 없습니다.
+        locationId: +locationId // locationId를 정수로 변환하는 것은 필요 없습니다.
       },
       select: {
         locationId: true,
