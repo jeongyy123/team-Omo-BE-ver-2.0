@@ -150,8 +150,6 @@ const upload = multer({ storage: storage });
 //둘러보기
 router.get("/locations", async (req, res, next) => {
   try {
-    // const { categoryName } = { categoryName: "전체" };
-    // const { qa, pa, ha, oa } = { qa: '37.50138120411985', pa: '37.65704612029616', ha: '126.76893684765624', oa: '127.16011455525364' };
     const { categoryName } = req.query;
     const { qa, pa, ha, oa } = req.query;
 
@@ -232,41 +230,38 @@ router.get("/locations", async (req, res, next) => {
     const imgUrlsArray = locationsWithDistance
       .sort((a, b) => a.distance - b.distance);
 
+    const paramsArray = imgUrlsArray.flatMap((arr) => {
+      return arr.Posts.map((post) => {
+        // 콤마로 구분된 여러 URL 분리
+        const imgUrls = post.imgUrl.split(",");
 
-    const paramsArray = imgUrlsArray.map((arr) =>
-      arr.Posts[0].imgUrl.split(",").flatMap((url) => ({
-        Bucket: bucketName,
-        Key: url,
-      })),
-    );
-
-    if (!paramsArray || paramsArray.length === 0) {
-      return res.status(400).json({ message: "해당 사진이 없거나 로딩이 안되거나 합니다." })
-    }
+        // 각 URL에 대해 Bucket 및 Key 속성을 가진 객체로 변환
+        return imgUrls.map((url) => ({
+          Bucket: bucketName,
+          Key: url,
+        }));
+      });
+    });
 
     const signedUrlsArray = await Promise.all(
-      paramsArray.map(async (locationParams) => {
-        const locationSignedUrls = await Promise.all(
-          locationParams.map(async (params) => {
-            const commands = new GetObjectCommand(params);
-            return await getSignedUrl(s3, commands);
-          })
+      paramsArray.map(async (params) => {
+        const commands = params.map((param) => new GetObjectCommand(param));
+        const urls = await Promise.all(
+          commands.map((command) =>
+            getSignedUrl(s3, command),
+          ),
         );
-
-        return locationSignedUrls;
+        return urls;
       }),
     );
 
-    const locationsWithSignedUrls = locationsWithDistance.map((location, locationIndex) => ({
-      ...location,
-      Posts: location.Posts.map((post, postIndex) => ({
-        ...post,
-        imgUrl: signedUrlsArray[locationIndex][postIndex],
-      })),
-    }));
-    const imgUrlfirstindex = locationsWithSignedUrls
+    for (let i = 0; i < imgUrlsArray.length; i++) {
+      imgUrlsArray[i].Posts.map((post) => {
+        post.imgUrl = signedUrlsArray[i]
+      })
+    }
 
-    return res.status(200).json(locationsWithSignedUrls);
+    return res.status(200).json(imgUrlsArray);
   } catch (error) {
     console.log(error)
     next(error);
