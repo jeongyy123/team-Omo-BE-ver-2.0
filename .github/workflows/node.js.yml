@@ -56,9 +56,9 @@ jobs:
           echo EMAIL_SENDER=${{ secrets.EMAIL_SENDER }} >> .env
           cat .env
 
-      - name: Apply migrations to production database
-        run: |
-          npx prisma migrate deploy
+      # - name: Apply migrations to production database
+      #   run: |
+      #     npx prisma migrate deploy
 
       # S3로 보낼 압축 파일 생성
       - name: zip file
