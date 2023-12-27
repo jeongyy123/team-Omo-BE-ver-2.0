@@ -30,6 +30,7 @@ const bucketRegion = process.env.BUCKET_REGION;
 const accessKey = process.env.ACCESS_KEY;
 const secretAccessKey = process.env.SECRET_ACCESS_KEY;
 
+// s3의 서비스 객체
 const s3 = new S3Client({
   credentials: {
     accessKeyId: process.env.ACCESS_KEY,
@@ -291,37 +292,49 @@ router.get(
 
       //-------------------------------------------------------
       for (let i = 0; i < userPosts.length; i++) {
-        const imgUrls = userPosts[i].imgUrl.split(","); // 게시물의 이미지 URL 배열
+        const imgUrls = userPosts[i].imgUrl.split(","); // image urls for each post
         console.log("imgUrls >>>", imgUrls);
 
-        const imgUrl = [];
+        const imgUrl = []; // one to many
 
+        // 각 게시글에 있는 이미지들
         for (let j = 0; j < imgUrls.length; j++) {
           const currentImgUrl = imgUrls[j];
           console.log("currentImgUrl >>>>", currentImgUrl);
 
+          // 지금 db에 저장된 이미지 주소는 64자의 해시화된 값이기 때문이다
           if (currentImgUrl.length === 64) {
+            // S3에서 객체를 가져오기 위해 사용될 매개변수들
+            // S3의 getObject 함수를 호출하여 해당 객체를 가져온다
             const getObjectParams = {
-              Bucket: bucketName,
-              Key: currentImgUrl,
+              Bucket: bucketName, // 객체들을 보관하는 s3의 저장공간
+              Key: currentImgUrl, // 가져오려는 객체의 키 => 이를 사용하여 객체를 식별
             };
 
             try {
+              // getObjectCommand는 AWS SDK에서 "가져오기 작업"을 수행하기 위한 명령(Command) 객체를 생성
+              // getSignedUrl 함수를 호출하여 해당 객체에 대한 서명된 URL을 얻기 위해 AWS SDK에 요청
               const command = new GetObjectCommand(getObjectParams);
+              // getSignedUrl 함수는 AWS SDK에서 제공하는 함수 중 하나로, 서명된 URL을 얻기 위해 사용
+              // s3 - s3의 서비스 객체
+              // command - : 서명된 URL을 얻기 위해 실행할 명령(Command) 객체가 전달
+              // 이 작업은 비 동기적으로 이루어지므로 await를 사용하여 URL을 기다린 후에 url 변수에 저장
               const url = await getSignedUrl(s3, command);
-              signedUrls.push(url); // 서명된 URL을 배열에 추가
+              imgUrl.push(url); // 서명된 URL을 배열에 추가
             } catch (error) {
-              console.error(`Error fetching URL for ${currentImgUrl}:`, error);
-              // 에러 처리 로직 추가
+              console.error(
+                `${currentImgUrl}을 가져오면서 문제가 발생하였습니다.`,
+                error,
+              );
             }
           } else {
-            signedUrls.push(currentImgUrl); // 서명되지 않은 URL은 그대로 유지
+            imgUrl.push(currentImgUrl); // 서명되지 않은 URL은 그대로 유지
           }
         }
 
-        userPosts[i].signedImgUrls = signedUrls; // 서명된 URL을 signedImgUrls 속성에 할당
+        // 각 포스트에 있는 imgUrl에 이미지 1개 또는 여러개를 담은 배열을 전달
+        userPosts[i].imgUrl = imgUrl;
       }
-
       //-------------------------------------------------------
 
       return res.status(200).json({
@@ -428,18 +441,6 @@ router.get(
         },
       });
 
-      //-----------------------------------------------------
-      const getObjectParams = {
-        Bucket: bucketName, // 버킷 이름
-        Key: myPostsCount.imgUrl, // 이미지 키
-      };
-
-      // User GetObjectCommand to create the url
-      const command = new GetObjectCommand(getObjectParams);
-      const url = await getSignedUrl(s3, command);
-      userInfo.imgUrl = url;
-      // ------------------------------------------------------
-
       // 이전 페이지의 마지막 bookmarkId를 쿼리스트링을 통해 받아옴
       const lastBookmarkId = req.query.lastBookmarkId || null;
 
@@ -453,30 +454,28 @@ router.get(
         },
         select: {
           bookmarkId: true,
+          // createdAt: true,
           Location: {
             select: {
               locationId: true,
               storeName: true,
               address: true,
               starAvg: true,
+              postCount: true,
               Posts: {
                 select: {
                   LocationId: true,
-                  likeCount: true,
+                  // likeCount: true,
                   imgUrl: true,
                 },
                 orderBy: {
-                  likeCount: "desc",
+                  createdAt: "asc", // 이 장소에 대한 게시글을 맨 처음 올린사람의 이미지를 가져옴
                 },
+                take: 1, // 첫번째 게시글 1개만 가져오기, 여러개불러오면 낭비가 될수있음
               },
               Category: {
                 select: {
                   categoryName: true,
-                },
-              },
-              District: {
-                select: {
-                  districtName: true,
                 },
               },
             },
@@ -487,6 +486,67 @@ router.get(
           createdAt: "desc",
         },
       });
+
+      //-----------------------------------------------------
+      // const getObjectParams = {
+      //   Bucket: bucketName, // 버킷 이름
+      //   Key: myPostsCount.imgUrl, // 이미지 키
+      // };
+
+      // // User GetObjectCommand to create the url
+      // const command = new GetObjectCommand(getObjectParams);
+      // const url = await getSignedUrl(s3, command);
+      // userInfo.imgUrl = url;
+      // ------------------------------------------------------
+      for (let i = 0; i < favouritePlaces.length; i++) {
+        // 각 장소와 관련된 첫번째 게시글의 이미지 가져오기
+        const firstPostImagesPerLocation =
+          favouritePlaces[i].Location.Posts[0].imgUrl.split(","); // 여러개의 이미지가 있을 수 있다.
+
+        console.log(
+          "firstPostImagesPerLocation  >>>>>>>>>>>>",
+          firstPostImagesPerLocation,
+        );
+        // "49f6c9b7688c558931fb9140cdc84e0210295e5a37845e855f3c21206e44112f",
+        // "c53de4d7c2dba1ba7c822597141a8c7056f085567bd52b54a6e1b875778c2c4f";
+
+        const imgUrl = [];
+
+        // for (let j = 0; j < firstPostImagesPerLocation.length; j++) {
+        // 비동기 작업을 순차적으로 실행하기 위해 for...of 루프와 await를 사용합니다
+        for (const currentImgUrl of firstPostImagesPerLocation) {
+          // const currentImgUrl = firstPostImagesPerLocation[j];
+
+          // 지금 db에 저장된 이미지 주소는 64자의 해시화된 값이기 때문이다
+          if (currentImgUrl.length === 64) {
+            // S3에서 객체를 가져오기 위해 사용될 매개변수들
+            // S3의 getObject 함수를 호출하여 해당 객체를 가져온다
+            const getObjectParams = {
+              Bucket: bucketName, // 객체들을 보관하는 s3의 저장공간
+              Key: currentImgUrl, // 가져오려는 객체의 키 => 이를 사용하여 객체를 식별
+            };
+
+            try {
+              // User GetObjectCommand to create the url
+              const command = new GetObjectCommand(getObjectParams);
+              const url = await getSignedUrl(s3, command);
+              imgUrl.push(url);
+            } catch (error) {
+              console.error(
+                `${currentImgUrl}을 가져오면서 문제가 발생하였습니다.`,
+                error,
+              );
+              // 이미지를 가져오는 데 문제가 있으면 빈 문자열 또는 다른 값을 넣는다
+              imgUrl.push(""); // 빈 문자열로 대체하거나 에러 핸들링에 따라 다른 값 설정
+            }
+          } else {
+            imgUrl.push(currentImgUrl); // 서명되지 않은 URL은 그대로 유지
+          }
+        }
+        // 각 포스트에 있는 imgUrl에 이미지 1개 또는 여러개를 담은 배열을 전달
+        // // 비동기 처리된 imgUrl을 할당
+        favouritePlaces[i].Location.Posts[0].imgUrl = imgUrl;
+      }
 
       return res
         .status(200)

@@ -22,7 +22,12 @@ const options = {
     "./src/routes/profiles/*.js",
     "./src/routes/locations/*.js",
     "./src/routes/comments/*.js",
-    "./src/routes/replies/*.js"
+    "./src/routes/replies/*.js",
+    "./src/routes/main/*.js",
+    "./src/routes/bookmark/*.js",
+    "./src/routes/isLike/*.js",
+    "./src/routes/posts/*.js",
+    "./src/routes/searching/*.js",
   ],
 };
 

@@ -5,7 +5,7 @@ import multer from "multer";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
-import { getManyImagesS3, getSingleImageS3, getImageS3 } from "../../utils/getImageS3.js"
+import { getManyImagesS3 } from "../../utils/getImageS3.js"
 
 dotenv.config();
 
@@ -157,7 +157,6 @@ router.get("/locations", async (req, res, next) => {
 
 
     if (!categoryName || !['음식점', '카페', '기타', '전체'].includes(categoryName)) {
-      console.log("3 >>>>>>>", "올바른 카테고리를 입력하세요.")
       return res.status(400).json({ message: "올바른 카테고리를 입력하세요." });
     }
 
@@ -228,7 +227,6 @@ router.get("/locations", async (req, res, next) => {
         };
       }),
     );
-    console.log("9 >>>>>>>", locationsWithDistance)
 
     // 이미지 배열로 반환하는 로직
     const imgUrlsArray = locationsWithDistance
@@ -263,7 +261,6 @@ router.get("/locations", async (req, res, next) => {
       })),
     }));
     const imgUrlfirstindex = locationsWithSignedUrls
-    console.log("11 >>>>>>>", locationsWithSignedUrls)
 
     return res.status(200).json(locationsWithSignedUrls);
   } catch (error) {
@@ -274,7 +271,7 @@ router.get("/locations", async (req, res, next) => {
 
 /**
  * @swagger
- * /locations/locationId:
+ * /locations/:locationId:
  *   get:
  *     summary: 인기 게시글 조회
  *     description: 특정 위치의 인기 게시글과 위치 정보를 조회한다.
@@ -419,7 +416,6 @@ router.get("/locations/:locationId", async (req, res, next) => {
         }
       }
     });
-    console.log("인3 >>>>>>>", location)
 
     // 16진수로 바꾼 imgUrl 을 , 기준으로 split 해주기
     const locationImgUrlsArray = location.Posts[0].imgUrl.split(",")

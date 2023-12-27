@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
+// import { redisClient } from "../../utils/redis.util.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import {
   registerSchema,
@@ -69,6 +70,8 @@ router.post("/verify-email", async (req, res, next) => {
     const { email } = validation; // 사용자가 입력한 이메일
     const sender = process.env.EMAIL_SENDER;
 
+    console.log("사용자가 입력한 이메일 주소  >>>", email);
+
     // 인증번호를 보내기 전에 이메일 중복을 체크하여 이미 가입된 이메일인 경우에는 인증 이메일을 보내지 않는다
     const existEmail = await prisma.users.findFirst({
       where: {
@@ -94,7 +97,8 @@ router.post("/verify-email", async (req, res, next) => {
       },
     });
 
-    // 만료시간 이후에 삭제가 되야하나...?
+    // 만료시간 이후에 삭제가 되어야함.
+    // 인증번호를 확인하는 api에서 삭제요청 들어감
 
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
@@ -191,30 +195,55 @@ router.post("/verify-email", async (req, res, next) => {
 router.post("/verify-authentication-code", async (req, res, next) => {
   try {
     const { authenticationCode, email } = req.body;
+    console.log("authenticationCode >>>", authenticationCode);
+
+    // ==========================================================================
+    // 이미 만료기간이 지난 인증번호를 db에서 지우자
+    // 현재 시간보다 expiryDate가 이전인 인증번호를 조회.
+    // 만약 클라이언트가 이전에 발급받은 만료된 인증번호를 사용할 수도 있으니까!
+    const expiredVerificationCodes = await prisma.verificationCode.findMany({
+      where: {
+        expiryDate: {
+          lt: new Date(), // 현재 시간보다 이전인 데이터를 찾는다.
+        },
+      },
+    });
+
+    // 만료된 인증번호를 삭제.
+    for (const code of expiredVerificationCodes) {
+      await prisma.verificationCode.delete({
+        where: {
+          verificationCodeId: code.verificationCodeId,
+        },
+      });
+    }
+    // ============================================================================
 
     // 인증번호가 일치하는지 확인
     const checkVerificationCode = await prisma.verificationCode.findFirst({
       where: {
-        verificationCode: authenticationCode,
+        verificationCode: parseInt(authenticationCode),
         email: email,
       },
     });
 
-    if (checkVerificationCode) {
-      // 이메일 및 인증코드가 일치하고 유효한 경우 해당 인증코드를 삭제
-      await prisma.verificationCode.delete({
-        where: {
-          verificationCodeId: checkVerificationCode.verificationCodeId,
-        },
+    // 클라이언트가 인증 정보를 제공하지 않으면
+    if (!checkVerificationCode) {
+      return res.status(404).json({
+        errorMessage: "인증번호가 일치하지 않습니다.",
       });
-    } else {
-      // 인증 실패
-      return res
-        .status(404)
-        .json({ errorMessage: "인증번호가 일치하지 않습니다." });
     }
 
-    return res.status(200).json({ message: "성공적으로 인증되었습니다" });
+    // 인증번호가 일치하는 경우에만 삭제
+    await prisma.verificationCode.delete({
+      where: {
+        verificationCodeId: checkVerificationCode.verificationCodeId,
+      },
+    });
+
+    return res
+      .status(200)
+      .json({ message: "인증번호가 성공적으로 확인되었습니다." });
   } catch (error) {
     console.error(error);
 
@@ -276,6 +305,8 @@ router.post("/check-nickname", async (req, res, next) => {
         nickname: nickname,
       },
     });
+
+    console.log("existNickname >>>>>", existNickname);
 
     if (existNickname) {
       return res.status(409).json({
@@ -376,7 +407,7 @@ router.post("/register", async (req, res, next) => {
     const encryptPassword = await bcrypt.hash(password, 10);
 
     const defaultImageUrl =
-      "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw";
+      "0b2f746651bb7e903bd2c985714170b8746f0fc6d9a966ba31476e515495ebd1";
 
     await prisma.users.create({
       data: {
@@ -507,7 +538,7 @@ router.post("/login", async (req, res, next) => {
         userId: findUser.userId,
       },
       secretKey,
-      { expiresIn: "30m" },
+      { expiresIn: "2h" },
     );
 
     // Issue refresh token
@@ -519,6 +550,20 @@ router.post("/login", async (req, res, next) => {
       secretKey,
       { expiresIn: "7d" },
     );
+
+    // =======================================================
+    // 레디스에 리프레시 토큰 저장
+    // 리프레시 토큰을 키로 사용하면 해당 토큰에 대한 사용자 ID를 빠르게 찾을 수 있다.
+    // 특정 리프레시 토큰에 대응하는 사용자를 신속하게 확인할 수 있다
+    // await redisClient.set(findUser.userId, refreshToken);
+
+    // 만료 시간 설정 (7일)
+    // const TTL = 7 * 24 * 60 * 60; // 초 단위
+    // expire 메서드를 호출하여 findUser.userId 키의 만료 시간을 TTL 변수에 지정된 만큼으로 설정
+    // expire 명령어에는 두 개의 인자(키와 TTL)만 필요하다
+    // await redisClient.expire(findUser.userId, TTL);
+
+    // =======================================================
 
     const sevenDaysLater = new Date(); // 현재 시간
     sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
@@ -541,7 +586,7 @@ router.post("/login", async (req, res, next) => {
     res.setHeader("RefreshToken", `Bearer ${refreshToken}`);
 
     //
-    res.status(200).json({ message: "로그인에 성공하였습니다." });
+    res.status(200).json({ userId: findUser.userId });
   } catch (error) {
     console.error(error);
 
@@ -609,12 +654,15 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
     const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
       where: {
         refreshToken: refreshToken, // 전달받은 토큰
+        expiresAt: {
+          gte: new Date(), // 만료되지 않은 토큰인지 확인
+        },
       },
     });
 
     if (!isRefreshTokenExist) {
       return res.status(419).json({
-        errorMessage: "Refresh token의 정보가 서버에 존재하지 않습니다.",
+        errorMessage: "리프레시 토큰이 유효하지 않습니다.",
       });
     }
 
@@ -624,7 +672,7 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
         userId: +userId,
       },
       secretKey,
-      { expiresIn: "30m" },
+      { expiresIn: "2h" },
     );
 
     console.log("새로 발급된 AccessToken: ", newAccessToken);

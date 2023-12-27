@@ -402,7 +402,6 @@ router.delete(
       return res.status(200).json({ message: "댓글이 삭제되었습니다." });
     } catch (error) {
       next(error);
-      throw new Error("대댓글 삭제에 실패 하였습니다.");
     }
   },
 );

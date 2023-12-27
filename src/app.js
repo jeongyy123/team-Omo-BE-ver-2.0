@@ -6,10 +6,10 @@ import MainRouter from "./routes/main/main.router.js";
 import PostsRouter from "./routes/posts/posts.router.js";
 import CommentsRouter from "./routes/comments/comments.router.js";
 import LocationRouter from "./routes/locations/location.router.js";
-import LikeRouter from './routes/isLike/isLike.router.js'
-import SearchingRouter from './routes/searching/searching.router.js'
-import BookmarkRouter from './routes/bookmark/bookmark.router.js'
-import RepliesRouter from './routes/replies/replies.ruter.js'
+import LikeRouter from "./routes/isLike/isLike.router.js";
+import SearchingRouter from "./routes/searching/searching.router.js";
+import BookmarkRouter from "./routes/bookmark/bookmark.router.js";
+import RepliesRouter from "./routes/replies/replies.ruter.js";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import ErrorMiddleware from "./middlewares/error.middleware.js";
@@ -24,11 +24,11 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+
 const PORT = 3003;
 
-// ..
 // express-session을 passport 설정 전에 먼저 사용하도록 설정
-app.use(morgan('dev'));
+app.use(morgan("dev"));
 app.use(
   session({
     resave: false,
@@ -41,6 +41,7 @@ app.use(
   }),
 );
 
+// --
 // Passport 설정 초기화
 // configurePassport(); // configurePassport 함수 호출  // passport 불러온다.
 
@@ -57,7 +58,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerConfig.specs));
 
 app.get("/", (req, res) => {
-  return res.status(200).json({ message: "success" });
+  res.send("첫번째 서버");
 });
 
 app.use("/api", [
