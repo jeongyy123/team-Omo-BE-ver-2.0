@@ -76,10 +76,18 @@ jobs:
       - name: upload to S3
         run: aws s3 cp --region ap-northeast-2 ./CI.zip s3://omo-cicd-bucket/deploy/
 
-      # codeDeploy 실행
-      - name: deploy with AWS codeDeploy
+      # codeDeploy 실행 - 첫 번째 EC2 인스턴스 배포
+      - name: deploy with AWS codeDeploy 1
         run: aws deploy create-deployment
           --application-name my-codedeploy-app
           --deployment-config-name CodeDeployDefault.OneAtATime
           --deployment-group-name my-codedeploy-development-group
+          --s3-location bucket=omo-cicd-bucket,bundleType=zip,key=deploy/CI.zip
+
+      # codeDeploy 실행 - 두 번째 EC2 인스턴스 배포
+      - name: deploy with AWS codeDeploy 2
+        run: aws deploy create-deployment
+          --application-name my-codedeploy-app2
+          --deployment-config-name CodeDeployDefault.OneAtATime
+          --deployment-group-name my-codedeploy-development-group2
           --s3-location bucket=omo-cicd-bucket,bundleType=zip,key=deploy/CI.zip

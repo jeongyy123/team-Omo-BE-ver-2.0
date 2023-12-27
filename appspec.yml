@@ -4,6 +4,11 @@ files:
   - source: /
     destination: /home/ubuntu/Omo-Web-Server
     overwrite: yes
+    filter: ["/Omo-Web-Server/*"]
+  - source: /
+    destination: /home/ubuntu/Omo-2nd-Web-Server
+    overwrite: yes
+    filter: ["/Omo-2nd-Web-Server/*"]
 
 file_exists_behavior: OVERWRITE
 
@@ -15,9 +20,14 @@ permissions:
 
 hooks:
   BeforeInstall:
-    - location: scripts/before_deploy.sh
+    - location: scripts/before_deploy_first.sh
+      runas: ubuntu
+    - location: scripts/before_deploy_second.sh
       runas: ubuntu
   AfterInstall:
-    - location: scripts/after_deploy.sh
+    - location: scripts/after_deploy_first.sh
+      timeout: 120
+      runas: ubuntu
+    - location: scripts/after_deploy_second.sh
       timeout: 120
       runas: ubuntu

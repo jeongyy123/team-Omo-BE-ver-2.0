@@ -22,7 +22,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 dotenv.config();
-//
+
 const app = express();
 
 const PORT = 3003;
@@ -41,6 +41,7 @@ app.use(
   }),
 );
 
+// --
 // Passport 설정 초기화
 // configurePassport(); // configurePassport 함수 호출  // passport 불러온다.
 
