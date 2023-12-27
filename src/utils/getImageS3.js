@@ -36,14 +36,14 @@ const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
 export const getSingleImageS3 = async (post) => {
   const param = {
     Bucket: bucketName,
-    Key: post.imgUrl
-  }
+    Key: post.imgUrl,
+  };
 
   const command = new GetObjectCommand(param);
   const imgUrl = await getSignedUrl(s3, command);
 
-  return post.imgUrl = imgUrl
-}
+  return (post.imgUrl = imgUrl);
+};
 
 // 1개의 게시글 - 여러 개 이미지 조회
 export const getImageS3 = async (post) => {
@@ -61,9 +61,8 @@ export const getImageS3 = async (post) => {
     }),
   );
 
-  return post.imgUrl = signedUrlsArray;
-}
-
+  return (post.imgUrl = signedUrlsArray);
+};
 
 // 여러 개의 게시글 - 여러 개 이미지 조회
 export const getManyImagesS3 = async (posts) => {
@@ -90,20 +89,20 @@ export const getManyImagesS3 = async (posts) => {
   for (let i = 0; i < posts.length; i++) {
     posts[i].imgUrl = signedUrlsArray[i];
   }
-}
+};
 
 // 댓글 여러 유저들의 프로필 이미지
 export const getProfileImageS3 = async (posts) => {
   posts.map(async (post) => {
     const params = {
       Bucket: bucketName,
-      Key: post.User.imgUrl
-    }
+      Key: post.User.imgUrl,
+    };
     const command = new GetObjectCommand(params);
     const imgUrl = await getSignedUrl(s3, command);
-    return post.User.imgUrl = imgUrl
-  })
-}
+    return (post.User.imgUrl = imgUrl);
+  });
+};
 
 // 대댓글 유저의 프로필 이미지
 export const getRepliesImageS3 = async (comments) => {
@@ -111,7 +110,7 @@ export const getRepliesImageS3 = async (comments) => {
     for (const reply of comment.Replies) {
       const params = {
         Bucket: bucketName,
-        Key: reply.User.imgUrl
+        Key: reply.User.imgUrl,
       };
       const command = new GetObjectCommand(params);
       const imgUrl = await getSignedUrl(s3, command);
