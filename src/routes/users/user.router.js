@@ -506,10 +506,8 @@ router.post("/login", async (req, res, next) => {
   try {
     const validation = await loginSchema.validateAsync(req.body);
     const { email, password } = validation;
-    const secretKey = process.env.SECRET_TOKEN_KEY;
-
-    // const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
-    // const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
+    const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
+    const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
 
     const findUser = await prisma.users.findFirst({
       where: {
@@ -537,7 +535,7 @@ router.post("/login", async (req, res, next) => {
         purpose: "access",
         userId: findUser.userId,
       },
-      secretKey,
+      accessKey,
       { expiresIn: "2h" },
     );
 
@@ -547,7 +545,7 @@ router.post("/login", async (req, res, next) => {
         purpose: "refresh",
         userId: findUser.userId,
       },
-      secretKey,
+      refreshKey,
       { expiresIn: "7d" },
     );
 
@@ -646,7 +644,7 @@ router.post("/login", async (req, res, next) => {
 /** 리프레시 토큰을 이용해서 엑세스 토큰을 재발급하는 API */
 router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
   try {
-    const secretKey = process.env.SECRET_TOKEN_KEY;
+    const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
     const { userId } = req.user;
     const { refreshToken } = req.headers;
 
@@ -671,13 +669,24 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
         purpose: "newaccess",
         userId: +userId,
       },
-      secretKey,
+      accessKey,
       { expiresIn: "2h" },
     );
 
+    // const newRefreshToken = jwt.sign(
+    //   {
+    //     purpose: "newrefresh",
+    //     userId: +userId,
+    //   },
+    //   refreshToken,
+    //   { expiresIn: "14d" },
+    // );
+
     console.log("새로 발급된 AccessToken: ", newAccessToken);
+    // console.log("새로 발급된 RefreshToken: ", newRefreshToken);
 
     res.setHeader("Authorization", `Bearer ${newAccessToken}`);
+    // res.setHeader("RefreshToken", `Bearer ${newRefreshToken}`);
 
     return res
       .status(200)
@@ -692,14 +701,14 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
 });
 
 // 제공된 토큰이 유효한지 여부를 검증하는 함수
-function validateToken(token, secretKey) {
-  try {
-    const accessToken = token.split(" ")[1]; // Bearer 제거 후 토큰 추출
-    return jwt.verify(accessToken, secretKey);
-  } catch (error) {
-    return null;
-  }
-}
+// function validateToken(token, secretKey) {
+//   try {
+//     const accessToken = token.split(" ")[1]; // Bearer 제거 후 토큰 추출
+//     return jwt.verify(accessToken, secretKey);
+//   } catch (error) {
+//     return null;
+//   }
+// }
 
 /**
  * @swagger
