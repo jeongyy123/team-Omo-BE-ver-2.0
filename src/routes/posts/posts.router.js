@@ -424,6 +424,7 @@ router.get("/posts/:postId", async (req, res, next) => {
         star: true,
         User: {
           select: {
+            userId: true,
             nickname: true,
             imgUrl: true,
           },
@@ -452,6 +453,7 @@ router.get("/posts/:postId", async (req, res, next) => {
             createdAt: true,
             User: {
               select: {
+                userId: true,
                 imgUrl: true,
                 nickname: true,
               },
@@ -463,6 +465,7 @@ router.get("/posts/:postId", async (req, res, next) => {
                 createdAt: true,
                 User: {
                   select: {
+                    userId: true,
                     imgUrl: true,
                     nickname: true,
                   },
