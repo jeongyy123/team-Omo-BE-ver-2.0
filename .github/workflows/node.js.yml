@@ -1,0 +1,93 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Node.js CI
+
+on:
+  push:
+    branches: ["develop"]
+  pull_request:
+    branches: ["develop"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+      - run: yarn install
+
+      # - name: Clear Yarn Cache
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ~/.cache/yarn
+      #     key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-yarn-
+
+      - name: Create .env file
+        working-directory: ./
+        run: |
+          pwd
+          touch .env
+          echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
+          echo BUCKET_NAME=${{ secrets.BUCKET_NAME }} >> .env
+          echo BUCKET_REGION=${{ secrets.BUCKET_REGION }} >> .env
+          echo ACCESS_KEY=${{ secrets.ACCESS_KEY }} >> .env
+          echo SECRET_ACCESS_KEY=${{ secrets.SECRET_ACCESS_KEY }} >> .env
+          echo KAKAO_ID=${{ secrets.KAKAO_ID }} >> .env
+          echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
+          echo ACCESS_TOKEN_SECRET_KEY=${{ secrets.ACCESS_TOKEN_SECRET_KEY }} >> .env
+          echo REFRESH_TOKEN_SECRET_KEY=${{ secrets.REFRESH_TOKEN_SECRET_KEY }} >> .env
+          echo COOKIE_SECRET=${{ secrets.COOKIE_SECRET }} >> .env
+          echo SECRET_TOKEN_KEY=${{ secrets.SECRET_TOKEN_KEY }} >> .env
+          echo NODEMAILER_USER=${{ secrets.NODEMAILER_USER }} >> .env
+          echo NODEMAILER_PASS=${{ secrets.NODEMAILER_PASS }} >> .env
+          echo EMAIL_SENDER=${{ secrets.EMAIL_SENDER }} >> .env
+          cat .env
+
+      # - name: Apply migrations to production database
+      #   run: |
+      #     npx prisma migrate deploy
+
+      # S3로 보낼 압축 파일 생성
+      - name: zip file
+        run: zip -r CI.zip ./src/* ./prisma/* ./.yarn/* ./.env ./scripts/* ./appspec.yml ./.eslintrc.js ./.prettierrc.json ./.yarnrc ./package.json ./package-lock.json ./yarn.lock
+
+      # AWS 인증하기
+      - name: AWS configure credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # S3로 업로드하기
+      - name: upload to S3
+        run: aws s3 cp --region ap-northeast-2 ./CI.zip s3://omo-cicd-bucket/deploy/
+
+      # codeDeploy 실행 - 첫 번째 EC2 인스턴스 배포
+      - name: deploy with AWS codeDeploy 1
+        run: aws deploy create-deployment
+          --application-name my-codedeploy-app
+          --deployment-config-name CodeDeployDefault.OneAtATime
+          --deployment-group-name my-codedeploy-development-group
+          --s3-location bucket=omo-cicd-bucket,bundleType=zip,key=deploy/CI.zip
+
+      # codeDeploy 실행 - 두 번째 EC2 인스턴스 배포
+      - name: deploy with AWS codeDeploy 2
+        run: aws deploy create-deployment
+          --application-name my-codedeploy-app2
+          --deployment-config-name CodeDeployDefault.OneAtATime
+          --deployment-group-name my-codedeploy-development-group2
+          --s3-location bucket=omo-cicd-bucket,bundleType=zip,key=deploy/CI.zip
