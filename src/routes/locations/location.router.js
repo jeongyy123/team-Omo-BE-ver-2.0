@@ -200,6 +200,7 @@ router.get("/locations", async (req, res, next) => {
       },
     });
 
+
     const latitude = ((Number(qa) + Number(pa)) / 2).toFixed(10)
     const longitude = ((Number(ha) + Number(oa)) / 2).toFixed(10)
 
@@ -237,6 +238,7 @@ router.get("/locations", async (req, res, next) => {
     if (!paramsArray || paramsArray.length === 0) {
       return res.status(400).json({ message: "해당 사진이 없거나 로딩이 안되거나 합니다." })
     }
+
 
     const signedUrlsArray = await Promise.all(
       paramsArray.map(async (locationParams) => {
