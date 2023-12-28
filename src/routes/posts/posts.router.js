@@ -944,6 +944,7 @@ router.delete("/posts/:postId", authMiddleware, async (req, res, next) => {
     }
 
     await prisma.$transaction(async (prisma) => {
+
       const imgUrlsArray = post.imgUrl.split(",");
 
       const params = imgUrlsArray.map((url) => {
@@ -960,14 +961,26 @@ router.delete("/posts/:postId", authMiddleware, async (req, res, next) => {
       await prisma.posts.delete({
         where: { postId: +postId },
       });
-    });
-    await prisma.locations.update({
-      where: { locationId: post.LocationId },
-      data: {
-        postCount: {
-          decrement: 1,
+
+      await prisma.locations.update({
+        where: { locationId: post.LocationId },
+        data: {
+          postCount: {
+            decrement: 1,
+          },
         },
-      },
+      });
+
+      // 게시글 삭제할 때 마지막 게시글이 삭제가 되면 로케이션 정보도 삭제가 되어야한다.
+      const findLocation = await prisma.locations.findFirst({
+        where: { locationId: post.LocationId }
+      })
+
+      if (findLocation.postCount === 0) {
+        await prisma.locations.delete({
+          where: { locationId: post.LocationId }
+        })
+      }
     });
 
     return res.status(200).json({ message: "게시글을 삭제하였습니다." });
