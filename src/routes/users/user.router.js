@@ -642,10 +642,10 @@ router.post("/login", async (req, res, next) => {
  */
 
 /** 리프레시 토큰을 이용해서 엑세스 토큰을 재발급하는 API */
-router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
+router.post("/tokens/refresh", async (req, res, next) => {
   try {
     const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
-    const { userId } = req.user;
+    // const { userId } = req.user;
     const { refreshToken } = req.headers;
 
     // 서버에서도 실제 정보를 가지고 있는지 확인
@@ -667,7 +667,7 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
     const newAccessToken = jwt.sign(
       {
         purpose: "newaccess",
-        userId: +userId,
+        userId: +isRefreshTokenExist.UserId,
       },
       accessKey,
       { expiresIn: "1m" },
