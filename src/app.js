@@ -13,7 +13,6 @@ import RepliesRouter from "./routes/replies/replies.ruter.js";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import ErrorMiddleware from "./middlewares/error.middleware.js";
-// import session from "express-session";
 import swaggerConfig from "./swagger/swagger.js";
 import swaggerUi from "swagger-ui-express";
 import configurePassport from "./passport/index.js";
