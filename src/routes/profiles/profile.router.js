@@ -286,7 +286,7 @@ router.get(
         },
         take: +pageSize, // 가져올 데이터의 갯수
         orderBy: {
-          postId: "asc", // 커서 기반 정렬
+          postId: "desc", // 커서 기반 정렬
         },
       });
 
@@ -462,6 +462,9 @@ router.get(
               address: true,
               starAvg: true,
               postCount: true,
+              placeInfoId: true,
+              latitude: true,
+              longitude: true,
               Posts: {
                 select: {
                   LocationId: true,
@@ -652,6 +655,8 @@ router.patch(
 
       // console.log("req.file", req.file); // to display data about the image
       //req.file.buffer; // you want to send this data to the s3 bucket
+
+      const imageName = randomImageName(); // file name will be random
 
       // ** 이미지가 수정되었는지 확인 **
       if (req.file) {
