@@ -8,7 +8,7 @@ const kakaoAuthConfig = () => {
     new KakaoStrategy(
       {
         clientID: process.env.KAKAO_ID, // 카카오 로그인에서 발급받은 REST API 키
-        callbackURL: "/auth/kakao/callback", // 카카오 로그인 redirect URI
+        callbackURL: "https://tonadus.shop/auth/kakao/callback", // 카카오 로그인 redirect URI
       },
       /*
        * clientID에 카카오 앱 아이디 추가
