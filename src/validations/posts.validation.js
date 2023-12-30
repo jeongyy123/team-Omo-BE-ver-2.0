@@ -50,7 +50,21 @@ const editPostsSchema = Joi.object({
     'number.max': "별점을 5점 이하로 입력해주세요.",
     'number.integer': '별점을 정수로만 입력해주세요.'
   }),
-  placeInfoId: Joi.string()
+  placeInfoId: Joi.string().messages({
+    "string.empty": "placeInfoId을 입력해주세요."
+  }),
+  categoryName: Joi.string().valid("음식점", "카페", "기타").messages({
+    "string.empty": "categoryName를 입력해주세요.",
+    "any.only": "음식점, 카페, 기타만 선택해주세요.",
+  }),
+  latitude: Joi.string().messages({
+    "any.only": "위도를 입력해주세요.",
+    "string.empty": "위도를 입력해주세요."
+  }),
+  longitude: Joi.string().messages({
+    "any.only": "경도를 입력해주세요.",
+    "string.empty": "경도를 입력해주세요."
+  }),
 });
 
 export { createPostsSchema, editPostsSchema };
