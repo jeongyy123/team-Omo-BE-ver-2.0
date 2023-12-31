@@ -1,15 +1,15 @@
 import passport from "passport";
 import { Strategy as KakaoStrategy } from "passport-kakao";
-import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
+// import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { prisma } from "../utils/prisma/index.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 dotenv.config();
 
-const jwtOptions = {
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: process.env.SECRET_TOKEN_KEY,
-};
+// const jwtOptions = {
+//   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+//   secretOrKey: process.env.SECRET_TOKEN_KEY,
+// };
 
 // 사용자가 카카오를 통해 로그인하면 실행될 전략과 그에 따른 처리를 정의
 const kakaoAuthConfig = () => {
@@ -51,12 +51,12 @@ const kakaoAuthConfig = () => {
        * profile: 카카오가 보내준 유저 정보. profile의 정보를 바탕으로 회원가입
        */
       async (accessToken, refreshToken, profile, done) => {
-        console.log("KakaoStrategy configuration object:", {
-          clientID: process.env.KAKAO_ID,
-          clientSecret: process.env.SECRET_KEY,
-          callbackURL: "http://tonadus.shop/auth/kakao/callback",
-          scope: ["profile_nickname", "profile_image", "account_email"],
-        });
+        // console.log("KakaoStrategy configuration object:", {
+        //   clientID: process.env.KAKAO_ID,
+        //   clientSecret: process.env.SECRET_KEY,
+        //   callbackURL: "http://tonadus.shop/auth/kakao/callback",
+        //   scope: ["profile_nickname", "profile_image", "account_email"],
+        // });
         console.log("kakao profile", profile);
         try {
           // DB에서 가입이력 조사
@@ -74,12 +74,6 @@ const kakaoAuthConfig = () => {
           } else {
             // 가입되지 않는 유저면 회원가입 시키고 로그인을 시킨다
 
-            const saltRound = 10;
-            const hashedPassword = await bcrypt.hash(
-              String(profile.id),
-              saltRound,
-            );
-
             const newUser = await prisma.users.create({
               data: {
                 email: profile._json.kakao_account.email,
@@ -87,7 +81,7 @@ const kakaoAuthConfig = () => {
                 snsId: String(profile.id),
                 provider: "kakao",
                 imgUrl: profile._json.properties.profile_image, // 프로필 이미지
-                password: hashedPassword,
+                password: "",
               },
             });
 
