@@ -676,7 +676,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
         userId: isRefreshTokenExist.UserId,
       },
       accessKey,
-      { expiresIn: "2h", algorithm: "ES256" },
+      { expiresIn: "2h" },
     );
 
     const newRefreshToken = jwt.sign(
@@ -685,7 +685,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
         userId: isRefreshTokenExist.UserId,
       },
       refreshToken,
-      { expiresIn: "7d", algorithm: "HS256" },
+      { expiresIn: "7d" },
     );
 
     // 새로운 엑세스 토큰을 발급하기 전에 이전 리프레시 토큰을 데이터베이스에서 삭제
