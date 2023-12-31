@@ -2,6 +2,7 @@ import passport from "passport";
 import { Strategy as KakaoStrategy } from "passport-kakao";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { prisma } from "../utils/prisma/index.js";
+import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -35,7 +36,7 @@ const kakaoAuthConfig = () => {
       {
         clientID: process.env.KAKAO_ID, // 카카오 로그인에서 발급받은 REST API 키
         clientSecret: process.env.SECRET_KEY, // 클라이언트 시크릿 설정
-        callbackURL: "https://tonadus.shop/auth/kakao/callback", // 카카오 로그인 redirect URI
+        callbackURL: "http://localhost:3003/auth/kakao/callback", // 카카오 로그인 redirect URI
         scope: ["profile_nickname", "profile_image", "account_email"],
       },
 
@@ -69,6 +70,9 @@ const kakaoAuthConfig = () => {
           } else {
             // 가입되지 않는 유저면 회원가입 시키고 로그인을 시킨다
 
+            const saltRound = 10;
+            const hashedPassword = await bcrypt.hash(profile.id, saltRound);
+
             const newUser = await prisma.users.create({
               data: {
                 email: profile._json.kakao_account.email,
@@ -76,6 +80,7 @@ const kakaoAuthConfig = () => {
                 snsId: String(profile.id),
                 provider: "kakao",
                 imgUrl: profile._json.properties.profile_image, // 프로필 이미지
+                passport: hashedPassword,
               },
             });
 
