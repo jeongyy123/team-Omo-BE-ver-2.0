@@ -83,7 +83,7 @@ const kakaoAuthConfig = () => {
                 snsId: String(profile.id),
                 provider: "kakao",
                 imgUrl: profile._json.properties.profile_image, // 프로필 이미지
-                passport: hashedPassword,
+                password: hashedPassword,
               },
             });
 
