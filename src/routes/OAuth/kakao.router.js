@@ -7,6 +7,9 @@ const router = express.Router();
 
 // 카카오로 로그인하기 라우터
 router.get("/kakao", passport.authenticate("kakao", { session: false }));
+// router.get("/kakao", (req, res, next) => {
+//   passport.authenticate("kakao", { session: false })(req, res, next);
+// });
 // router.get("/kakao", passport.authenticate("kakao"));
 
 // 카카오 로그인 후 콜백 라우터
@@ -15,7 +18,7 @@ router.get(
   passport.authenticate("kakao", {
     session: false, // 세션 비활성화
     // 카카오 로그인 실패 시 리다이렉션할 경로
-    failureRedirect: "/kakao",
+    failureRedirect: "/login",
   }),
   // Passport에서는 사용자 정보를 req.user에 저장
   async (req, res) => {
