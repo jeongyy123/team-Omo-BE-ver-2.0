@@ -71,7 +71,10 @@ const kakaoAuthConfig = () => {
             // 가입되지 않는 유저면 회원가입 시키고 로그인을 시킨다
 
             const saltRound = 10;
-            const hashedPassword = await bcrypt.hash(profile.id, saltRound);
+            const hashedPassword = await bcrypt.hash(
+              String(profile.id),
+              saltRound,
+            );
 
             const newUser = await prisma.users.create({
               data: {
