@@ -71,6 +71,9 @@ const kakaoAuthConfig = () => {
           } else {
             // 가입되지 않는 유저면 회원가입 시키고 로그인을 시킨다
 
+            const saltRound = 10;
+            const hashedPassword = await bcrypt.hash(profile.id, saltRound);
+
             const newUser = await prisma.users.create({
               data: {
                 email: profile._json.kakao_account.email,
@@ -78,7 +81,6 @@ const kakaoAuthConfig = () => {
                 snsId: String(profile.id),
                 provider: "kakao",
                 imgUrl: profile._json.properties.profile_image, // 프로필 이미지
-                password: "test", // 나중에 지워야함
               },
             });
 
