@@ -14,29 +14,33 @@ const jwtOptions = {
 // 사용자가 카카오를 통해 로그인하면 실행될 전략과 그에 따른 처리를 정의
 const kakaoAuthConfig = () => {
   // JWT Strategy 추가
-  passport.use(
-    new JwtStrategy(jwtOptions, async (jwtPayload, done) => {
-      try {
-        const user = await prisma.users.findUnique({
-          where: { id: jwtPayload.userId },
-        });
-        if (user) {
-          done(null, user); // JWT 유효하면 사용자 인증 완료
-        } else {
-          done(null, false); // 유저를 찾지 못하면 인증 실패
-        }
-      } catch (error) {
-        done(error);
-      }
-    }),
-  );
+  // passport.use(
+  //   new JwtStrategy(jwtOptions, async (jwtPayload, done) => {
+  //     try {
+  //       console.log("jwtPayload >>", jwtPayload);
+  //       console.log("jwtPayload.userId >>", jwtPayload.userId);
+
+  //       const user = await prisma.users.findUnique({
+  //         where: { userId: jwtPayload.userId },
+  //       });
+
+  //       if (user) {
+  //         done(null, user); // JWT 유효하면 사용자 인증 완료
+  //       } else {
+  //         done(null, false); // 유저를 찾지 못하면 인증 실패
+  //       }
+  //     } catch (error) {
+  //       done(error);
+  //     }
+  //   }),
+  // );
 
   passport.use(
     new KakaoStrategy(
       {
         clientID: process.env.KAKAO_ID, // 카카오 로그인에서 발급받은 REST API 키
         clientSecret: process.env.SECRET_KEY, // 클라이언트 시크릿 설정
-        callbackURL: "https://tonadus.shop/auth/kakao/callback", // 카카오 로그인 redirect URI
+        callbackURL: "http://tonadus.shop/auth/kakao/callback", // 카카오 로그인 redirect URI
         scope: ["profile_nickname", "profile_image", "account_email"],
       },
 
