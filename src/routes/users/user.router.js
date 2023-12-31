@@ -536,7 +536,7 @@ router.post("/login", async (req, res, next) => {
         userId: findUser.userId,
       },
       accessKey,
-      { expiresIn: "2h" },
+      { expiresIn: "30s" },
     );
 
     // Issue refresh token
@@ -676,7 +676,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
         userId: isRefreshTokenExist.UserId,
       },
       accessKey,
-      { expiresIn: "2h" },
+      { expiresIn: "30s" },
     );
 
     const newRefreshToken = jwt.sign(
