@@ -2,9 +2,7 @@ import passport from "passport";
 import { Strategy as KakaoStrategy } from "passport-kakao";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { prisma } from "../utils/prisma/index.js";
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import bcrypt from "bcrypt";
 dotenv.config();
 
 const jwtOptions = {
@@ -70,9 +68,6 @@ const kakaoAuthConfig = () => {
             done(null, exUser); // 이미 가입된 경우
           } else {
             // 가입되지 않는 유저면 회원가입 시키고 로그인을 시킨다
-
-            const saltRound = 10;
-            const hashedPassword = await bcrypt.hash(profile.id, saltRound);
 
             const newUser = await prisma.users.create({
               data: {
