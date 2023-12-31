@@ -61,7 +61,7 @@ router.get(
           accessToken,
           refreshToken,
           message: "카카오 로그인 성공",
-          // redirectUrl: "/main", // 리다이렉션할 URL을 응답에 포함
+          redirectUrl: "https://omo-six.vercel.app/", // 리다이렉션할 URL을 응답에 포함
         });
 
         //
