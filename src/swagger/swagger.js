@@ -13,6 +13,7 @@ const options = {
     servers: [
       {
         url: "https://tonadus.shop",
+        // url: "localhost:3003",
       },
     ],
   },
@@ -22,11 +23,11 @@ const options = {
     "./src/routes/locations/*.js",
     "./src/routes/comments/*.js",
     "./src/routes/replies/*.js",
-    "./src/routes/main/*.js",
-    "./src/routes/bookmark/*.js",
-    "./src/routes/isLike/*.js",
-    "./src/routes/posts/*.js",
-    "./src/routes/searching/*.js",
+    "./src/swagger/main.js",
+    "./src/swagger/bookmark.js",
+    "./src/swagger/isLike.js",
+    "./src/swagger/posts.js",
+    "./src/swagger/searching.js",
   ],
 };
 
