@@ -5,6 +5,13 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
+// 사용자 정보를 요청마다 처리하는 미들웨어 생성
+const getUserInfo = (req, res, next) => {
+  // req 객체에 사용자 정보 저장
+  req.userInfo = req.user;
+  next();
+};
+
 // 로그인 라우터
 router.get("/kakao", passport.authenticate("kakao", { session: false }));
 
@@ -15,6 +22,7 @@ router.get(
     session: false, // 세션 비활성화
     failureRedirect: "/login",
   }),
+  getUserInfo, // 사용자 정보 미들웨어 적용
   // Passport에서는 사용자 정보를 req.user에 저장
   async (req, res) => {
     try {
