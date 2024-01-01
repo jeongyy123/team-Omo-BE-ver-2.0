@@ -326,9 +326,9 @@ router.post("/tokens/refresh", async (req, res, next) => {
   try {
     const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
     const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
-    const { refreshToken } = req.headers;
+    const { refreshtoken } = req.headers;
 
-    console.log("Test >>>", refreshToken);
+    console.log("Test >>>", refreshtoken);
     console.log("req.headers >>>", req.headers);
 
     const [tokenType, token] = authorization.split(" ");
@@ -356,7 +356,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
     // 데이터베이스에서 유효한 리프레시 토큰인지 확인
     const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
       where: {
-        refreshToken: refreshToken, // 전달받은 토큰
+        refreshToken: refreshtoken, // 전달받은 토큰
         expiresAt: {
           gte: new Date(), // 만료되지 않은 토큰인지 확인
         },
@@ -368,7 +368,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
       // 만료된 리프레시 토큰은 데이터베이스에서 삭제되어야 합니다.
       await prisma.refreshTokens.delete({
         where: {
-          refreshToken: refreshToken,
+          refreshToken: refreshtoken,
         },
       });
 
@@ -398,7 +398,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
     // 새로운 엑세스 토큰을 발급하기 전에 이전 리프레시 토큰을 데이터베이스에서 삭제
     await prisma.refreshTokens.delete({
       where: {
-        refreshToken: refreshToken,
+        refreshToken: refreshtoken,
       },
     });
 
