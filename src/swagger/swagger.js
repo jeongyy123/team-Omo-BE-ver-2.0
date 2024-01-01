@@ -29,6 +29,7 @@ const options = {
     "./src/swagger/searching.js",
     "./src/swagger/profile.js",
     "./src/swagger/user.js",
+    "./src/swagger/kakao.js",
   ],
 };
 
