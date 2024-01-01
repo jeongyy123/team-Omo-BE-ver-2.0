@@ -3,6 +3,7 @@ import { prisma } from "../../utils/prisma/index.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import crypto from "crypto";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createRepliesSchema } from "../../validations/replies.validation.js";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 
@@ -103,7 +104,13 @@ router.post(
     try {
       const { userId } = req.user;
       const { postId, commentId } = req.params;
-      const { content } = req.body;
+
+      if(!userId) {
+        return res.status(401).json({ message: "로그인 후 사용하여 주세요."})
+      }
+
+      const validation = await createRepliesSchema.validateAsync(req.body);
+      const { content } = validation;
 
       const posts = await prisma.posts.findFirst({
         where: { postId: +postId },
@@ -366,6 +373,10 @@ router.delete(
     try {
       const { userId } = req.user;
       const { replyId, commentId } = req.params;
+      
+      if(!userId) {
+        return res.status(401).json({ message: "로그인 후 사용하여 주세요."})
+      }
 
       await prisma.$transaction(async (prisma) => {
         const reply = await prisma.replies.findFirst({

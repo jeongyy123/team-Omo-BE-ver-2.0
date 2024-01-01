@@ -603,10 +603,16 @@ router.post(
       const category = await prisma.categories.findFirst({
         where: { categoryName },
       });
+      console.log("address>>>>>>>>>", address)
+      console.log("address>>>>>>>>>", address.split(" ")[1].trim())
+
+      const a = address.split(" ")[1]
 
       const district = await prisma.districts.findFirst({
-        where: { districtName: address.split(" ")[1] },
+        where: { districtName: a},
       });
+
+      console.log("district>>>>>>", district)
 
       if (!district) {
         return res.status(400).json({ message: "지역이 존재하지 않습니다." });
@@ -615,12 +621,11 @@ router.post(
       if (!req.files || req.files.length === 0) {
         return res.status(400).json({ message: "사진을 등록해주세요." });
       }
-      console.log("req.files", req.files)
 
       //이미지 이름 나눠서 저장
       const imgPromises = req.files.map(async (file) => {
-        if (file.size > 1500000) {
-          return res.status(400).json({ message: "900KB이하의 이미지파일만 넣어주세요." })
+        if (file.size > 6000000) { // 1500000 
+          return res.status(400).json({ message: "3MB이하의 이미지파일만 넣어주세요." })
         }
 
         const imgName = randomImgName();
@@ -630,7 +635,7 @@ router.post(
           .read(file.buffer)
           .then((image) =>
             image
-              .resize(jimp.AUTO, 350)
+              .resize(jimp.AUTO, 500)
               .quality(70)
               .getBufferAsync(jimp.MIME_JPEG),
           );
@@ -662,7 +667,7 @@ router.post(
               address,
               latitude,
               longitude,
-              starAvg: 0,
+              starAvg: star || 0,
               postCount: 1,
               placeInfoId,
               Category: { connect: { categoryId: +category.categoryId } },

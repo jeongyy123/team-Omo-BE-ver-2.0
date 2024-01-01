@@ -1,10 +1,13 @@
 import express from "express";
+import { CommentsController } from "../../../controllers/comments.controller.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import { prisma } from "../../utils/prisma/index.js";
 import crypto from "crypto";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createCommentsSchema } from "../../validations/comments.validation.js";
 import dotenv from "dotenv";
+// import { CommentsController } from "../../../services/comments.service.js";
 
 dotenv.config();
 
@@ -28,7 +31,20 @@ const s3 = new S3Client({
 });
 
 const router = express.Router();
+const commentsController = new CommentsController();
 
+// 등록 api
+router.post(
+  "/:postId/comments",
+  authMiddleware,
+  commentsController.createComment,
+);
+
+// 조회 api
+router.get("/:postId/comments", commentsController.getComments);
+
+// 삭제 api
+router.delete("/:postId/comments/:commentId", commentsController.deleteComment);
 /**
  * @swagger
  * /posts/:postId/comments:
@@ -130,12 +146,21 @@ router.post(
     try {
       const { userId } = req.user;
       const { postId } = req.params;
-      const { content } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({ message: "로그인 후 사용하여 주세요." });
+      }
+
+      const validation = await createCommentsSchema.validateAsync(req.body);
+      const { content } = validation;
+
+      console.log("validation>>>>>>>", validation);
 
       const post = await prisma.posts.findFirst({
         where: { postId: +postId },
       });
 
+      console.log("post>>>>>>.", post);
       const comment = await prisma.comments.create({
         data: {
           UserId: userId,
@@ -143,6 +168,7 @@ router.post(
           content: content,
         },
       });
+      console.log("comment>>>>>.", comment);
       // commentCount
       await prisma.posts.update({
         where: { postId: +postId },
@@ -155,7 +181,7 @@ router.post(
 
       if (!comment) {
         return res
-          .status(403)
+          .status(401)
           .json({ errorMessage: "댓글을 등록할 권한이 없습니다." });
       }
       return res.status(200).json({ data: comment });
@@ -371,6 +397,10 @@ router.delete(
       const { userId } = req.user;
       const { commentId, postId } = req.params;
 
+      if (!userId) {
+        return res.status(401).json({ message: "로그인 후 사용하여 주세요." });
+      }
+
       await prisma.$transaction(async (prisma) => {
         const comment = await prisma.comments.findFirst({
           where: { commentId: +commentId },
@@ -385,7 +415,7 @@ router.delete(
         });
 
         if (!deleteComment) {
-          return res.status(403).json({ message: "삭제할 권한이 없습니다." });
+          return res.status(401).json({ message: "삭제할 권한이 없습니다." });
         }
 
         // 댓글 수량 업데이트 -1
