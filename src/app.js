@@ -29,7 +29,7 @@ const PORT = 3003;
 app.use(morgan("dev"));
 
 // Passport 설정
-configurePassport(); // configurePassport 함수 호출  // passport 불러온다.
+configurePassport(); // passport 불러온다.
 app.use(passport.initialize()); //  Passport를 초기화.
 
 app.use(cors());

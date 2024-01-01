@@ -5,66 +5,27 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-// 카카오로 로그인하기 라우터
+// 로그인 라우터
 router.get("/kakao", passport.authenticate("kakao", { session: false }));
-// router.get("/kakao", (req, res, next) => {
-//   passport.authenticate("kakao", { session: false })(req, res, next);
-// });
-// router.get("/kakao", passport.authenticate("kakao"));
 
-// 카카오 로그인 후 콜백 라우터
+// 로그인 후 콜백 라우터
 router.get(
   "/kakao/callback",
   passport.authenticate("kakao", {
     session: false, // 세션 비활성화
-    // 카카오 로그인 실패 시 리다이렉션할 경로
     failureRedirect: "/login",
   }),
   // Passport에서는 사용자 정보를 req.user에 저장
   async (req, res) => {
     try {
-      const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
-      const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
-
-      // 여기서 토큰 생성 및 반환 등의 로직 수행
       if (req.user) {
+        // 사용자 정보는 req.user에 저장
         console.log("kakaoRouter에서 req.user >>>>>", req.user);
-        // 사용자가 로그인에 성공했다면 토큰 생성
+        const userInfo = req.user;
         const userId = req.user.userId; // 사용자 ID를 가져옴
 
-        console.log("kakaoRouter에서 userId >>>>>>", userId);
-
-        // 엑세스 토큰 생성
-        const accessToken = jwt.sign({ userId }, accessKey, {
-          expiresIn: "2h", // 엑세스 토큰 만료 기간 설정
-        });
-
-        // Refresh Token을 데이터베이스에 저장
-        const refreshToken = jwt.sign({ userId }, refreshKey, {
-          expiresIn: "7d", // 리프레시 토큰 만료 기간 설정
-        });
-
-        const sevenDaysLater = new Date(); // 현재 시간
-        sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
-
-        // Refresh Token을 데이터베이스에 저장
-        await prisma.refreshTokens.create({
-          data: {
-            refreshToken: refreshToken,
-            UserId: +userId,
-            expiresAt: sevenDaysLater,
-          },
-        });
-
-        // 클라이언트에게 엑세스 토큰과 리프레시 토큰을 응답
-        res.status(200).json({
-          accessToken,
-          refreshToken,
-          message: "카카오 로그인 성공",
-          redirectUrl: "https://omo-six.vercel.app/", // 리다이렉션할 URL을 응답에 포함
-        });
-
-        //
+        // 클라이언트는 새로운 페이지로 이동하면서 새로운 헤더를 받지 않는다.
+        res.redirect("https://omo-six.vercel.app/"); // 리다이렉션
       } else {
         res.status(401).json({ message: "카카오 로그인 실패" });
       }
@@ -74,5 +35,44 @@ router.get(
     }
   },
 );
+
+// 토큰을 반환하는 엔드포인트
+router.get("/getToken", async (req, res) => {
+  const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
+  const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
+
+  // 사용자 정보가 없으면 인증되지 않은 사용자로 처리
+  if (!req.user || !req.user.userId) {
+    return res.status(401).json({ message: "인증되지 않은 사용자" });
+  }
+
+  const userId = req.user.userId;
+  console.log("userId >>>", userId);
+
+  // 엑세스 토큰 생성
+  const accessToken = jwt.sign({ userId }, accessKey, {
+    expiresIn: "2h",
+  });
+
+  // Refresh Token을 데이터베이스에 저장
+  const refreshToken = jwt.sign({ userId }, refreshKey, {
+    expiresIn: "7d",
+  });
+
+  const sevenDaysLater = new Date(); // 현재 시간
+  sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+
+  await prisma.refreshTokens.create({
+    data: {
+      refreshToken: refreshToken,
+      UserId: +userId,
+      expiresAt: sevenDaysLater,
+    },
+  });
+
+  res.setHeader("Authorization", `Bearer ${accessToken}`);
+  res.setHeader("RefreshToken", `Bearer ${refreshToken}`);
+  res.send("Token generated");
+});
 
 export default router;
