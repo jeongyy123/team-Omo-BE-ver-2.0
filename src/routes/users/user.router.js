@@ -326,18 +326,21 @@ router.post("/tokens/refresh", async (req, res, next) => {
   try {
     const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
     const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
-    const refreshToken = req.headers["refreshToken"];
+    const { refreshToken } = req.headers;
 
-    if (!refreshToken) {
-      return res.status(400).json({ errorMessage: "인증 정보가 없습니다." });
-    }
+    console.log("Test >>>", refreshToken);
+    console.log("req.headers >>>", req.headers);
 
-    const [tokenType, token] = refreshToken.split(" ");
+    const [tokenType, token] = authorization.split(" ");
 
-    if (tokenType !== "Bearer") {
+    if (!token) {
       return res
         .status(400)
-        .json({ errorMessage: "올바른 리프레시 토큰 형식이 아닙니다." });
+        .json({ errorMessage: "토큰이 존재하지 않습니다." });
+    }
+
+    if (tokenType !== "Bearer") {
+      return res.status(400).json({ errorMessage: "Bearer형식이 아닙니다." });
     }
 
     const decodedToken = jwt.verify(token, refreshKey);
@@ -348,7 +351,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
         .json({ errorMessage: "리프레시 토큰이 유효하지 않습니다." });
     }
 
-    const userId = decodedToken.userId;
+    const { userId } = decodedToken;
 
     // 데이터베이스에서 유효한 리프레시 토큰인지 확인
     const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
@@ -417,9 +420,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
     res.setHeader("Authorization", `Bearer ${newAccessToken}`);
     res.setHeader("RefreshToken", `Bearer ${newRefreshToken}`);
 
-    return res.status(200).json({
-      message: "Access token과 Refresh token이 정상적으로 재발급되었습니다.",
-    });
+    return res.status(200).json({ userId });
   } catch (error) {
     console.error(error);
 
