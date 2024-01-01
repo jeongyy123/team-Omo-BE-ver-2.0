@@ -50,11 +50,11 @@ router.get("/getToken", async (req, res) => {
   const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
 
   // 사용자 정보가 없으면 인증되지 않은 사용자로 처리
-  if (!req.user || !req.user.userId) {
+  if (!req.userInfo || !req.userInfo.userId) {
     return res.status(401).json({ message: "인증되지 않은 사용자" });
   }
 
-  const userId = req.user.userId;
+  const userId = req.userInfo.userId;
   console.log("userId >>>", userId);
 
   // 엑세스 토큰 생성
@@ -80,7 +80,7 @@ router.get("/getToken", async (req, res) => {
 
   res.setHeader("Authorization", `Bearer ${accessToken}`);
   res.setHeader("RefreshToken", `Bearer ${refreshToken}`);
-  res.send("Token generated");
+  res.send("토큰 발급 성공");
 });
 
 export default router;
