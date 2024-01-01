@@ -7,7 +7,8 @@ import MainRouter from "./routes/main/main.router.js";
 import PostsRouter from "./routes/posts.router.js";
 import CommentsRouter from "./routes/comments/comments.router.js";
 import LocationRouter from "./routes/locations/location.router.js";
-import LikeRouter from "./routes/isLike/isLike.router.js";
+// import LikeRouter from "./routes/isLike/isLike.router.js";
+import LikeRouter from "./routes/isLike.router.js";
 import SearchingRouter from "./routes/searching/searching.router.js";
 // import BookmarkRouter from "./routes/bookmark/bookmark.router.js";
 import BookmarkRouter from "./routes/bookmark.router.js";
@@ -31,8 +32,8 @@ const PORT = 3003;
 app.use(morgan("dev"));
 
 // Passport 설정
-configurePassport(); // passport 불러온다.
-app.use(passport.initialize()); //  Passport를 초기화.
+// configurePassport(); // passport 불러온다.
+// app.use(passport.initialize()); //  Passport를 초기화.
 
 app.use(cors());
 
