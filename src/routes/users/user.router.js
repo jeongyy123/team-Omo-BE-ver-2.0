@@ -353,23 +353,23 @@ router.post("/tokens/refresh", async (req, res, next) => {
 
     const { userId } = decodedToken;
 
+    // ========================================================================
     // 데이터베이스에서 유효한 리프레시 토큰인지 확인
     const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
       where: {
         refreshToken: refreshtoken, // 전달받은 토큰
         expiresAt: {
-          gte: new Date(), // 만료되지 않은 토큰인지 확인
+          lte: new Date(), // 만료되지 않은 토큰인지 확인
         },
         UserId: +userId,
       },
     });
 
-    if (!isRefreshTokenExist) {
-      // 만료된 리프레시 토큰은 데이터베이스에서 삭제되어야 합니다.
+    if (isRefreshTokenExist) {
       await prisma.refreshTokens.delete({
         where: {
           refreshToken: refreshtoken,
-          UserId: +userId,
+          tokenId: isRefreshTokenExist.tokenId,
         },
       });
 
@@ -377,6 +377,8 @@ router.post("/tokens/refresh", async (req, res, next) => {
         errorMessage: "리프레시 토큰이 유효하지 않습니다.",
       });
     }
+
+    // ============================================================================
 
     const newAccessToken = jwt.sign(
       {
