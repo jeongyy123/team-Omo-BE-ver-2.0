@@ -17,8 +17,6 @@ const options = {
     ],
   },
   apis: [
-    "./src/routes/users/*.js",
-    "./src/routes/profiles/*.js",
     "./src/routes/locations/*.js",
     "./src/routes/comments/*.js",
     "./src/routes/replies/*.js",
