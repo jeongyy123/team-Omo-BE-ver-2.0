@@ -2,7 +2,10 @@ import express from "express";
 import multer from "multer";
 import jimp from "jimp";
 import { prisma } from "../../utils/prisma/index.js";
-import { createPostsSchema, editPostsSchema } from "../../validations/posts.validation.js";
+import {
+  createPostsSchema,
+  editPostsSchema,
+} from "../../validations/posts.validation.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import {
   getImageS3,
@@ -209,7 +212,6 @@ router.get("/posts/:postId", async (req, res, next) => {
   }
 });
 
-
 /* 게시물 작성 */
 router.post(
   "/posts",
@@ -226,7 +228,7 @@ router.post(
         latitude,
         longitude,
         star,
-        placeInfoId
+        placeInfoId,
       } = validation;
       const { userId } = req.user;
 
@@ -248,8 +250,11 @@ router.post(
 
       //이미지 이름 나눠서 저장
       const imgPromises = req.files.map(async (file) => {
-        if (file.size > 6000000) { // 1500000 
-          return res.status(400).json({ message: "3MB이하의 이미지파일만 넣어주세요." })
+        if (file.size > 6000000) {
+          // 1500000
+          return res
+            .status(400)
+            .json({ message: "3MB이하의 이미지파일만 넣어주세요." });
         }
 
         const imgName = randomImgName();
@@ -357,14 +362,22 @@ router.post(
   },
 );
 
-
 // 게시물 수정
 router.patch("/posts/:postId", authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
     const { postId } = req.params;
-    const validation = await editPostsSchema.validateAsync(req.body)
-    const { address, content, star, storeName, placeInfoId, latitude, longitude, categoryName } = validation;
+    const validation = await editPostsSchema.validateAsync(req.body);
+    const {
+      address,
+      content,
+      star,
+      storeName,
+      placeInfoId,
+      latitude,
+      longitude,
+      categoryName,
+    } = validation;
     // 확인사항: 주소를 바꾸는 경우에는 latitude, longitude, categoryName, placeInfoId도 받아서 같이 수정해야함
     // 수정사항 : 기존에 location이 있어도 장소가 변경되는 경우 기존 장소를 수정해버림..
     const post = await prisma.posts.findFirst({
@@ -383,7 +396,7 @@ router.patch("/posts/:postId", authMiddleware, async (req, res, next) => {
 
     // 수정 후 category 정보
     const category = await prisma.categories.findFirst({
-      where: { categoryName }
+      where: { categoryName },
     });
 
     // 수정 후 district 정보
@@ -397,11 +410,10 @@ router.patch("/posts/:postId", authMiddleware, async (req, res, next) => {
 
     // 수정 후 location 정보
     const afterEditPostLocation = await prisma.locations.findFirst({
-      where: { address }
-    })
+      where: { address },
+    });
 
-
-    // 수정 후 location 정보가 있을 경우 
+    // 수정 후 location 정보가 있을 경우
     // -> post 수정( content, star ) & location 수정 ( starAvg, postCount )
     if (afterEditPostLocation) {
       await prisma.$transaction(async (prisma) => {
@@ -429,8 +441,8 @@ router.patch("/posts/:postId", authMiddleware, async (req, res, next) => {
           data: {
             starAvg: starAvg._avg.star,
             postCount: {
-              increment: 1
-            }
+              increment: 1,
+            },
           },
         });
 
@@ -439,22 +451,22 @@ router.patch("/posts/:postId", authMiddleware, async (req, res, next) => {
           where: { locationId: post.LocationId },
           data: {
             postCount: {
-              decrement: 1
-            }
-          }
-        })
+              decrement: 1,
+            },
+          },
+        });
 
         // 만약 수정 후에 기존 location.postcount가 0이 된다면 삭제
         if (beforeEditPostLocation.postCount === 0) {
           await prisma.locations.delete({
-            where: { locationId: beforeEditPostLocation.locationId }
-          })
+            where: { locationId: beforeEditPostLocation.locationId },
+          });
         }
       });
     } else {
-      // 수정 후 location 정보가 없는경우 
-      // -> post정보 수정 & 수정 후 location 정보 생성 
-      // -> 수정 전 location 정보 수정 
+      // 수정 후 location 정보가 없는경우
+      // -> post정보 수정 & 수정 후 location 정보 생성
+      // -> 수정 전 location 정보 수정
       await prisma.$transaction(async (prisma) => {
         // 수정 후의 location 정보 create
         const location = await prisma.locations.create({
@@ -492,25 +504,25 @@ router.patch("/posts/:postId", authMiddleware, async (req, res, next) => {
         await prisma.locations.update({
           where: { locationId: location.locationId },
           data: {
-            starAvg: starAvg._avg.star
-          }
-        })
+            starAvg: starAvg._avg.star,
+          },
+        });
 
         // 수정 전 post의 location decrement 하기
         const beforeEditPostLocation = await prisma.locations.update({
           where: { locationId: post.LocationId },
           data: {
             postCount: {
-              decrement: 1
-            }
-          }
-        })
+              decrement: 1,
+            },
+          },
+        });
 
         // 수정 전 location.postcount가 0이 되면 지워
         if (beforeEditPostLocation.postCount === 0) {
           await prisma.locations.delete({
-            where: { locationId: beforeEditPostLocation.locationId }
-          })
+            where: { locationId: beforeEditPostLocation.locationId },
+          });
         }
       });
     }
@@ -539,7 +551,6 @@ router.delete("/posts/:postId", authMiddleware, async (req, res, next) => {
     }
 
     await prisma.$transaction(async (prisma) => {
-
       const imgUrlsArray = post.imgUrl.split(",");
 
       const params = imgUrlsArray.map((url) => {
@@ -568,13 +579,13 @@ router.delete("/posts/:postId", authMiddleware, async (req, res, next) => {
 
       // 게시글 삭제할 때 마지막 게시글이 삭제가 되면 로케이션 정보도 삭제가 되어야한다.
       const findLocation = await prisma.locations.findFirst({
-        where: { locationId: post.LocationId }
-      })
+        where: { locationId: post.LocationId },
+      });
 
       if (findLocation.postCount === 0) {
         await prisma.locations.delete({
-          where: { locationId: post.LocationId }
-        })
+          where: { locationId: post.LocationId },
+        });
       }
     });
 

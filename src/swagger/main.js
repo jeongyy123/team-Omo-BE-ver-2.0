@@ -1,4 +1,3 @@
-
 /**
  * @swagger
  * paths:
@@ -96,7 +95,6 @@
  *                    example: 서버에서 에러가 발생했습니다.
  */
 
-
 /**
  * @swagger
  * paths:
@@ -186,7 +184,6 @@
  *                    type: string
  *                    example: 서버에서 에러가 발생했습니다.
  */
-
 
 /**
  * @swagger

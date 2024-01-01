@@ -110,9 +110,7 @@ router.get("/main/popular", async (req, res, next) => {
       paramsArray.map(async (params) => {
         const commands = params.map((param) => new GetObjectCommand(param));
         const urls = await Promise.all(
-          commands.map((command) =>
-            getSignedUrl(s3, command),
-          ),
+          commands.map((command) => getSignedUrl(s3, command)),
         );
         return urls;
       }),
@@ -128,7 +126,6 @@ router.get("/main/popular", async (req, res, next) => {
     console.log(error);
   }
 });
-
 
 /* 최신글 조회 */
 // 자치구별 최신순 게시물
@@ -213,7 +210,6 @@ router.get("/main/recent", async (req, res, next) => {
     next(error);
   }
 });
-
 
 /* 댓글 조회 */
 router.get("/main/comments", async (req, res, next) => {

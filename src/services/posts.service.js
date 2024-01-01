@@ -1,10 +1,14 @@
-import { PostsRepository } from '../repositories/posts.repository.js'
+import { PostsRepository } from "../repositories/posts.repository.js";
 import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
-import { getManyImagesS3, getSingleImageS3, getImageS3 } from "../utils/getImageS3.js";
+import {
+  getManyImagesS3,
+  getSingleImageS3,
+  getImageS3,
+} from "../utils/getImageS3.js";
 import crypto from "crypto";
 import jimp from "jimp";
 import dotenv from "dotenv";
@@ -29,19 +33,24 @@ export class PostsService {
 
   /* 게시글 목록 조회 */
   findAllPosts = async (page, lastSeenPage, categoryName, districtName) => {
-    const posts = await this.postsRepository.findAllPosts(page, lastSeenPage, categoryName, districtName);
+    const posts = await this.postsRepository.findAllPosts(
+      page,
+      lastSeenPage,
+      categoryName,
+      districtName,
+    );
 
     await getManyImagesS3(posts);
 
-    return posts
-  }
+    return posts;
+  };
 
   /* 게시글 상세 조회 */
   findPostById = async (postId) => {
     const post = await this.postsRepository.findPostById(postId);
 
     if (!post) {
-      const err = new Error("존재하지않는 게시글입니다.")
+      const err = new Error("존재하지않는 게시글입니다.");
       err.statusCode = 404;
       throw err;
     }
@@ -49,11 +58,12 @@ export class PostsService {
     await getSingleImageS3(post.User);
     await getImageS3(post);
 
-    return post
-  }
+    return post;
+  };
 
   /* 게시글 작성 */
-  createPost = async (userId,
+  createPost = async (
+    userId,
     content,
     categoryName,
     storeName,
@@ -62,14 +72,14 @@ export class PostsService {
     longitude,
     star,
     placeInfoId,
-    files) => {
-
+    files,
+  ) => {
     const imgNames = await this.processPutImages(files);
 
     const category = await this.postsRepository.findCategory(categoryName);
 
     if (!category) {
-      const err = new Error("존재하지않는 카테고리입니다.")
+      const err = new Error("존재하지않는 카테고리입니다.");
       err.statusCode = 404;
       throw err;
     }
@@ -77,7 +87,7 @@ export class PostsService {
     const district = await this.postsRepository.findDistrict(address);
 
     if (!district) {
-      const err = new Error("지역이 존재하지 않습니다.")
+      const err = new Error("지역이 존재하지 않습니다.");
       err.statusCode = 404;
       throw err;
     }
@@ -92,31 +102,32 @@ export class PostsService {
       longitude,
       star,
       placeInfoId,
-      imgNames
+      imgNames,
     );
 
     return {
-      message: "게시글 등록이 완료되었습니다."
-    }
-  }
+      message: "게시글 등록이 완료되었습니다.",
+    };
+  };
 
   /* 게시글 작성 중 이미지 등록 처리*/
   processPutImages = async (files) => {
     //이미지 이름 나눠서 저장
     if (!files || files.length === 0) {
-      const err = new Error("사진을 등록해주세요.")
+      const err = new Error("사진을 등록해주세요.");
       err.statusCode = 400;
       throw err;
     }
 
     const imgPromises = files.map(async (file) => {
       if (file.size > 6000000) {
-        const err = new Error("3MB이하의 이미지파일만 넣어주세요.")
+        const err = new Error("3MB이하의 이미지파일만 넣어주세요.");
         err.statusCode = 400;
         throw err;
       }
 
-      const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
+      const randomImgName = (bytes = 32) =>
+        crypto.randomBytes(bytes).toString("hex");
       const imgName = randomImgName();
 
       // 이미지 사이즈 조정
@@ -140,56 +151,87 @@ export class PostsService {
 
       return imgName;
     });
-    return Promise.all(imgPromises)
-  }
+    return Promise.all(imgPromises);
+  };
 
   /* 게시글 수정 */
-  updatePost = async (userId, postId, address, content, star, storeName, placeInfoId, latitude, longitude, categoryName) => {
-    const post = await this.postsRepository.findPostByPostIdAndUserId(userId, postId);
+  updatePost = async (
+    userId,
+    postId,
+    address,
+    content,
+    star,
+    storeName,
+    placeInfoId,
+    latitude,
+    longitude,
+    categoryName,
+  ) => {
+    const post = await this.postsRepository.findPostByPostIdAndUserId(
+      userId,
+      postId,
+    );
 
     if (!post) {
-      const err = new Error("존재하지않는 게시글입니다.")
+      const err = new Error("존재하지않는 게시글입니다.");
       err.statusCode = 400;
       throw err;
     }
 
     if (post.UserId !== userId) {
-      const err = new Error("수정할 권한이 존재하지 않습니다.")
+      const err = new Error("수정할 권한이 존재하지 않습니다.");
       err.statusCode = 401;
       throw err;
     }
 
-    await this.postsRepository.updatePost(userId, postId, address, content, star, storeName, placeInfoId, latitude, longitude, categoryName)
+    await this.postsRepository.updatePost(
+      userId,
+      postId,
+      address,
+      content,
+      star,
+      storeName,
+      placeInfoId,
+      latitude,
+      longitude,
+      categoryName,
+    );
 
     return {
-      message: "게시물을 수정하였습니다."
-    }
-  }
+      message: "게시물을 수정하였습니다.",
+    };
+  };
 
   /* 게시글 찾기 by PostId, UserId */
   findPostByPostIdAndUserId = async (userId, postId) => {
-    const post = await this.postsRepository.findPostByPostIdAndUserId(userId, postId);
+    const post = await this.postsRepository.findPostByPostIdAndUserId(
+      userId,
+      postId,
+    );
 
     if (!post) {
-      const err = new Error("존재하지않는 게시글입니다.")
+      const err = new Error("존재하지않는 게시글입니다.");
       err.statusCode = 400;
       throw err;
     }
     return post;
-  }
+  };
 
   /* 게시글 삭제 */
   deletePost = async (userId, postId) => {
-    const post = await this.postsRepository.findPostByPostIdAndUserId(userId, postId);
+    const post = await this.postsRepository.findPostByPostIdAndUserId(
+      userId,
+      postId,
+    );
 
     if (!post) {
-      const err = new Error("존재하지않는 게시글입니다.")
+      const err = new Error("존재하지않는 게시글입니다.");
       err.statusCode = 400;
       throw err;
     }
 
     if (post.UserId !== userId) {
-      const err = new Error("삭제할 권한이 존재하지 않습니다.")
+      const err = new Error("삭제할 권한이 존재하지 않습니다.");
       err.statusCode = 401;
       throw err;
     }
@@ -210,8 +252,7 @@ export class PostsService {
     await this.postsRepository.deletePost(userId, postId);
 
     return {
-      message: "게시글을 삭제하였습니다."
-    }
-  }
-
+      message: "게시글을 삭제하였습니다.",
+    };
+  };
 }

@@ -1,4 +1,4 @@
-import { BookmarkService } from '../services/bookmark.service.js'
+import { BookmarkService } from "../services/bookmark.service.js";
 
 export class BookmarkController {
   bookmarkService = new BookmarkService();
@@ -13,9 +13,9 @@ export class BookmarkController {
 
       return res.status(201).json({ message: "북마크" });
     } catch (error) {
-      next(error)
+      next(error);
     }
-  }
+  };
 
   /* 북마크 취소 */
   deleteBookmark = async (req, res, next) => {
@@ -27,20 +27,21 @@ export class BookmarkController {
 
       return res.status(200).json({ message: "북마크 취소" });
     } catch (error) {
-      next(error)
+      next(error);
     }
-  }
+  };
 
   /** 유저의 북마크 지도 표시**/
   getUserMapBookmarks = async (req, res, next) => {
     try {
       const { userId } = req.user;
 
-      const userBookmark = await this.bookmarkService.getUserMapBookmarks(userId);
+      const userBookmark =
+        await this.bookmarkService.getUserMapBookmarks(userId);
 
       return res.status(200).json(userBookmark);
     } catch (error) {
-      next(error)
+      next(error);
     }
-  }
+  };
 }

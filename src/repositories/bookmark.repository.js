@@ -8,8 +8,8 @@ export class BookmarkRepository {
         UserId: +userId,
       },
     });
-    return { message: "북마크" }
-  }
+    return { message: "북마크" };
+  };
 
   deleteBookmark = async (locationId, userId) => {
     const bookmark = await prisma.bookmark.findFirst({
@@ -19,20 +19,20 @@ export class BookmarkRepository {
     await prisma.bookmark.delete({
       where: { bookmarkId: bookmark.bookmarkId },
     });
-    return { message: "북마크 취소" }
-  }
+    return { message: "북마크 취소" };
+  };
 
   findLocationByLocationId = async (locationId) => {
     return await prisma.locations.findFirst({
       where: { locationId: +locationId },
     });
-  }
+  };
 
   findBookmarkByLocationIdAndUserId = async (locationId, userId) => {
     return await prisma.bookmark.findFirst({
       where: { LocationId: +locationId, UserId: +userId },
     });
-  }
+  };
 
   getUserMapBookmarks = async (userId) => {
     const userBookmark = await prisma.bookmark.findMany({
@@ -48,5 +48,5 @@ export class BookmarkRepository {
       },
     });
     return userBookmark;
-  }
+  };
 }

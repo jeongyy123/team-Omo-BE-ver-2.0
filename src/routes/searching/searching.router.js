@@ -1,13 +1,8 @@
 import express from "express";
 import { prisma } from "../../utils/prisma/index.js";
 import { searchingSchema } from "../../validations/searching.validation.js";
-import {
-  getManyImagesS3,
-} from "../../utils/getImageS3.js";
-import {
-  S3Client,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
+import { getManyImagesS3 } from "../../utils/getImageS3.js";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 
@@ -28,7 +23,6 @@ const s3 = new S3Client({
   region,
 });
 
-
 /* 검색 기능 (유저, 가게 이름) */
 router.get("/posts/main/searching", async (req, res, next) => {
   try {
@@ -42,11 +36,9 @@ router.get("/posts/main/searching", async (req, res, next) => {
     }
 
     if (nickname && storeName) {
-      return res
-        .status(400)
-        .json({
-          message: "nickname 또는 storeName 둘 중 하나만 입력해주세요.",
-        });
+      return res.status(400).json({
+        message: "nickname 또는 storeName 둘 중 하나만 입력해주세요.",
+      });
     }
 
     let resultData;
@@ -121,7 +113,7 @@ router.get("/posts/main/searching", async (req, res, next) => {
       resultData = stores;
     }
 
-    console.log("resultData >>>>>>>>>>> ", resultData)
+    console.log("resultData >>>>>>>>>>> ", resultData);
     const imgUrlsArray = resultData.map((arr) =>
       arr.Posts[0].imgUrl.split(","),
     );
