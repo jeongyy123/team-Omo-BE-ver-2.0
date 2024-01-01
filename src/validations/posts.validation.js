@@ -11,22 +11,28 @@ const createPostsSchema = Joi.object({
     "any.only": "음식점, 카페, 기타만 선택해주세요.",
   }),
   address: Joi.string().messages({
+    "string.empty": "address를 입력해주세요.",
     "any.only": "주소를 선택해주세요.",
   }),
   likeCount: Joi.string().messages({
     "any.only": "주소를 선택해주세요.",
   }),
   storeName: Joi.string().messages({
+    "string.empty": "storeName를 입력해주세요.",
     "any.only": "가게를 선택해주세요.",
   }),
   latitude: Joi.string().messages({
+    "string.empty": "latitude를 입력해주세요.",
     "any.only": "위도를 입력해주세요.",
   }),
   longitude: Joi.string().messages({
+    "string.empty": "longitude를 입력해주세요.",
     "any.only": "경도를 입력해주세요.",
   }),
   star: Joi.number().min(1).max(5).messages({
+    "string.empty": "star를 입력해주세요.",
     "any.only": "별점을 입력해주세요.",
+    "number.base": "star는 숫자로만 입력해주세요"
   }),
   placeInfoId: Joi.string()
 });
@@ -35,6 +41,7 @@ const editPostsSchema = Joi.object({
   content: Joi.string().min(10).max(2000).messages({
     "string.min": "content를 10자 이상으로 작성해주세요.",
     "string.max": "content를 2000자 이하으로 작성해주세요.",
+    "string.empty": "본문을 작성해주세요."
   }),
   address: Joi.string().messages({
     "any.only": "주소를 선택해주세요.",

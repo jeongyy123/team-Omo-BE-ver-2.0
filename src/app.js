@@ -3,12 +3,14 @@ import UsersRouter from "./routes/users/user.router.js";
 import UserProfileRouter from "./routes/profiles/profile.router.js";
 import OauthRouter from "./routes/Oauth/auth.router.js";
 import MainRouter from "./routes/main/main.router.js";
-import PostsRouter from "./routes/posts/posts.router.js";
+// import PostsRouter from "./routes/posts/posts.router.js";
+import PostsRouter from "./routes/posts.router.js";
 import CommentsRouter from "./routes/comments/comments.router.js";
 import LocationRouter from "./routes/locations/location.router.js";
 import LikeRouter from "./routes/isLike/isLike.router.js";
 import SearchingRouter from "./routes/searching/searching.router.js";
-import BookmarkRouter from "./routes/bookmark/bookmark.router.js";
+// import BookmarkRouter from "./routes/bookmark/bookmark.router.js";
+import BookmarkRouter from "./routes/bookmark.router.js";
 import RepliesRouter from "./routes/replies/replies.ruter.js";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
@@ -71,7 +73,7 @@ app.use("/api", [
   BookmarkRouter,
   RepliesRouter,
   SearchingRouter,
-  
+
 ]);
 
 app.use("/auth", [OauthRouter, UsersRouter]);

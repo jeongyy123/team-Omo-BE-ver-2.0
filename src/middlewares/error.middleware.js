@@ -8,6 +8,11 @@ export default function (err, req, res, next) {
   if (err.code === "INCORRECT_FILETYPE") {
     return res.status(400).json({ errorMessage: err.message });
   }
+  if (err.statusCode) {
+    err.statusCode = err.statusCode
+    err.message = err.message
+    return res.status(err.statusCode).json({ errorMessage: `${err.message}` })
+  }
 
   // 그 외의 에러가 발생하면, 서버 에러로 처리합니다.
   return res
