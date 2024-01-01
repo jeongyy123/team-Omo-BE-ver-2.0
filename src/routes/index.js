@@ -6,9 +6,9 @@ import bookmark from "../swagger/bookmark.js";
 import isLike from "../swagger/isLike.js";
 import posts from "../swagger/posts.js";
 import searching from "../swagger/searching.js";
-import location from "./locations/location.router.js"
-import comments from "./comments/comments.router.js"
-import replies from "./replies/replies.ruter.js"
+import location from "./locations/location.router.js";
+import comments from "./comments/comments.router.js";
+import replies from "./replies/replies.ruter.js";
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ const router = express.Router();
  * @swagger
  * tags:
  *   - name: Users
- *     description: 회원가입/로그인/로그아웃/회원탈퇴/엑세스 토큰 재발급
+ *     description: 이메일 인증 요청/인증코드 확인/닉네임 중복확인/회원가입/로그인/로그아웃/회원탈퇴/엑세스 토큰 재발급/Kakao OAuth 로그인/Kakao OAuth 로그인 후 콜백 엔드포인트
  */
 
 /**
