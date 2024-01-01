@@ -358,9 +358,9 @@ router.post("/tokens/refresh", async (req, res, next) => {
     const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
       where: {
         refreshToken: refreshtoken, // 전달받은 토큰
-        expiresAt: {
-          lte: new Date(), // 만료되지 않은 토큰인지 확인
-        },
+        // expiresAt: {
+        //   lte: new Date(), // 만료되지 않은 토큰인지 확인
+        // },
         UserId: +userId,
       },
     });
