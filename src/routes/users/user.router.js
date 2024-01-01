@@ -365,20 +365,29 @@ router.post("/tokens/refresh", async (req, res, next) => {
       },
     });
 
-    if (isRefreshTokenExist) {
-      await prisma.refreshTokens.delete({
-        where: {
-          refreshToken: refreshtoken,
-          tokenId: isRefreshTokenExist.tokenId,
-        },
-      });
+    // if (isRefreshTokenExist) {
+    //   await prisma.refreshTokens.delete({
+    //     where: {
+    //       refreshToken: refreshtoken,
+    //       tokenId: isRefreshTokenExist.tokenId,
+    //     },
+    //   });
 
-      return res.status(419).json({
-        errorMessage: "리프레시 토큰이 유효하지 않습니다.",
-      });
-    }
+    //   return res.status(419).json({
+    //     errorMessage: "리프레시 토큰이 유효하지 않습니다.",
+    //   });
+    // }
 
     // ============================================================================
+
+    // 새로운 엑세스 토큰을 발급하기 전에 이전 리프레시 토큰을 데이터베이스에서 삭제
+    await prisma.refreshTokens.delete({
+      where: {
+        refreshToken: refreshtoken,
+        UserId: +userId,
+        tokenId: isRefreshTokenExist.tokenId,
+      },
+    });
 
     const newAccessToken = jwt.sign(
       {
@@ -397,14 +406,6 @@ router.post("/tokens/refresh", async (req, res, next) => {
       refreshKey,
       { expiresIn: "7d" },
     );
-
-    // 새로운 엑세스 토큰을 발급하기 전에 이전 리프레시 토큰을 데이터베이스에서 삭제
-    await prisma.refreshTokens.delete({
-      where: {
-        refreshToken: refreshtoken,
-        UserId: +userId,
-      },
-    });
 
     const sevenDaysLater = new Date(); // 현재 시간
     sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
