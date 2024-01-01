@@ -331,7 +331,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
     console.log("Test >>>", refreshtoken);
     console.log("req.headers >>>", req.headers);
 
-    const [tokenType, token] = authorization.split(" ");
+    const [tokenType, token] = refreshtoken.split(" ");
 
     if (!token) {
       return res
