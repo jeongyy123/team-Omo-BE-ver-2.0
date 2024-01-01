@@ -45,7 +45,7 @@ router.get(
 );
 
 // 토큰을 반환하는 엔드포인트
-router.get("/getToken", async (req, res) => {
+router.get("/getToken", getUserInfo, async (req, res) => {
   const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
   const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
 
@@ -53,6 +53,8 @@ router.get("/getToken", async (req, res) => {
   if (!req.userInfo || !req.userInfo.userId) {
     return res.status(401).json({ message: "인증되지 않은 사용자" });
   }
+
+  console.log(req.userInfo);
 
   const userId = req.userInfo.userId;
   console.log("userId >>>", userId);
