@@ -273,7 +273,7 @@ router.post("/login", async (req, res, next) => {
         userId: findUser.userId,
       },
       accessKey,
-      { expiresIn: "2h" },
+      { expiresIn: "30s" },
     );
 
     // Issue refresh token
@@ -325,15 +325,39 @@ router.post("/login", async (req, res, next) => {
 router.post("/tokens/refresh", async (req, res, next) => {
   try {
     const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
-    const { refreshToken } = req.headers;
+    const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
+    const refreshToken = req.headers["refreshToken"];
 
-    // 서버에서도 실제 정보를 가지고 있는지 확인
+    if (!refreshToken) {
+      return res.status(400).json({ errorMessage: "인증 정보가 없습니다." });
+    }
+
+    const [tokenType, token] = refreshToken.split(" ");
+
+    if (tokenType !== "Bearer") {
+      return res
+        .status(400)
+        .json({ errorMessage: "올바른 리프레시 토큰 형식이 아닙니다." });
+    }
+
+    const decodedToken = jwt.verify(token, refreshKey);
+
+    if (!decodedToken) {
+      return res
+        .status(401)
+        .json({ errorMessage: "리프레시 토큰이 유효하지 않습니다." });
+    }
+
+    const userId = decodedToken.userId;
+
+    // 데이터베이스에서 유효한 리프레시 토큰인지 확인
     const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
       where: {
         refreshToken: refreshToken, // 전달받은 토큰
         expiresAt: {
           gte: new Date(), // 만료되지 않은 토큰인지 확인
         },
+        UserId: +userId,
       },
     });
 
@@ -353,18 +377,18 @@ router.post("/tokens/refresh", async (req, res, next) => {
     const newAccessToken = jwt.sign(
       {
         purpose: "newaccess",
-        userId: isRefreshTokenExist.UserId,
+        userId: userId,
       },
       accessKey,
-      { expiresIn: "2h" },
+      { expiresIn: "30s" },
     );
 
     const newRefreshToken = jwt.sign(
       {
         purpose: "newrefresh",
-        userId: isRefreshTokenExist.UserId,
+        userId: userId,
       },
-      refreshToken,
+      refreshKey,
       { expiresIn: "7d" },
     );
 
@@ -382,7 +406,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
     await prisma.refreshTokens.create({
       data: {
         refreshToken: newRefreshToken,
-        UserId: isRefreshTokenExist.UserId,
+        UserId: userId,
         expiresAt: sevenDaysLater, // 유효기간 7일
       },
     });
