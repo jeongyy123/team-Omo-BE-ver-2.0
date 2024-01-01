@@ -399,6 +399,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
     await prisma.refreshTokens.delete({
       where: {
         refreshToken: refreshtoken,
+        UserId: +userId,
       },
     });
 
