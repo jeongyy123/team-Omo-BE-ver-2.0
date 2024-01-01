@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
-// import { redisClient } from "../../utils/redis.util.js";
+// import redisClient from "../../utils/redis.util.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import {
   registerSchema,
@@ -518,15 +518,15 @@ router.post("/login", async (req, res, next) => {
     if (!findUser) {
       return res
         .status(404)
-        .json({ errorMessage: "해당 이메일로 가입된 계정이 없습니다." });
+        .json({ errorMessage: "해당 이메일로 가입된 내역이 없습니다." });
     }
 
     const isMatch = await bcrypt.compare(password, findUser.password);
 
     if (!isMatch) {
-      return res
-        .status(401)
-        .json({ errorMessage: "비밀번호가 일치하지 않습니다." });
+      return res.status(401).json({
+        errorMessage: "비밀번호가 틀립니다. 다시 한 번 확인해 주세요.",
+      });
     }
 
     // Issue access token
@@ -550,17 +550,17 @@ router.post("/login", async (req, res, next) => {
     );
 
     // =======================================================
-    // 레디스에 리프레시 토큰 저장
-    // 리프레시 토큰을 키로 사용하면 해당 토큰에 대한 사용자 ID를 빠르게 찾을 수 있다.
-    // 특정 리프레시 토큰에 대응하는 사용자를 신속하게 확인할 수 있다
+    // // Redis에 Refresh Token 저장
+    // // 사용자 ID를 키로 사용하여 Refresh Token 저장
     // await redisClient.set(findUser.userId, refreshToken);
 
-    // 만료 시간 설정 (7일)
+    // // 만료 시간 설정 (7일)
     // const TTL = 7 * 24 * 60 * 60; // 초 단위
-    // expire 메서드를 호출하여 findUser.userId 키의 만료 시간을 TTL 변수에 지정된 만큼으로 설정
-    // expire 명령어에는 두 개의 인자(키와 TTL)만 필요하다
+    // // expire 메서드를 호출하여 findUser.userId 키의 만료 시간을 TTL 변수에 지정된 만큼으로 설정
+    // // expire 명령어에는 두 개의 인자(키와 TTL)만 필요하다
     // await redisClient.expire(findUser.userId, TTL);
 
+    // 이렇게 하면 Redis에 Refresh Token을 저장할 수 있으며, redisClient.get() 등을 사용하여 저장된 토큰을 가져올 수도 있습니다
     // =======================================================
 
     const sevenDaysLater = new Date(); // 현재 시간
@@ -642,10 +642,9 @@ router.post("/login", async (req, res, next) => {
  */
 
 /** 리프레시 토큰을 이용해서 엑세스 토큰을 재발급하는 API */
-router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
+router.post("/tokens/refresh", async (req, res, next) => {
   try {
     const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
-    const { userId } = req.user;
     const { refreshToken } = req.headers;
 
     // 서버에서도 실제 정보를 가지고 있는지 확인
@@ -659,6 +658,13 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
     });
 
     if (!isRefreshTokenExist) {
+      // 만료된 리프레시 토큰은 데이터베이스에서 삭제되어야 합니다.
+      await prisma.refreshTokens.delete({
+        where: {
+          refreshToken: refreshToken,
+        },
+      });
+
       return res.status(419).json({
         errorMessage: "리프레시 토큰이 유효하지 않습니다.",
       });
@@ -667,30 +673,49 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
     const newAccessToken = jwt.sign(
       {
         purpose: "newaccess",
-        userId: +userId,
+        userId: isRefreshTokenExist.UserId,
       },
       accessKey,
       { expiresIn: "2h" },
     );
 
-    // const newRefreshToken = jwt.sign(
-    //   {
-    //     purpose: "newrefresh",
-    //     userId: +userId,
-    //   },
-    //   refreshToken,
-    //   { expiresIn: "14d" },
-    // );
+    const newRefreshToken = jwt.sign(
+      {
+        purpose: "newrefresh",
+        userId: isRefreshTokenExist.UserId,
+      },
+      refreshToken,
+      { expiresIn: "7d" },
+    );
+
+    // 새로운 엑세스 토큰을 발급하기 전에 이전 리프레시 토큰을 데이터베이스에서 삭제
+    await prisma.refreshTokens.delete({
+      where: {
+        refreshToken: refreshToken,
+      },
+    });
+
+    const sevenDaysLater = new Date(); // 현재 시간
+    sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+
+    // 리프레시 토큰을 생성하고 이를 데이터베이스에 저장한다
+    await prisma.refreshTokens.create({
+      data: {
+        refreshToken: newRefreshToken,
+        UserId: isRefreshTokenExist.UserId,
+        expiresAt: sevenDaysLater, // 유효기간 7일
+      },
+    });
 
     console.log("새로 발급된 AccessToken: ", newAccessToken);
-    // console.log("새로 발급된 RefreshToken: ", newRefreshToken);
+    console.log("새로 발급된 RefreshToken: ", newRefreshToken);
 
     res.setHeader("Authorization", `Bearer ${newAccessToken}`);
-    // res.setHeader("RefreshToken", `Bearer ${newRefreshToken}`);
+    res.setHeader("RefreshToken", `Bearer ${newRefreshToken}`);
 
-    return res
-      .status(200)
-      .json({ message: "엑세스 토큰이 정상적으로 재발급되었습니다." });
+    return res.status(200).json({
+      message: "Access token과 Refresh token이 정상적으로 재발급되었습니다.",
+    });
   } catch (error) {
     console.error(error);
 
@@ -699,16 +724,6 @@ router.post("/tokens/refresh", authMiddleware, async (req, res, next) => {
       .json({ errorMessage: "서버에서 문제가 발생하였습니다." });
   }
 });
-
-// 제공된 토큰이 유효한지 여부를 검증하는 함수
-// function validateToken(token, secretKey) {
-//   try {
-//     const accessToken = token.split(" ")[1]; // Bearer 제거 후 토큰 추출
-//     return jwt.verify(accessToken, secretKey);
-//   } catch (error) {
-//     return null;
-//   }
-// }
 
 /**
  * @swagger
@@ -747,9 +762,9 @@ router.post("/logout", authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
 
-    await prisma.tokenBlacklist.create({
-      data: {
-        token: req.headers.authorization,
+    await prisma.refreshTokens.delete({
+      where: {
+        UserId: +userId,
       },
     });
 
@@ -801,31 +816,22 @@ router.delete("/withdraw", authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
 
-    const findRefreshToken = await prisma.refreshTokens.findFirst({
-      where: {
-        UserId: +userId,
-      },
-      select: {
-        refreshToken: true,
-      },
-    });
-
-    if (findRefreshToken) {
-      const refreshToken = findRefreshToken.refreshToken;
-
-      // 리프레시 토큰을 블랙리스트에 추가
-      await prisma.tokenBlacklist.create({
-        data: {
-          token: refreshToken,
+    /** 트랜젝션 사용 - 작업의 완전성을 보장해 주기 위함 */
+    // 트랜젝션 시작
+    // prisma.$transaction을 사용하여 배열 안에 여러 프리즈마 쿼리를 넣어 실행한다
+    // 트랜젝션 내의 모든 작업이 성공하거나, 실패할 경우 롤백된다.
+    await prisma.$transaction([
+      prisma.refreshTokens.deleteMany({
+        where: {
+          UserId: +userId,
         },
-      });
-    }
-
-    await prisma.users.delete({
-      where: {
-        userId: +userId,
-      },
-    });
+      }),
+      prisma.users.delete({
+        where: {
+          userId: +userId,
+        },
+      }),
+    ]); // 트랜젝션 끝
 
     return res.status(200).json({
       message:
