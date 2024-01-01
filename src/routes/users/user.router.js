@@ -367,7 +367,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
     // 새로운 엑세스 토큰을 발급하기 전에 이전 리프레시 토큰을 데이터베이스에서 삭제
     await prisma.refreshTokens.delete({
       where: {
-        refreshToken: refreshtoken,
+        refreshToken: token,
         UserId: +userId,
         tokenId: isRefreshTokenExist.tokenId,
       },
