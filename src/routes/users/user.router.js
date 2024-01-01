@@ -345,6 +345,8 @@ router.post("/tokens/refresh", async (req, res, next) => {
 
     const decodedToken = jwt.verify(token, refreshKey);
 
+    console.log("decodedToken >>>>>>>>", decodedToken);
+
     if (!decodedToken) {
       return res
         .status(401)
@@ -353,12 +355,14 @@ router.post("/tokens/refresh", async (req, res, next) => {
 
     const { userId } = decodedToken;
 
+    console.log("Check userId from decodedToken", userId);
+
     // ========================================================================
     // 데이터베이스에서 유효한 리프레시 토큰인지 확인
     const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
       where: {
         refreshToken: token, // 전달받은 토큰
-        UserId: +userId,
+        // UserId: +userId,
       },
     });
 
@@ -368,7 +372,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
     await prisma.refreshTokens.delete({
       where: {
         refreshToken: token,
-        UserId: +userId,
+        // UserId: +userId,
         tokenId: isRefreshTokenExist.tokenId,
       },
     });
