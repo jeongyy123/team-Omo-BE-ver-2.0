@@ -57,8 +57,8 @@ export class PostsService {
       throw err;
     }
 
-    // await getRepliesImageS3(post.Comments); // 추가
-    // await getProfileImageS3(post.Comments); // 추가
+    await getRepliesImageS3(post.Comments); // 추가
+    await getProfileImageS3(post.Comments); // 추가
     await getSingleImageS3(post.User);
     await getImageS3(post);
 
