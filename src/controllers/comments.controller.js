@@ -1,4 +1,5 @@
-import { CommentsService } from "../services/comments.service";
+import { CommentsService } from "../services/comments.service.js";
+import { createCommentsSchema } from "../validations/comments.validation.js";
 
 export class CommentsController {
   commentsService = new CommentsService();
@@ -13,7 +14,8 @@ export class CommentsController {
         return res.status(401).json({ message: "로그인 후 사용하여 주세요." });
       }
 
-      const validation = await this.commentsService.validateComment(req.body);
+      const validation = await createCommentsSchema.validateAsync(req.body);
+
       const { content } = validation;
 
       const comment = await this.commentsService.createComment(
@@ -32,8 +34,8 @@ export class CommentsController {
   getComments = async (req, res, next) => {
     try {
       const { postId } = req.params;
-
-      const comments = await this.commentsService.findAllComments();
+      const {  page, lastSeenId } = req.query;
+      const comments = await this.commentsService.getComments(postId, page, lastSeenId);
 
       return res.status(200).json({ data: comments });
     } catch (error) {
