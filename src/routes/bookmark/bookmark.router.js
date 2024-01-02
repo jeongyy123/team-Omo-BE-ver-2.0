@@ -43,7 +43,6 @@ router.post(
   },
 );
 
-
 //북마크 취소
 router.delete(
   "/posts/:locationId/bookmark",
@@ -82,7 +81,6 @@ router.delete(
   },
 );
 
-
 // 유저의 북마크 지도 표시
 router.get("/posts/user/bookmark", authMiddleware, async (req, res, next) => {
   try {
@@ -102,7 +100,9 @@ router.get("/posts/user/bookmark", authMiddleware, async (req, res, next) => {
     });
 
     if (!userBookmark) {
-      return res.status(404).json({ message: "사용자가 북마크한 장소가 없습니다." })
+      return res
+        .status(404)
+        .json({ message: "사용자가 북마크한 장소가 없습니다." });
     }
 
     return res.status(200).json(userBookmark);
