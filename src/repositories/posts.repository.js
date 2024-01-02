@@ -95,6 +95,34 @@ export class PostsRepository {
             },
           },
         },
+        Comments: {
+          select: {
+            commentId: true,
+            content: true,
+            createdAt: true,
+            User: {
+              select: {
+                userId: true,
+                imgUrl: true,
+                nickname: true,
+              },
+            },
+            Replies: {
+              select: {
+                replyId: true,
+                content: true,
+                createdAt: true,
+                User: {
+                  select: {
+                    userId: true,
+                    imgUrl: true,
+                    nickname: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 

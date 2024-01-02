@@ -166,34 +166,34 @@ router.get("/posts/:postId", async (req, res, next) => {
             },
           },
         },
-        // Comments: {
-        //   select: {
-        //     commentId: true,
-        //     content: true,
-        //     createdAt: true,
-        //     User: {
-        //       select: {
-        //         userId: true,
-        //         imgUrl: true,
-        //         nickname: true,
-        //       },
-        //     },
-        //     Replies: {
-        //       select: {
-        //         replyId: true,
-        //         content: true,
-        //         createdAt: true,
-        //         User: {
-        //           select: {
-        //             userId: true,
-        //             imgUrl: true,
-        //             nickname: true,
-        //           },
-        //         },
-        //       },
-        //     },
-        //   },
-        // },
+        Comments: {
+          select: {
+            commentId: true,
+            content: true,
+            createdAt: true,
+            User: {
+              select: {
+                userId: true,
+                imgUrl: true,
+                nickname: true,
+              },
+            },
+            Replies: {
+              select: {
+                replyId: true,
+                content: true,
+                createdAt: true,
+                User: {
+                  select: {
+                    userId: true,
+                    imgUrl: true,
+                    nickname: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -201,8 +201,8 @@ router.get("/posts/:postId", async (req, res, next) => {
       return res.status(404).json({ message: "존재하지않는 게시글입니다." });
     }
 
-    // await getRepliesImageS3(posts.Comments);
-    // await getProfileImageS3(posts.Comments);
+    await getRepliesImageS3(posts.Comments);
+    await getProfileImageS3(posts.Comments);
     await getSingleImageS3(posts.User);
     await getImageS3(posts);
 

@@ -5,6 +5,8 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import {
+  getRepliesImageS3,
+  getProfileImageS3,
   getManyImagesS3,
   getSingleImageS3,
   getImageS3,
@@ -55,6 +57,8 @@ export class PostsService {
       throw err;
     }
 
+    // await getRepliesImageS3(post.Comments); // 추가
+    // await getProfileImageS3(post.Comments); // 추가
     await getSingleImageS3(post.User);
     await getImageS3(post);
 
@@ -130,20 +134,20 @@ export class PostsService {
         crypto.randomBytes(bytes).toString("hex");
       const imgName = randomImgName();
 
-      // 이미지 사이즈 조정
-      const buffer = await jimp
-        .read(file.buffer)
-        .then((image) =>
-          image
-            .resize(jimp.AUTO, 500)
-            .quality(70)
-            .getBufferAsync(jimp.MIME_JPEG),
-        );
+      // // 이미지 사이즈 조정
+      // const buffer = await jimp
+      //   .read(file.buffer)
+      //   .then((image) =>
+      //     image
+      //       .resize(jimp.AUTO, 500)
+      //       .quality(70)
+      //       .getBufferAsync(jimp.MIME_JPEG),
+      //   );
 
       const params = {
         Bucket: bucketName,
         Key: imgName,
-        Body: buffer,
+        Body: file.buffer, //jimp 사용 시 buffer로 바꿔야함
         ContentType: file.mimetype,
       };
       const command = new PutObjectCommand(params);

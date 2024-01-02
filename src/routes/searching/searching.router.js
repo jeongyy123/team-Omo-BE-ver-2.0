@@ -43,26 +43,16 @@ router.get("/posts/main/searching", async (req, res, next) => {
 
     let resultData;
     if (nickname) {
+      //userId를 찾고, 해당 post를 찾기
       const users = await prisma.users.findMany({
-        select: {
-          nickname: true,
-          imgUrl: true,
-          // Posts: {
-          //   select: {
-          //     content: true,
-          //     imgUrl: true,
-          //     likeCount: true,
-          //     commentCount: true,
-          //     star: true,
-          //     createdAt: true
-          //   }
-          // }
-        },
         where: {
           nickname: {
             contains: nickname,
-          },
+          }
         },
+        select: {
+          userId: true,
+        }
       });
 
       if (!users || users.length === 0) {
@@ -71,71 +61,142 @@ router.get("/posts/main/searching", async (req, res, next) => {
           .json({ message: "검색하신 유저의 정보가 없어요." });
       }
 
-      resultData = users;
+      const usersPosts = await Promise.all(users.map(async (user) => {
+        const posts = await prisma.posts.findMany({
+          where: { UserId: user.userId },
+          select: {
+            User: {
+              select: {
+                nickname: true,
+              },
+            },
+            Category: {
+              select: {
+                categoryName: true,
+              },
+            },
+            Location: {
+              select: {
+                locationId: true,
+                storeName: true,
+                address: true,
+                starAvg: true,
+                postCount: true,
+              },
+            },
+            postId: true,
+            imgUrl: true,
+            content: true,
+            likeCount: true,
+            commentCount: true,
+            createdAt: true,
+          },
+          orderBy: { postId: "desc" }
+        });
 
-      await getManyImagesS3(resultData);
+        const imgUrlsArray = posts.map((post) =>
+          post.imgUrl.split(",").map((url) => ({
+            Bucket: bucketName,
+            Key: url,
+          }))
+        );
+
+        const signedUrlsArray = await Promise.all(
+          imgUrlsArray.map(async (params) => {
+            const commands = params.map((param) =>
+              new GetObjectCommand(param)
+            );
+            const urls = await Promise.all(
+              commands.map((command) => getSignedUrl(s3, command))
+            );
+            return urls;
+          })
+        );
+
+        return posts.map((post, i) => {
+          post.imgUrl = signedUrlsArray[i];
+          return post;
+        });
+      })
+      );
+      resultData = usersPosts.flat();
+
+      if (!resultData || resultData.length === 0) {
+        return res.status(404).json({ message: "해당 유저가 작성한 게시글이 없어요." })
+      }
     }
 
     if (storeName) {
-      const stores = await prisma.locations.findMany({
+      const stores = await prisma.posts.findMany({
         where: {
-          storeName: {
-            contains: storeName,
-          },
+          Location: {
+            storeName: {
+              contains: storeName
+            }
+          }
         },
         select: {
-          storeName: true,
-          address: true,
-          starAvg: true,
-          Posts: {
+          imgUrl: true,
+          content: true,
+          likeCount: true,
+          commentCount: true,
+          createdAt: true,
+          content: true,
+          Location: {
             select: {
-              imgUrl: true,
-              content: true,
-              likeCount: true,
-              commentCount: true,
-              createdAt: true,
-            },
-            take: 1,
+              locationId: true,
+              storeName: true,
+              address: true,
+              starAvg: true,
+              latitude: true,
+              longitude: true,
+              starAvg: true,
+              postCount: true,
+              placeInfoId: true,
+            }
+          },
+          Category: {
+            select: {
+              categoryName: true
+            }
           },
           User: {
             select: {
               nickname: true,
             },
           },
-        },
-      });
+        }
+      })
 
       if (!stores || stores.length === 0) {
         return res
           .status(400)
           .json({ message: "검색하신 가게 정보가 없어요." });
       }
-      resultData = stores;
-    }
 
-    console.log("resultData >>>>>>>>>>> ", resultData);
-    const imgUrlsArray = resultData.map((arr) =>
-      arr.Posts[0].imgUrl.split(","),
-    );
-    const paramsArray = imgUrlsArray.map((urls) =>
-      urls.map((url) => ({
-        Bucket: bucketName,
-        Key: url,
-      })),
-    );
+      const imgUrlsArray = stores.map((store) =>
+        store.imgUrl.split(",").map((url) => ({
+          Bucket: bucketName,
+          Key: url,
+        }))
+      );
 
-    const signedUrlsArray = await Promise.all(
-      paramsArray.map(async (params) => {
-        const commands = params.map((param) => new GetObjectCommand(param));
-        const urls = await Promise.all(
-          commands.map((command) => getSignedUrl(s3, command)),
-        );
-        return urls;
-      }),
-    );
+      const signedUrlsArray = await Promise.all(
+        imgUrlsArray.map(async (params) => {
+          const commands = params.map((param) =>
+            new GetObjectCommand(param)
+          );
+          const urls = await Promise.all(
+            commands.map((command) => getSignedUrl(s3, command))
+          );
+          return urls;
+        })
+      );
 
-    for (let i = 0; i < resultData.length; i++) {
-      resultData[i].Posts[0].imgUrl = signedUrlsArray[i];
+      resultData = stores.map((store, i) => {
+        store.imgUrl = signedUrlsArray[i];
+        return store;
+      });
     }
 
     return res.status(200).json(resultData);

@@ -28,10 +28,10 @@ const s3 = new S3Client({
 });
 
 const fileFilter = (req, file, next) => {
-  const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+  const allowedTypes = ["image/webp"];
 
   if (!allowedTypes.includes(file.mimetype)) {
-    const error = new Error("jpeg, jpg, png만 입력해주세요.");
+    const error = new Error("webp 확장자만 입력해주세요.");
     error.code = "INCORRECT_FILETYPE";
     return next(error, false);
   }
