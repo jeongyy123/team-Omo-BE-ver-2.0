@@ -95,6 +95,8 @@ export class SearchingRepository {
         postId: true,
         likeCount: true,
         commentCount: true,
+        star: true,
+        content: true,
         Location: {
           select: {
             locationId: true,
