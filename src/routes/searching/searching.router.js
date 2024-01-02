@@ -26,8 +26,7 @@ const s3 = new S3Client({
 /* 검색 기능 (유저, 가게 이름) */
 router.get("/posts/main/searching", async (req, res, next) => {
   try {
-    const validation = await searchingSchema.validateAsync(req.body);
-    const { nickname, storeName } = validation;
+    const { nickname, storeName } = req.query;
 
     if (!nickname && !storeName) {
       return res
