@@ -499,4 +499,219 @@ router.patch(
   },
 );
 
+// 다른 사람의 프로필 조회
+router.get(
+  "/users/profile/:nickname",
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      const nickname = req.params.nickname;
+
+      const otherUserInfo = await prisma.users.findFirst({
+        where: {
+          nickname: nickname,
+        },
+        select: {
+          userId: true,
+          email: true,
+          nickname: true,
+          imgUrl: true,
+        },
+      });
+
+      console.log("otherUserInfo >>>>>>>>>>>>>>", otherUserInfo);
+
+      if (!otherUserInfo) {
+        return res
+          .status(404)
+          .json({ errorMessage: "해당 사용자를 찾을 수 없습니다." });
+      }
+
+      // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
+      if (otherUserInfo.imgUrl && otherUserInfo.imgUrl.length === 64) {
+        const getObjectParams = {
+          Bucket: bucketName, // 버킷 이름
+          Key: otherUserInfo.imgUrl, // 이미지 키
+        };
+
+        try {
+          // User GetObjectCommand to create the url
+          const command = new GetObjectCommand(getObjectParams);
+          const url = await getSignedUrl(s3, command);
+          otherUserInfo.imgUrl = url;
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      return res.status(200).json({ data: otherUserInfo });
+      //
+    } catch (error) {
+      console.error(error);
+
+      return res
+        .status(500)
+        .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
+    }
+  },
+);
+
+// 다른 사람의 게시글 조회
+router.get(
+  "/users/profile/:nickname/posts",
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      const { nickname } = req.params; // 다른 사용자의 닉네임
+      const pageSize = req.query.pageSize || 10; // 한 페이지에 표시할 데이터의 갯수
+
+      // https://tonadus.shop/api/users/profile/:nickname/posts?lastPostId=5&pageSize=10
+
+      // 유저 닉네임으로 해당 유저의 userId 가져오기
+      const user = await prisma.users.findFirst({
+        where: {
+          nickname: nickname,
+        },
+        select: {
+          userId: true,
+        },
+      });
+
+      console.log(
+        "해당 닉네임을 사용하는 이용자의 userId >>>>>>>>>",
+        user.userId,
+      );
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ errorMessage: "해당 사용자를 찾을 수 없습니다." });
+      }
+
+      // 해당 유저가 작성한 게시글의 갯수
+      const userPostsCount = await prisma.posts.count({
+        where: {
+          UserId: user.userId,
+        },
+      });
+
+      console.log(
+        "해당 닉네임을 사용하는 사람이 쓴 게시글 갯수 >>>>>>>>>>",
+        userPostsCount,
+      );
+
+      // 이전 페이지의 마지막 postId를 쿼리스트링을 통해 받아옴
+      const lastPostId = req.query.lastPostId || null;
+
+      const userPosts = await prisma.posts.findMany({
+        where: {
+          UserId: +user.userId,
+          // 이전 페이지의 마지막 lastPostId보다 큰 값일 경우에만 추가 필터링
+          postId: lastPostId ? { gt: +lastPostId } : undefined,
+        },
+        // 내 게시글
+        select: {
+          postId: true,
+          UserId: true,
+          User: {
+            select: {
+              nickname: true, // 현재 유저 네임!
+            },
+          },
+          imgUrl: true,
+          content: true,
+          likeCount: true,
+          commentCount: true, // 각 게시글의 댓글 갯수
+          createdAt: true,
+          updatedAt: true,
+          Comments: {
+            // 게시글에 있는 댓글
+            select: {
+              UserId: true,
+              PostId: true,
+              content: true,
+              createdAt: true,
+              User: {
+                select: {
+                  nickname: true, // 댓글 작성자의 닉네임
+                  imgUrl: true, // 댓글 작성자의 프로필 사진
+                },
+              },
+            },
+          },
+          Location: {
+            select: {
+              address: true,
+            },
+          },
+        },
+        take: +pageSize, // 가져올 데이터의 갯수
+        orderBy: {
+          postId: "desc", // 커서 기반 정렬
+        },
+      });
+
+      console.log("userPosts >>>>>>>>>", userPosts);
+
+      //-------------------------------------------------------
+      for (let i = 0; i < userPosts.length; i++) {
+        const imgUrls = userPosts[i].imgUrl.split(","); // image urls for each post
+        console.log("imgUrls >>>", imgUrls);
+
+        const imgUrl = []; // one to many
+
+        // 각 게시글에 있는 이미지들
+        for (let j = 0; j < imgUrls.length; j++) {
+          const currentImgUrl = imgUrls[j];
+          console.log("currentImgUrl >>>>", currentImgUrl);
+
+          // 지금 db에 저장된 이미지 주소는 64자의 해시화된 값이기 때문이다
+          if (currentImgUrl.length === 64) {
+            // S3에서 객체를 가져오기 위해 사용될 매개변수들
+            // S3의 getObject 함수를 호출하여 해당 객체를 가져온다
+            const getObjectParams = {
+              Bucket: bucketName, // 객체들을 보관하는 s3의 저장공간
+              Key: currentImgUrl, // 가져오려는 객체의 키 => 이를 사용하여 객체를 식별
+            };
+
+            try {
+              // getObjectCommand는 AWS SDK에서 "가져오기 작업"을 수행하기 위한 명령(Command) 객체를 생성
+              // getSignedUrl 함수를 호출하여 해당 객체에 대한 서명된 URL을 얻기 위해 AWS SDK에 요청
+              const command = new GetObjectCommand(getObjectParams);
+              // getSignedUrl 함수는 AWS SDK에서 제공하는 함수 중 하나로, 서명된 URL을 얻기 위해 사용
+              // s3 - s3의 서비스 객체
+              // command - : 서명된 URL을 얻기 위해 실행할 명령(Command) 객체가 전달
+              // 이 작업은 비 동기적으로 이루어지므로 await를 사용하여 URL을 기다린 후에 url 변수에 저장
+              const url = await getSignedUrl(s3, command);
+              imgUrl.push(url); // 서명된 URL을 배열에 추가
+            } catch (error) {
+              console.error(
+                `${currentImgUrl}을 가져오면서 문제가 발생하였습니다.`,
+                error,
+              );
+            }
+          } else {
+            imgUrl.push(currentImgUrl); // 서명되지 않은 URL은 그대로 유지
+          }
+        }
+
+        // 각 포스트에 있는 imgUrl에 이미지 1개 또는 여러개를 담은 배열을 전달
+        userPosts[i].imgUrl = imgUrl;
+      }
+      //-------------------------------------------------------
+
+      return res.status(200).json({
+        postsCount: userPostsCount,
+        data: userPosts,
+      });
+    } catch (error) {
+      console.error(error);
+
+      return res
+        .status(500)
+        .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
+    }
+  },
+);
+
 export default router;
