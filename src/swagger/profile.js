@@ -277,9 +277,9 @@
 
 /**
  * @swagger
- * /users/profile/{nickname}:
+ * /users/profile/:nickname:
  *   get:
- *     summary: 닉네임으로 사용자 프로필 가져오기
+ *     summary: 닉네임으로 다른 사람의 프로필 조회하기
  *     description: 닉네임으로 사용자 프로필 정보를 검색한다
  *     tags:
  *        - Profiles
@@ -333,9 +333,9 @@
 
 /**
  * @swagger
- * /users/profile/{nickname}/posts:
+ * /users/profile/:nickname/posts:
  *   get:
- *     summary: 사용자의 닉네임으로 게시물 가져오기
+ *     summary: 닉네임으로 다른 사람이 쓴 게시글 조회하기 (닉네임을 사용하는 사람의 프로필 페이지에서)
  *     description: 페이지네이션을 사용하여 사용자의 닉네임으로 게시물 검색
  *     tags:
  *       - Profiles
