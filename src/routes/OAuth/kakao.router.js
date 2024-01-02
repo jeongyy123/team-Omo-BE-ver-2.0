@@ -54,7 +54,7 @@ router.get(
         // 클라이언트는 새로운 페이지로 이동하면서 새로운 헤더를 받지 않는다.
         // 리다이렉션 시에 토큰들과 함께 클라이언트에게 전달
         res.redirect(
-          `https://localhost:5173/?accessToken=${accessToken}&refreshToken=${refreshToken}&userId=${userId}`,
+          `https://omo-six.vercel.app/?accessToken=${accessToken}&refreshToken=${refreshToken}&userId=${userId}`,
         );
       } else {
         res.status(401).json({ message: "카카오 로그인 실패" });

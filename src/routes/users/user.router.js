@@ -273,7 +273,7 @@ router.post("/login", async (req, res, next) => {
         userId: findUser.userId,
       },
       accessKey,
-      { expiresIn: "30s" },
+      { expiresIn: "2h" },
     );
 
     // Issue refresh token
@@ -327,7 +327,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
     const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
     const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
     const { refreshtoken } = req.headers;
-    
+
     console.log("Test >>>", refreshtoken);
     console.log("req.headers >>>", req.headers);
 
@@ -357,7 +357,6 @@ router.post("/tokens/refresh", async (req, res, next) => {
 
     console.log("Check userId from decodedToken", userId);
 
-    // ========================================================================
     // 데이터베이스에서 유효한 리프레시 토큰인지 확인
     const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
       where: {
@@ -389,7 +388,7 @@ router.post("/tokens/refresh", async (req, res, next) => {
         userId: userId,
       },
       accessKey,
-      { expiresIn: "30s" },
+      { expiresIn: "2h" },
     );
 
     const newRefreshToken = jwt.sign(
