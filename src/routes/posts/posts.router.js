@@ -235,10 +235,16 @@ router.post(
       const category = await prisma.categories.findFirst({
         where: { categoryName },
       });
+      console.log("address>>>>>>>>>", address)
+      console.log("address>>>>>>>>>", address.split(" ")[1].trim())
+
+      const a = address.split(" ")[1]
 
       const district = await prisma.districts.findFirst({
-        where: { districtName: address.split(" ")[1] },
+        where: { districtName: a},
       });
+
+      console.log("district>>>>>>", district)
 
       if (!district) {
         return res.status(400).json({ message: "지역이 존재하지 않습니다." });
