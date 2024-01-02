@@ -163,7 +163,7 @@ export class PostsRepository {
             address,
             latitude,
             longitude,
-            starAvg: star || 0,
+            starAvg: star,
             postCount: 1,
             placeInfoId,
             Category: { connect: { categoryId: +category.categoryId } },

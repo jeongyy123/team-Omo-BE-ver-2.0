@@ -57,8 +57,8 @@ export class PostsService {
       throw err;
     }
 
-    // await getRepliesImageS3(post.Comments); // 추가
-    // await getProfileImageS3(post.Comments); // 추가
+    await getRepliesImageS3(post.Comments); // 추가
+    await getProfileImageS3(post.Comments); // 추가
     await getSingleImageS3(post.User);
     await getImageS3(post);
 
@@ -134,22 +134,32 @@ export class PostsService {
         crypto.randomBytes(bytes).toString("hex");
       const imgName = randomImgName();
 
-      // // 이미지 사이즈 조정
-      // const buffer = await jimp
-      //   .read(file.buffer)
-      //   .then((image) =>
-      //     image
-      //       .resize(jimp.AUTO, 500)
-      //       .quality(70)
-      //       .getBufferAsync(jimp.MIME_JPEG),
-      //   );
+      let params;
+      if (file.mimetype === "image/webp") {
+        params = {
+          Bucket: bucketName,
+          Key: imgName,
+          Body: file.buffer, //jimp 사용 시 buffer로 바꿔야함
+          ContentType: file.mimetype,
+        };
+      } else {
+        // 이미지 사이즈 조정
+        const buffer = await jimp
+          .read(file.buffer)
+          .then((image) =>
+            image
+              .resize(jimp.AUTO, 500)
+              .quality(70)
+              .getBufferAsync(jimp.MIME_JPEG),
+          );
 
-      const params = {
-        Bucket: bucketName,
-        Key: imgName,
-        Body: file.buffer, //jimp 사용 시 buffer로 바꿔야함
-        ContentType: file.mimetype,
-      };
+        params = {
+          Bucket: bucketName,
+          Key: imgName,
+          Body: buffer, //jimp 사용 시 buffer로 바꿔야함
+          ContentType: file.mimetype,
+        };
+      }
       const command = new PutObjectCommand(params);
       await s3.send(command);
 
