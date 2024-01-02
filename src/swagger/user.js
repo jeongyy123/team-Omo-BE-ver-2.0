@@ -265,7 +265,7 @@
  * paths:
  *  /auth/tokens/refresh:
  *    post:
- *      summary: 엑세스 토큰 재발급
+ *      summary: 엑세스/리프레시 토큰 재발급
  *      description: 유효한 리프레시 토큰을 가지고 엑세스 토큰을 재발급 받는다
  *      tags:
  *        - Users

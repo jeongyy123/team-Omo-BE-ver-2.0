@@ -274,3 +274,182 @@
  *                    type: string
  *                    example: 서버에서 에러가 발생하였습니다
  */
+
+/**
+ * @swagger
+ * /users/profile/{nickname}:
+ *   get:
+ *     summary: 닉네임으로 사용자 프로필 가져오기
+ *     description: 닉네임으로 사용자 프로필 정보를 검색한다
+ *     tags:
+ *        - Profiles
+ *     parameters:
+ *       - in: path
+ *         name: nickname
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 검색할 사용자의 닉네임
+ *     responses:
+ *       '200':
+ *         description: 사용자 프로필 정보를 성공적으로 반환할 때
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: integer
+ *                     email:
+ *                       type: string
+ *                     nickname:
+ *                       type: string
+ *                     imgUrl:
+ *                       type: string
+ *       '404':
+ *         description: 제공된 닉네임을 가진 사용자를 찾을 수 없을 때
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorMessage:
+ *                   type: string
+ *                   description: 사용자를 찾을 수 없음을 나타내는 오류 메시지를 반환한다
+ *       '500':
+ *         description: 서버에서 에러가 발생하였을 경우
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errorMessage:
+ *                   type: string
+ *                   example: 서버에서 에러가 발생하였습니다
+ */
+
+/**
+ * @swagger
+ * /users/profile/{nickname}/posts:
+ *   get:
+ *     summary: 사용자의 닉네임으로 게시물 가져오기
+ *     description: 페이지네이션을 사용하여 사용자의 닉네임으로 게시물 검색
+ *     tags:
+ *       - Profiles
+ *     parameters:
+ *       - in: path
+ *         name: nickname
+ *         required: true
+ *         description: 유저의 닉네임
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: pageSize
+ *         description: 페이지당 게시물 수
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: lastPostId
+ *         description: 이전 페이지의 마지막 postId
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: 닉네임으로 조회한 사용자가 쓴 게시글을 조회한다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 postsCount:
+ *                   type: integer
+ *                   description: 사용자 게시물의 총 개수
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       postId:
+ *                         type: integer
+ *                         description: postId
+ *                       UserId:
+ *                         type: integer
+ *                         description: 게시글을 작성한 사람의 유저 아이디
+ *                       User:
+ *                         type: object
+ *                         properties:
+ *                           nickname:
+ *                             type: string
+ *                             description: 게시글을 작성한 사람의 닉네임
+ *                       imgUrl:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                           description: 게시글 이미지
+ *                       content:
+ *                         type: string
+ *                         description: 게시글 내용
+ *                       likeCount:
+ *                         type: integer
+ *                         description: 게시글 좋아요 갯수
+ *                       commentCount:
+ *                         type: integer
+ *                         description: 해당 게시글의 댓글 갯수
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         description: 게시물이 작성된 날짜 및 시간
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         description: 게시물이 마지막으로 업데이트된 날짜 및 시간
+ *                       Comments:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             UserId:
+ *                               type: integer
+ *                               description: 댓글을 단 사용자의 userId
+ *                             PostId:
+ *                               type: integer
+ *                               description: 댓글이 달린 게시물의 postId
+ *                             content:
+ *                               type: string
+ *                               description: 댓글 내용
+ *                             createdAt:
+ *                               type: string
+ *                               format: date-time
+ *                               description: 댓글이 작성된 날짜 및 시간
+ *                             User:
+ *                               type: object
+ *                               properties:
+ *                                 nickname:
+ *                                   type: string
+ *                                   description: 댓글을 단 사용자의 닉네임
+ *                                 imgUrl:
+ *                                   type: string
+ *                                   description: 댓글을 단 사용자의 프로필 사진 URL
+ *                       Location:
+ *                         type: object
+ *                         properties:
+ *                           address:
+ *                             type: string
+ *                             description: 게시물과 관련된 주소
+ *       '404':
+ *         description: 사용자를 찾을 수 없을 경우
+ *       '500':
+ *          description: 서버에서 에러가 발생했을 경우
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: object
+ *                properties:
+ *                  errorMessage:
+ *                    type: string
+ *                    example: 서버에서 에러가 발생하였습니다.
+ */
