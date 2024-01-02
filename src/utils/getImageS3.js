@@ -1,16 +1,8 @@
-import express from "express";
 import multer from "multer";
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 import crypto from "crypto";
-
-const router = express.Router();
 
 dotenv.config();
 
@@ -29,8 +21,6 @@ const s3 = new S3Client({
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
-const randomImgName = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
 
 //1개의 게시글 - 1개 이미지 조회
 export const getSingleImageS3 = async (post) => {

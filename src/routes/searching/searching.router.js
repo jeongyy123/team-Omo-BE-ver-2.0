@@ -1,17 +1,8 @@
 import express from "express";
 import { prisma } from "../../utils/prisma/index.js";
 import { searchingSchema } from "../../validations/searching.validation.js";
-import {
-  getManyImagesS3,
-  getImageS3,
-  getProfileImageS3,
-} from "../../utils/getImageS3.js";
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
+import { getManyImagesS3 } from "../../utils/getImageS3.js";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 
@@ -32,105 +23,10 @@ const s3 = new S3Client({
   region,
 });
 
-/**
- * @swagger
- * paths:
- *  /posts/main/searching:
- *    get:
- *      summary: 유저 또는 가게 이름을 검색합니다.
- *      description: 유저 또는 가게 이름으로 검색하여 결과를 반환하는 API입니다.
- *      tags:
- *        - Searching
- *      parameters:
- *        - name: nickname
- *          in: query
- *          description: 검색하려는 유저의 닉네임
- *          required: false
- *          schema:
- *            type: string
- *        - name: storeName
- *          in: query
- *          description: 검색하려는 가게의 이름
- *          required: false
- *          schema:
- *            type: string
- *      produces:
- *        - application/json
- *      responses:
- *        '200':
- *          description: 검색 결과를 성공적으로 반환한 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: array
- *                items:
- *                  type: object
- *                  properties:
- *                    nickname:
- *                      type: string
- *                      example: 유저 닉네임
- *                    imgUrl:
- *                      type: string
- *                      format: uri
- *                      example: "https://example.com/user-profile.jpg"
- *                    storeName:
- *                      type: string
- *                      example: 가게 이름
- *                    address:
- *                      type: string
- *                      example: 서울시 강남구 가로수길 123
- *                    starAvg:
- *                      type: number
- *                      example: 4.5
- *                    Posts:
- *                      type: array
- *                      items:
- *                        type: object
- *                        properties:
- *                          imgUrl:
- *                            type: string
- *                            format: uri
- *                            example: "https://example.com/post-image.jpg"
- *                          content:
- *                            type: string
- *                            example: 게시물 내용
- *                          likeCount:
- *                            type: number
- *                            example: 10
- *                          commentCount:
- *                            type: number
- *                            example: 5
- *                          createdAt:
- *                            type: string
- *                            format: date-time
- *                            example: 2023-01-01T12:00:00Z
- *        '400':
- *          description: 요청이 잘못된 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  message:
- *                    type: string
- *                    example: nickname 또는 storeName 둘 중 하나만 입력해주세요.
- *        '500':
- *          description: 서버에서 에러가 발생한 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  message:
- *                    type: string
- *                    example: 검색에서 에러가 발생했습니다.
- */
-
 /* 검색 기능 (유저, 가게 이름) */
 router.get("/posts/main/searching", async (req, res, next) => {
   try {
-    const validation = await searchingSchema.validateAsync(req.body);
-    const { nickname, storeName } = validation;
+    const { nickname, storeName } = req.query;
 
     if (!nickname && !storeName) {
       return res
@@ -139,25 +35,23 @@ router.get("/posts/main/searching", async (req, res, next) => {
     }
 
     if (nickname && storeName) {
-      return res
-        .status(400)
-        .json({
-          message: "nickname 또는 storeName 둘 중 하나만 입력해주세요.",
-        });
+      return res.status(400).json({
+        message: "nickname 또는 storeName 둘 중 하나만 입력해주세요.",
+      });
     }
 
     let resultData;
     if (nickname) {
+      //userId를 찾고, 해당 post를 찾기
       const users = await prisma.users.findMany({
-        select: {
-          nickname: true,
-          imgUrl: true,
-        },
         where: {
           nickname: {
             contains: nickname,
-          },
+          }
         },
+        select: {
+          userId: true,
+        }
       });
 
       if (!users || users.length === 0) {
@@ -165,70 +59,143 @@ router.get("/posts/main/searching", async (req, res, next) => {
           .status(400)
           .json({ message: "검색하신 유저의 정보가 없어요." });
       }
-      resultData = users;
 
-      await getManyImagesS3(resultData);
+      const usersPosts = await Promise.all(users.map(async (user) => {
+        const posts = await prisma.posts.findMany({
+          where: { UserId: user.userId },
+          select: {
+            User: {
+              select: {
+                nickname: true,
+              },
+            },
+            Category: {
+              select: {
+                categoryName: true,
+              },
+            },
+            Location: {
+              select: {
+                locationId: true,
+                storeName: true,
+                address: true,
+                starAvg: true,
+                postCount: true,
+              },
+            },
+            postId: true,
+            imgUrl: true,
+            content: true,
+            likeCount: true,
+            commentCount: true,
+            createdAt: true,
+          },
+          orderBy: { postId: "desc" }
+        });
+
+        const imgUrlsArray = posts.map((post) =>
+          post.imgUrl.split(",").map((url) => ({
+            Bucket: bucketName,
+            Key: url,
+          }))
+        );
+
+        const signedUrlsArray = await Promise.all(
+          imgUrlsArray.map(async (params) => {
+            const commands = params.map((param) =>
+              new GetObjectCommand(param)
+            );
+            const urls = await Promise.all(
+              commands.map((command) => getSignedUrl(s3, command))
+            );
+            return urls;
+          })
+        );
+
+        return posts.map((post, i) => {
+          post.imgUrl = signedUrlsArray[i];
+          return post;
+        });
+      })
+      );
+      resultData = usersPosts.flat();
+
+      if (!resultData || resultData.length === 0) {
+        return res.status(404).json({ message: "해당 유저가 작성한 게시글이 없어요." })
+      }
     }
 
     if (storeName) {
-      const stores = await prisma.locations.findMany({
+      const stores = await prisma.posts.findMany({
         where: {
-          storeName: {
-            contains: storeName,
-          },
+          Location: {
+            storeName: {
+              contains: storeName
+            }
+          }
         },
         select: {
-          storeName: true,
-          address: true,
-          starAvg: true,
-          Posts: {
+          imgUrl: true,
+          content: true,
+          likeCount: true,
+          commentCount: true,
+          createdAt: true,
+          content: true,
+          Location: {
             select: {
-              imgUrl: true,
-              content: true,
-              likeCount: true,
-              commentCount: true,
-              createdAt: true,
-            },
-            take: 1,
+              locationId: true,
+              storeName: true,
+              address: true,
+              starAvg: true,
+              latitude: true,
+              longitude: true,
+              starAvg: true,
+              postCount: true,
+              placeInfoId: true,
+            }
+          },
+          Category: {
+            select: {
+              categoryName: true
+            }
           },
           User: {
             select: {
               nickname: true,
             },
           },
-        },
-      });
+        }
+      })
 
       if (!stores || stores.length === 0) {
         return res
           .status(400)
           .json({ message: "검색하신 가게 정보가 없어요." });
       }
-      resultData = stores;
-    }
 
-    const imgUrlsArray = resultData.map((arr) =>
-      arr.Posts[0].imgUrl.split(","),
-    );
-    const paramsArray = imgUrlsArray.map((urls) =>
-      urls.map((url) => ({
-        Bucket: bucketName,
-        Key: url,
-      })),
-    );
+      const imgUrlsArray = stores.map((store) =>
+        store.imgUrl.split(",").map((url) => ({
+          Bucket: bucketName,
+          Key: url,
+        }))
+      );
 
-    const signedUrlsArray = await Promise.all(
-      paramsArray.map(async (params) => {
-        const commands = params.map((param) => new GetObjectCommand(param));
-        const urls = await Promise.all(
-          commands.map((command) => getSignedUrl(s3, command)),
-        );
-        return urls;
-      }),
-    );
+      const signedUrlsArray = await Promise.all(
+        imgUrlsArray.map(async (params) => {
+          const commands = params.map((param) =>
+            new GetObjectCommand(param)
+          );
+          const urls = await Promise.all(
+            commands.map((command) => getSignedUrl(s3, command))
+          );
+          return urls;
+        })
+      );
 
-    for (let i = 0; i < resultData.length; i++) {
-      resultData[i].Posts[0].imgUrl = signedUrlsArray[i];
+      resultData = stores.map((store, i) => {
+        store.imgUrl = signedUrlsArray[i];
+        return store;
+      });
     }
 
     return res.status(200).json(resultData);

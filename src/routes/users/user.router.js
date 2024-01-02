@@ -4,7 +4,6 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
-// import { redisClient } from "../../utils/redis.util.js";
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import {
   registerSchema,
@@ -15,48 +14,6 @@ import {
 
 dotenv.config();
 const router = express.Router();
-
-/**
- * @swagger
- * paths:
- *  /auth/verify-email:
- *    post:
- *     summary: 이메일 인증 요청
- *     description: 회원가입할 때 이메일 인증을 요청하면 인증 이메일이 해당 이메일 주소로 전송한다
- *     tags:
- *       - Users
- *     responses:
- *      '200':
- *        description: 이메일 유효성 검증 후 해당 이메일로 인증번호를 성공적으로 전송한 경우
- *        content:
- *         applicaiton/json:
- *           schema:
- *             type: object
- *             properties:
- *               message:
- *                 type: string
- *                 example: 메일 전송에 성공하였습니다.
- *      '409':
- *        description: 입력한 이메일이 이미 존재하는 경우
- *        content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               errorMessage:
- *                 type: string
- *                 example: 중복된 이메일입니다.
- *      '500':
- *        description: 이메일 전송에 실패한 경우
- *        content:
- *          application/json:
- *            schema:
- *              type: object
- *              properties:
- *                errorMessage:
- *                  type: string
- *                  example: 메일 전송에 실패하였습니다..
- */
 
 // 랜덤한 숫자 생성 함수
 function generateRandomNumber(min, max) {
@@ -150,48 +107,6 @@ router.post("/verify-email", async (req, res, next) => {
   }
 });
 
-/**
- * @swagger
- * paths:
- *  /auth/verify-authentication-code:
- *   post:
- *    summary: 인증코드 확인
- *    description: 입력받은 인증 코드가 올바른지 확인한다
- *    tags:
- *      - Users
- *    responses:
- *      '200':
- *        description: 입력한 인증코드가 서버에서 발급한 인증코드와 일치하는 경우
- *        content:
- *          application/json:
- *            schema:
- *              type: object
- *              properties:
- *                message:
- *                  type: string
- *                  example: 성공적으로 인증되었습니다
- *      '404':
- *        description: 입력한 인증번호가 서버에서 발급한 인증코드와 일치하지 않는 경우
- *        content:
- *          application/json:
- *            schema:
- *              type: object
- *              properties:
- *                errorMessage:
- *                  type: string
- *                  example: 인증번호가 일치하지 않습니다
- *      '500':
- *        description: 서버에서 에러가 발생한 경우
- *        content:
- *          application/json:
- *            schema:
- *              type: object
- *              properties:
- *                errorMessage:
- *                  type: string
- *                  example: 서버에서 에러가 발생하였습니다.
- */
-
 router.post("/verify-authentication-code", async (req, res, next) => {
   try {
     const { authenticationCode, email } = req.body;
@@ -253,48 +168,6 @@ router.post("/verify-authentication-code", async (req, res, next) => {
   }
 });
 
-/**
- * @swagger
- * paths:
- *  /auth/chcek-nickname:
- *   post:
- *    summary: 닉네임 중복확인
- *    description: 닉네임이 이미 사용중인 닉네임인지 확인한다
- *    tags:
- *      - Users
- *    responses:
- *     '200':
- *       description: 입력받은 닉네임이 유효한 경우
- *       content:
- *        application/json:
- *         schema:
- *          type: object
- *          properties:
- *           message:
- *            type: string
- *            example: 중복검사 완료
- *        '409':
- *          description: 다른 사용자가 이미 같은 닉네임을 사용중인 경우
- *          content:
- *           application/json:
- *            schema:
- *             type: object
- *             properties:
- *              errorMessage:
- *               type: string
- *               example: 이미 사용 중인 닉네임입니다. 다른 닉네임을 사용해주세요.
- *        '500':
- *          description: 서버에서 에러가 발생한 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: 서버에서 에러가 발생하였습니다.
- */
-
 router.post("/check-nickname", async (req, res, next) => {
   try {
     const validation = await nicknameSchema.validateAsync(req.body);
@@ -324,73 +197,6 @@ router.post("/check-nickname", async (req, res, next) => {
       .json({ errorMessage: "서버에서 오류가 발생하였습니다." });
   }
 });
-
-/**
- * @swagger
- * /auth/register:
- *   post:
- *     summary: 사용자 등록
- *     description: POST 방식으로 사용자를 등록한다
- *     tags:
- *       - Users
- *     requestBody:
- *       description: 사용자가 서버에 전달하는 값에 따라 결과 값이 다르다 (사용자 등록)
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               nickname:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *               confirmedPassword:
- *                 type: string
- *     responses:
- *       '201':
- *         description: 회원가입에 성공했을 경우
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                  type: string
- *                  example: "회원가입이 완료되었습니다."
- *       '400':
- *         description: 비밀번호 일치하지 않을 경우
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errorMessage:
- *                  type: string
- *                  example: "비밀번호가 일치하지 않습니다. 다시 확인해주세요."
- *       '409':
- *         description: 중복된 이메일 주소나 닉네임을 입력했을 경우
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errorMessage:
- *                  type: stringnode
- *                  example: "중복된 닉네임입니다. 또는 중복된 이메일입니다."
- *       '500':
- *         description: "서버 에러가 발생했을 경우"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 errorMessage:
- *                  type: string
- *                  example: "서버에서 오류가 발생하였습니다."
- */
 
 /** Register API */
 router.post("/register", async (req, res, next) => {
@@ -432,75 +238,6 @@ router.post("/register", async (req, res, next) => {
   }
 });
 
-/**
- * @swagger
- * paths:
- *  /auth/login:
- *    post:
- *      summary: 로그인
- *      description: 이메일 주소와 비밀번호로 로그인
- *      tags:
- *        - Users
- *      requestBody:
- *        required: true
- *        content:
- *          application/json:
- *            schema:
- *              type: object
- *              properties:
- *                email:
- *                  type: string
- *                password:
- *                  type: string
- *      responses:
- *        '200':
- *          description: 로그인에 성공했을 경우
- *          headers:
- *            Authorization:
- *              description: Bearer token for authentication
- *              schema:
- *                type: string
- *                example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
- *            RefreshToken:
- *              description: Bearer token for refresh purposes
- *              schema:
- *                type: string
- *                example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
- *            message:
- *              type: string
- *              example: "로그인에 성공하였습니다."
- *        '401':
- *          description: 입력된 비밀번호가 일치하지 않을 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: "비밀번호가 일치하지 않습니다."
- *        '404':
- *          description: 유저가 존재하지 않을 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: "해당 이메일로 가입된 계정이 없습니다."
- *        '500':
- *          description: 서버에서 발생한 에러일 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: "서버에서 오류가 발생하였습니다."
- */
-
 /** Login API */
 router.post("/login", async (req, res, next) => {
   try {
@@ -518,15 +255,15 @@ router.post("/login", async (req, res, next) => {
     if (!findUser) {
       return res
         .status(404)
-        .json({ errorMessage: "해당 이메일로 가입된 계정이 없습니다." });
+        .json({ errorMessage: "해당 이메일로 가입된 내역이 없습니다." });
     }
 
     const isMatch = await bcrypt.compare(password, findUser.password);
 
     if (!isMatch) {
-      return res
-        .status(401)
-        .json({ errorMessage: "비밀번호가 일치하지 않습니다." });
+      return res.status(401).json({
+        errorMessage: "비밀번호가 틀립니다. 다시 한 번 확인해 주세요.",
+      });
     }
 
     // Issue access token
@@ -536,7 +273,7 @@ router.post("/login", async (req, res, next) => {
         userId: findUser.userId,
       },
       accessKey,
-      { expiresIn: "1d" },
+      { expiresIn: "2h" },
     );
 
     // Issue refresh token
@@ -548,20 +285,6 @@ router.post("/login", async (req, res, next) => {
       refreshKey,
       { expiresIn: "7d" },
     );
-
-    // =======================================================
-    // 레디스에 리프레시 토큰 저장
-    // 리프레시 토큰을 키로 사용하면 해당 토큰에 대한 사용자 ID를 빠르게 찾을 수 있다.
-    // 특정 리프레시 토큰에 대응하는 사용자를 신속하게 확인할 수 있다
-    // await redisClient.set(findUser.userId, refreshToken);
-
-    // 만료 시간 설정 (7일)
-    // const TTL = 7 * 24 * 60 * 60; // 초 단위
-    // expire 메서드를 호출하여 findUser.userId 키의 만료 시간을 TTL 변수에 지정된 만큼으로 설정
-    // expire 명령어에는 두 개의 인자(키와 TTL)만 필요하다
-    // await redisClient.expire(findUser.userId, TTL);
-
-    // =======================================================
 
     const sevenDaysLater = new Date(); // 현재 시간
     sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
@@ -598,98 +321,108 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
-/**
- * @swagger
- * paths:
- *  /auth/tokens/refresh:
- *    post:
- *      summary: 엑세스 토큰 재발급
- *      description: 유효한 리프레시 토큰을 가지고 엑세스 토큰을 재발급 받는다
- *      tags:
- *        - Users
- *      responses:
- *        '200':
- *          description: 성공적으로 엑세스 토큰이 재발급된 경우
- *          headers:
- *            Authorization:
- *              description: Bearer token for authentication
- *              schema:
- *                type: string
- *                example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
- *            message:
- *              type: string
- *              example: "엑세스 토큰이 정상적으로 재발급되었습니다."
- *        '419':
- *          description: 전달받은 리프레시 토큰이 유효하지 않거나 존재하지 않을 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: Refresh token의 정보가 서버에 존재하지 않습니다.
- *        '500':
- *          description: 서버에서 오류가 발생한 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: 서버에서 오류가 발생하였습니다.
- */
-
 /** 리프레시 토큰을 이용해서 엑세스 토큰을 재발급하는 API */
 router.post("/tokens/refresh", async (req, res, next) => {
   try {
     const accessKey = process.env.ACCESS_TOKEN_SECRET_KEY;
-    const { refreshToken } = req.headers;
+    const refreshKey = process.env.REFRESH_TOKEN_SECRET_KEY;
+    const { refreshtoken } = req.headers;
 
-    // 서버에서도 실제 정보를 가지고 있는지 확인
+    console.log("Test >>>", refreshtoken);
+    console.log("req.headers >>>", req.headers);
+
+    const [tokenType, token] = refreshtoken.split(" ");
+
+    if (!token) {
+      return res
+        .status(400)
+        .json({ errorMessage: "토큰이 존재하지 않습니다." });
+    }
+
+    if (tokenType !== "Bearer") {
+      return res.status(400).json({ errorMessage: "Bearer형식이 아닙니다." });
+    }
+
+    const decodedToken = jwt.verify(token, refreshKey);
+
+    console.log("decodedToken >>>>>>>>", decodedToken);
+
+    if (!decodedToken) {
+      return res
+        .status(401)
+        .json({ errorMessage: "리프레시 토큰이 유효하지 않습니다." });
+    }
+
+    const { userId } = decodedToken;
+
+    console.log("Check userId from decodedToken", userId);
+
+    // 데이터베이스에서 유효한 리프레시 토큰인지 확인
     const isRefreshTokenExist = await prisma.refreshTokens.findFirst({
       where: {
-        refreshToken: refreshToken, // 전달받은 토큰
-        expiresAt: {
-          gte: new Date(), // 만료되지 않은 토큰인지 확인
-        },
+        refreshToken: token, // 전달받은 토큰
+        UserId: +userId,
       },
     });
 
+    console.log("isRefreshTokenExist >>>>>>>>>>", isRefreshTokenExist);
+
     if (!isRefreshTokenExist) {
-      return res.status(419).json({
-        errorMessage: "리프레시 토큰이 유효하지 않습니다.",
-      });
+      return res
+        .status(401)
+        .json({ errorMessage: "토큰이 존재하지 않습니다." });
     }
+
+    // 새로운 엑세스 토큰을 발급하기 전에 이전 리프레시 토큰을 데이터베이스에서 삭제
+    await prisma.refreshTokens.delete({
+      where: {
+        refreshToken: token,
+        // UserId: +userId,
+        tokenId: isRefreshTokenExist.tokenId,
+      },
+    });
 
     const newAccessToken = jwt.sign(
       {
         purpose: "newaccess",
-        userId: isRefreshTokenExist.UserId,
+        userId: userId,
       },
       accessKey,
-      { expiresIn: "1d" },
+      { expiresIn: "2h" },
     );
 
-    // const newRefreshToken = jwt.sign(
-    //   {
-    //     purpose: "newrefresh",
-    //     userId: +userId,
-    //   },
-    //   refreshToken,
-    //   { expiresIn: "14d" },
-    // );
+    const newRefreshToken = jwt.sign(
+      {
+        purpose: "newrefresh",
+        userId: userId,
+      },
+      refreshKey,
+      { expiresIn: "7d" },
+    );
+
+    const sevenDaysLater = new Date(); // 현재 시간
+    sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+
+    // 리프레시 토큰을 생성하고 이를 데이터베이스에 저장한다
+    await prisma.refreshTokens.create({
+      data: {
+        refreshToken: newRefreshToken,
+        UserId: userId,
+        expiresAt: sevenDaysLater, // 유효기간 7일
+      },
+    });
 
     console.log("새로 발급된 AccessToken: ", newAccessToken);
-    // console.log("새로 발급된 RefreshToken: ", newRefreshToken);
+    console.log("새로 발급된 RefreshToken: ", newRefreshToken);
 
+    res.setHeader(
+      "Access-Control-Expose-Headers",
+      "Authorization, RefreshToken",
+    );
     res.setHeader("Authorization", `Bearer ${newAccessToken}`);
-    // res.setHeader("RefreshToken", `Bearer ${newRefreshToken}`);
+    res.setHeader("RefreshToken", `Bearer ${newRefreshToken}`);
 
-    return res
-      .status(200)
-      .json({ message: "엑세스 토큰이 정상적으로 재발급되었습니다." });
+    return res.status(200).json({ userId });
   } catch (error) {
     console.error(error);
 
@@ -699,56 +432,14 @@ router.post("/tokens/refresh", async (req, res, next) => {
   }
 });
 
-// 제공된 토큰이 유효한지 여부를 검증하는 함수
-// function validateToken(token, secretKey) {
-//   try {
-//     const accessToken = token.split(" ")[1]; // Bearer 제거 후 토큰 추출
-//     return jwt.verify(accessToken, secretKey);
-//   } catch (error) {
-//     return null;
-//   }
-// }
-
-/**
- * @swagger
- * paths:
- *  /auth/logout:
- *    post:
- *      summary: 로그아웃
- *      description: 유저를 로그아웃 시키고 토큰을 무효화시킨다
- *      tags:
- *       - Users
- *      responses:
- *        '200':
- *          description: 성공적으로 로그아웃이 된 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  message:
- *                    type: string
- *                    example: "로그아웃 되었습니다."
- *        '500':
- *          description: 서버에서 에러가 발생한 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: 서버에서 에러가 발생하였습니다.
- */
-
 /** Logout API */
 router.post("/logout", authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
 
-    await prisma.tokenBlacklist.create({
-      data: {
-        token: req.headers.authorization,
+    await prisma.refreshTokens.delete({
+      where: {
+        UserId: +userId,
       },
     });
 
@@ -764,67 +455,27 @@ router.post("/logout", authMiddleware, async (req, res, next) => {
   }
 });
 
-/**
- * @swagger
- * paths:
- *  /auth/withdraw:
- *    delete:
- *      summary: 회원탈퇴
- *      description: 회원탈퇴를 요청받은 경우 유저 데이터를 삭제, 발급받은 리프레시 토큰을 무효화 시킨다
- *      tags: [Users]
- *      responses:
- *        '200':
- *          description: 유저의 정보가 삭제되고 성공적으로 회원탈퇴가 된 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  message:
- *                    type: string
- *                    example: "회원탈퇴가 성공적으로 처리되었습니다. 이용해 주셔서 감사합니다."
- *        '500':
- *          description: 서버에서 에러가 발생한 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: 서버에서 에러가 발생하였습니다.
- */
-
 /** Account Deletion API */
 router.delete("/withdraw", authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
 
-    const findRefreshToken = await prisma.refreshTokens.findFirst({
-      where: {
-        UserId: +userId,
-      },
-      select: {
-        refreshToken: true,
-      },
-    });
-
-    if (findRefreshToken) {
-      const refreshToken = findRefreshToken.refreshToken;
-
-      // 리프레시 토큰을 블랙리스트에 추가
-      await prisma.tokenBlacklist.create({
-        data: {
-          token: refreshToken,
+    /** 트랜젝션 사용 - 작업의 완전성을 보장해 주기 위함 */
+    // 트랜젝션 시작
+    // prisma.$transaction을 사용하여 배열 안에 여러 프리즈마 쿼리를 넣어 실행한다
+    // 트랜젝션 내의 모든 작업이 성공하거나, 실패할 경우 롤백된다.
+    await prisma.$transaction([
+      prisma.refreshTokens.deleteMany({
+        where: {
+          UserId: +userId,
         },
-      });
-    }
-
-    await prisma.users.delete({
-      where: {
-        userId: +userId,
-      },
-    });
+      }),
+      prisma.users.delete({
+        where: {
+          userId: +userId,
+        },
+      }),
+    ]); // 트랜젝션 끝
 
     return res.status(200).json({
       message:

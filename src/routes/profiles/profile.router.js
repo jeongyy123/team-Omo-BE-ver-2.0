@@ -39,47 +39,6 @@ const s3 = new S3Client({
   region: bucketRegion,
 });
 
-/**
- * @swagger
- * /users/self/profile:
- *   get:
- *     summary: 사용자 정보 조회.
- *     description: 로그인에 성공한 사용자는 마이페이지에서 자신의 프로필 정보를 조회할 수 있다.
- *     tags:
- *       - Profiles
- *     responses:
- *       200:
- *         description: 사용자의 프로필 정보를 성공적으로 조회했을 경우
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: object
- *                   properties:
- *                     email:
- *                       type: string
- *                       format: email
- *                       description: 사용자의 이메일 주소
- *                     nickname:
- *                       type: string
- *                       description: 사용자의 닉네임
- *                     imgUrl:
- *                       type: string
- *                       description: 사용자의 프로필 이미지
- *       '500':
- *          description: 서버에서 에러가 발생했을 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: 서버에서 에러가 발생하였습니다.
- */
-
 // 마이페이지 회원정보 확인 API
 router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
   try {
@@ -123,101 +82,6 @@ router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
       .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
   }
 });
-
-/**
- * @swagger
- * /users/self/profile/posts:
- *   get:
- *     summary: 마이페이지 게시글 및 댓글 목록 조회
- *     description: 사용자의 닉네임과 함께 게시글과 댓글 목록을 조회한다
- *     tags:
- *      - Profiles
- *     responses:
- *       200:
- *         description: 사용자가 작성한 게시글과 댓글 목록을 성공적으로 불러왔을 경우
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 postsCount:
- *                   type: number
- *                   description: 사용자가 작성한 게시글의 갯수
- *                 data:
- *                   type: object
- *                   properties:
- *                     nickname:
- *                       type: string
- *                       description: 사용자의 닉네임
- *                     Posts:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           postId:
- *                             type: number
- *                             description: 게시글의 고유 번호
- *                           UserId:
- *                             type: number
- *                             description: 작성한 사용자의 고유 번호
- *                           imgUrl:
- *                             type: string
- *                             description: 게시글 이미지
- *                           content:
- *                             type: string
- *                             description: 게시글 내용
- *                           likeCount:
- *                             type: number
- *                             description: 게시글 좋아요 갯수
- *                           commentCount:
- *                             type: number
- *                             description: 게시글의 댓글 갯수
- *                           createdAt:
- *                             type: string
- *                             format: date-time
- *                             description: 게시글 작성 날짜
- *                           updatedAt:
- *                             type: string
- *                             format: date-time
- *                             description: 게시글이 업데이트 된 날짜
- *                           Comments:
- *                             type: array
- *                             items:
- *                               type: object
- *                               properties:
- *                                 UserId:
- *                                   type: number
- *                                   description: 댓글을 작성한 사용자의 고유 번호
- *                                 PostId:
- *                                   type: number
- *                                   description: 댓글이 달린 게시글의 고유 번호
- *                                 content:
- *                                   type: string
- *                                   description: 댓글 내용
- *                                 createdAt:
- *                                   type: string
- *                                   format: date-time
- *                                   description: 댓글이 작성된 날짜
- *                                 User:
- *                                   type: object
- *                                   properties:
- *                                     nickname:
- *                                       type: string
- *                                       description: 댓글을 작성한 사용자 닉네임.
- *                                     imgUrl:
- *                                       type: string
- *                                       description: 댓글을 작성한 사용자의 닉네임
- *       '500':
- *          description: 서버에서 에러가 발생했을 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: 서버에서 에러가 발생하였습니다.
- */
 
 // 마이페이지 게시글 조회 API
 router.get(
@@ -286,7 +150,7 @@ router.get(
         },
         take: +pageSize, // 가져올 데이터의 갯수
         orderBy: {
-          postId: "asc", // 커서 기반 정렬
+          postId: "desc", // 커서 기반 정렬
         },
       });
 
@@ -351,75 +215,6 @@ router.get(
   },
 );
 
-/**
- * @swagger
- * paths:
- *  /users/self/profile/bookmark:
- *    get:
- *      summary: 사용자가 북마크한 장소들의 목록들을 불러온다
- *      description: 로그인에 성공한 사용자는 자신이 북마크한 장소들의 목록들을 조회할 수 있다
- *      tags:
- *        - Profiles
- *      responses:
- *        '200':
- *          description: 사용자가 북마크한 장소들의 목록을 성공적으로 불러왔을 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  bookmarkCount:
- *                    type: integer
- *                    description: 사용자가 북마크한 장소들의 객수
- *                    example: 10
- *                  data:
- *                    type: array
- *                    description: 사용자가 북마크한 장소들의 목록들
- *                    items:
- *                      type: object
- *                      properties:
- *                        Location:
- *                          type: object
- *                          properties:
- *                            locationId:
- *                              type: integer
- *                              description: 북마크한 장소의 고유 번호
- *                            storeName:
- *                              type: string
- *                              description: 북마크한 장소 이름
- *                            address:
- *                              type: string
- *                              description: 북마크한 장소의 주소
- *                            starAvg:
- *                              type: number
- *                              description: 해당 장소의 별점 평균
- *                            Posts:
- *                              type: array
- *                              description: 장소에 관련관 게시글들의 목록
- *                              items:
- *                                type: object
- *                                properties:
- *                                  LocationId:
- *                                    type: integer
- *                                    description: 장소 고유의 번호
- *                                  likeCount:
- *                                    type: integer
- *                                    description: 해당하는 장소에 관련된 게시글의 좋아요 갯수
- *                                  imgUrl:
- *                                    type: string
- *                                    description: 해당하는 장소의 이미지 주소
- *        '500':
- *          description: 서버에서 에러가 발생했을 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: 서버에서 에러가 발생하였습니다.
- */
-
 // 마이페이지 북마크
 router.get(
   "/users/self/profile/bookmark",
@@ -462,6 +257,9 @@ router.get(
               address: true,
               starAvg: true,
               postCount: true,
+              placeInfoId: true,
+              latitude: true,
+              longitude: true,
               Posts: {
                 select: {
                   LocationId: true,
@@ -566,78 +364,6 @@ const storage = multer.memoryStorage();
 // multer로 업로드 기능을 생성. 항상 이미지를 메모리에 저장하도록 하기 위함이다.
 const upload = multer({ storage: storage, fileFilter });
 
-/**
- * @swagger
- * paths:
- *  /users/self/profile/edit:
- *    patch:
- *      summary: 사용자 프로필 수정
- *      description: 사용자는 자신의 프로필을 수정할 수 있다
- *      tags:
- *        - Profiles
- *      requestBody:
- *        required: true
- *        content:
- *          multipart/form-data:
- *            schema:
- *              type: object
- *              properties:
- *                nickname:
- *                  type: string
- *                  description: 새로운 닉네임
- *                newPassword:
- *                  type: string
- *                  description: 새로운 비밀번호
- *                confirmedPassword:
- *                  type: string
- *                  description: 입력된 새로운 비밀번호 재확인
- *                imgUrl:
- *                  type: string
- *                  format: binary
- *                  description: 프로필 사진 수정하기 위해서 업로드
- *      responses:
- *        '201':
- *          description: 프로필이 성공적으로 수정되었을 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  message:
- *                    type: string
- *                    message: 회원정보가 수정되었습니다.
- *        '400':
- *          description: 입력한 두 비밀번호가 일치하지 않을 경우 (new password !== repeat password)
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: 비밀번호가 일치하지 않습니다. 다시 확인해주세요.
- *        '401':
- *          description: 사용자가 입력한 비밀번호가 이전의 비밀번호와 같은 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    message: 새 비밀번호를 입력해 주세요
- *        '500':
- *          description: 서버에서 에러가 발생하였을 경우
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  errorMessage:
- *                    type: string
- *                    example: 서버에서 에러가 발생하였습니다
- */
-
 // 마이페이지 내 정보 수정
 router.patch(
   "/users/self/profile/edit",
@@ -652,6 +378,8 @@ router.patch(
 
       // console.log("req.file", req.file); // to display data about the image
       //req.file.buffer; // you want to send this data to the s3 bucket
+
+      const imageName = randomImageName(); // file name will be random
 
       // ** 이미지가 수정되었는지 확인 **
       if (req.file) {
@@ -763,6 +491,221 @@ router.patch(
       if (error.name === "ValidationError") {
         return res.status(400).json({ errorMessage: error.message });
       }
+
+      return res
+        .status(500)
+        .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
+    }
+  },
+);
+
+// 다른 사람의 프로필 조회
+router.get(
+  "/users/profile/:nickname",
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      const nickname = req.params.nickname;
+
+      const otherUserInfo = await prisma.users.findFirst({
+        where: {
+          nickname: nickname,
+        },
+        select: {
+          userId: true,
+          email: true,
+          nickname: true,
+          imgUrl: true,
+        },
+      });
+
+      console.log("otherUserInfo >>>>>>>>>>>>>>", otherUserInfo);
+
+      if (!otherUserInfo) {
+        return res
+          .status(404)
+          .json({ errorMessage: "해당 사용자를 찾을 수 없습니다." });
+      }
+
+      // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
+      if (otherUserInfo.imgUrl && otherUserInfo.imgUrl.length === 64) {
+        const getObjectParams = {
+          Bucket: bucketName, // 버킷 이름
+          Key: otherUserInfo.imgUrl, // 이미지 키
+        };
+
+        try {
+          // User GetObjectCommand to create the url
+          const command = new GetObjectCommand(getObjectParams);
+          const url = await getSignedUrl(s3, command);
+          otherUserInfo.imgUrl = url;
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      return res.status(200).json({ data: otherUserInfo });
+      //
+    } catch (error) {
+      console.error(error);
+
+      return res
+        .status(500)
+        .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
+    }
+  },
+);
+
+// 다른 사람의 게시글 조회
+router.get(
+  "/users/profile/:nickname/posts",
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      const { nickname } = req.params; // 다른 사용자의 닉네임
+      const pageSize = req.query.pageSize || 10; // 한 페이지에 표시할 데이터의 갯수
+
+      // https://tonadus.shop/api/users/profile/:nickname/posts?lastPostId=5&pageSize=10
+
+      // 유저 닉네임으로 해당 유저의 userId 가져오기
+      const user = await prisma.users.findFirst({
+        where: {
+          nickname: nickname,
+        },
+        select: {
+          userId: true,
+        },
+      });
+
+      console.log(
+        "해당 닉네임을 사용하는 이용자의 userId >>>>>>>>>",
+        user.userId,
+      );
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ errorMessage: "해당 사용자를 찾을 수 없습니다." });
+      }
+
+      // 해당 유저가 작성한 게시글의 갯수
+      const userPostsCount = await prisma.posts.count({
+        where: {
+          UserId: user.userId,
+        },
+      });
+
+      console.log(
+        "해당 닉네임을 사용하는 사람이 쓴 게시글 갯수 >>>>>>>>>>",
+        userPostsCount,
+      );
+
+      // 이전 페이지의 마지막 postId를 쿼리스트링을 통해 받아옴
+      const lastPostId = req.query.lastPostId || null;
+
+      const userPosts = await prisma.posts.findMany({
+        where: {
+          UserId: +user.userId,
+          // 이전 페이지의 마지막 lastPostId보다 큰 값일 경우에만 추가 필터링
+          postId: lastPostId ? { gt: +lastPostId } : undefined,
+        },
+        // 내 게시글
+        select: {
+          postId: true,
+          UserId: true,
+          User: {
+            select: {
+              nickname: true, // 현재 유저 네임!
+            },
+          },
+          imgUrl: true,
+          content: true,
+          likeCount: true,
+          commentCount: true, // 각 게시글의 댓글 갯수
+          createdAt: true,
+          updatedAt: true,
+          Comments: {
+            // 게시글에 있는 댓글
+            select: {
+              UserId: true,
+              PostId: true,
+              content: true,
+              createdAt: true,
+              User: {
+                select: {
+                  nickname: true, // 댓글 작성자의 닉네임
+                  imgUrl: true, // 댓글 작성자의 프로필 사진
+                },
+              },
+            },
+          },
+          Location: {
+            select: {
+              address: true,
+            },
+          },
+        },
+        take: +pageSize, // 가져올 데이터의 갯수
+        orderBy: {
+          postId: "desc", // 커서 기반 정렬
+        },
+      });
+
+      console.log("userPosts >>>>>>>>>", userPosts);
+
+      //-------------------------------------------------------
+      for (let i = 0; i < userPosts.length; i++) {
+        const imgUrls = userPosts[i].imgUrl.split(","); // image urls for each post
+        console.log("imgUrls >>>", imgUrls);
+
+        const imgUrl = []; // one to many
+
+        // 각 게시글에 있는 이미지들
+        for (let j = 0; j < imgUrls.length; j++) {
+          const currentImgUrl = imgUrls[j];
+          console.log("currentImgUrl >>>>", currentImgUrl);
+
+          // 지금 db에 저장된 이미지 주소는 64자의 해시화된 값이기 때문이다
+          if (currentImgUrl.length === 64) {
+            // S3에서 객체를 가져오기 위해 사용될 매개변수들
+            // S3의 getObject 함수를 호출하여 해당 객체를 가져온다
+            const getObjectParams = {
+              Bucket: bucketName, // 객체들을 보관하는 s3의 저장공간
+              Key: currentImgUrl, // 가져오려는 객체의 키 => 이를 사용하여 객체를 식별
+            };
+
+            try {
+              // getObjectCommand는 AWS SDK에서 "가져오기 작업"을 수행하기 위한 명령(Command) 객체를 생성
+              // getSignedUrl 함수를 호출하여 해당 객체에 대한 서명된 URL을 얻기 위해 AWS SDK에 요청
+              const command = new GetObjectCommand(getObjectParams);
+              // getSignedUrl 함수는 AWS SDK에서 제공하는 함수 중 하나로, 서명된 URL을 얻기 위해 사용
+              // s3 - s3의 서비스 객체
+              // command - : 서명된 URL을 얻기 위해 실행할 명령(Command) 객체가 전달
+              // 이 작업은 비 동기적으로 이루어지므로 await를 사용하여 URL을 기다린 후에 url 변수에 저장
+              const url = await getSignedUrl(s3, command);
+              imgUrl.push(url); // 서명된 URL을 배열에 추가
+            } catch (error) {
+              console.error(
+                `${currentImgUrl}을 가져오면서 문제가 발생하였습니다.`,
+                error,
+              );
+            }
+          } else {
+            imgUrl.push(currentImgUrl); // 서명되지 않은 URL은 그대로 유지
+          }
+        }
+
+        // 각 포스트에 있는 imgUrl에 이미지 1개 또는 여러개를 담은 배열을 전달
+        userPosts[i].imgUrl = imgUrl;
+      }
+      //-------------------------------------------------------
+
+      return res.status(200).json({
+        postsCount: userPostsCount,
+        data: userPosts,
+      });
+    } catch (error) {
+      console.error(error);
 
       return res
         .status(500)
