@@ -5,25 +5,25 @@ export class SearchingService {
 
   /* 검색 기능 (유저, 가게 이름) */
   getSearching = async (nickname, storeName) => {
-
-    const findUsers = await this.searchingRepository.findUsers(nickname);
-
-    if (!findUsers || findUsers.length === 0) {
-      const err = new Error(`검색하신 ${nickname} 님의 정보가 없어요.`);
-      err.statusCode = 404;
-      throw err;
-    }
-
     let searchedData;
     if (nickname) {
-      const seachedDataByNickname = await this.searchingRepository.getSearchingByNickname(findUsers);
 
-      if (!seachedDataByNickname || seachedDataByNickname.length === 0) {
-        const err = new Error(`해당 ${nickname} 님(이) 작성한 게시글이 없어요.`);
+      const getSearchingByNickname = await this.searchingRepository.getSearchingByNickname(nickname);
+
+      if (!getSearchingByNickname || getSearchingByNickname.length === 0) {
+        const err = new Error(`검색하신 ${nickname} 님의 정보가 없어요.`);
         err.statusCode = 404;
         throw err;
       }
-      searchedData = seachedDataByNickname;
+
+      // const seachedDataByNickname = await this.searchingRepository.getSearchingByNickname(findUsers);
+
+      // if (!seachedDataByNickname || seachedDataByNickname.length === 0) {
+      //   const err = new Error(`해당 ${nickname} 님(이) 작성한 게시글이 없어요.`);
+      //   err.statusCode = 404;
+      //   throw err;
+      // }
+      searchedData = getSearchingByNickname;
     }
 
     if (storeName) {

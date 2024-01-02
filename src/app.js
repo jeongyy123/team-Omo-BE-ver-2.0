@@ -4,8 +4,8 @@ import UserProfileRouter from "./routes/profiles/profile.router.js";
 import KakaoRouter from "./routes/OAuth/kakao.router.js";
 // import MainRouter from "./routes/main/main.router.js";
 import MainRouter from "./routes/main.router.js"
-import PostsRouter from "./routes/posts/posts.router.js";
-// import PostsRouter from "./routes/posts.router.js";
+// import PostsRouter from "./routes/posts/posts.router.js";
+import PostsRouter from "./routes/posts.router.js";
 import CommentsRouter from "./routes/comments/comments.router.js";
 import LocationRouter from "./routes/locations/location.router.js";
 // import LikeRouter from "./routes/isLike/isLike.router.js";
