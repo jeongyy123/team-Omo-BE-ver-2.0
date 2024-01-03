@@ -108,3 +108,24 @@ export const getRepliesImageS3 = async (comments) => {
     }
   }
 };
+
+// searching 프로필
+export const getSearchingProfile = async (findUsers) => {
+  const imgUrlPromises = findUsers.map(async (user) => {
+    const params = {
+      Bucket: bucketName,
+      Key: user.imgUrl,
+    };
+
+    const command = new GetObjectCommand(params);
+    const imgUrl = await getSignedUrl(s3, command);
+    return imgUrl;
+  });
+
+  const imgUrls = await Promise.all(imgUrlPromises);
+
+  findUsers.forEach((user, index) => {
+    user.imgUrl = imgUrls[index];
+  });
+  return findUsers;
+}
