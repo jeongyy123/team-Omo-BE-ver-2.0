@@ -8,6 +8,7 @@ import { profileEditSchema } from "../../validations/auth.validation.js";
 import multer from "multer";
 import crypto from "crypto";
 import { fileFilter } from "../../utils/putImageS3.js";
+import { ProfileController } from "../../controllers/profile.controller.js";
 
 import {
   S3Client,
@@ -25,6 +26,8 @@ const randomImageName = (bytes = 32) =>
 const imageName = randomImageName(); // file name will be random
 
 const router = express.Router();
+const profileController = new ProfileController(); // ProfileController를 인스턴스화 시킨다.
+
 const bucketName = process.env.BUCKET_NAME;
 const bucketRegion = process.env.BUCKET_REGION;
 const accessKey = process.env.ACCESS_KEY;
@@ -40,48 +43,48 @@ const s3 = new S3Client({
 });
 
 // 마이페이지 회원정보 확인 API
-router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
-  try {
-    const { userId } = req.user;
+// router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
+//   try {
+//     const { userId } = req.user;
 
-    const userInfo = await prisma.users.findFirst({
-      where: {
-        userId: +userId,
-      },
-      select: {
-        email: true,
-        nickname: true,
-        imgUrl: true,
-      },
-    });
+//     const userInfo = await prisma.users.findFirst({
+//       where: {
+//         userId: +userId,
+//       },
+//       select: {
+//         email: true,
+//         nickname: true,
+//         imgUrl: true,
+//       },
+//     });
 
-    // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
-    if (userInfo.imgUrl && userInfo.imgUrl.length === 64) {
-      const getObjectParams = {
-        Bucket: bucketName, // 버킷 이름
-        Key: userInfo.imgUrl, // 이미지 키
-      };
+//     // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
+//     if (userInfo.imgUrl && userInfo.imgUrl.length === 64) {
+//       const getObjectParams = {
+//         Bucket: bucketName, // 버킷 이름
+//         Key: userInfo.imgUrl, // 이미지 키
+//       };
 
-      // User GetObjectCommand to create the url
-      const command = new GetObjectCommand(getObjectParams);
-      const url = await getSignedUrl(s3, command);
-      userInfo.imgUrl = url;
-    } else {
-      const defaultImageUrl =
-        "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw";
+//       // User GetObjectCommand to create the url
+//       const command = new GetObjectCommand(getObjectParams);
+//       const url = await getSignedUrl(s3, command);
+//       userInfo.imgUrl = url;
+//     } else {
+//       const defaultImageUrl =
+//         "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw";
 
-      userInfo.imgUrl = defaultImageUrl;
-    }
+//       userInfo.imgUrl = defaultImageUrl;
+//     }
 
-    return res.status(200).json({ data: userInfo });
-  } catch (error) {
-    console.error(error);
+//     return res.status(200).json({ data: userInfo });
+//   } catch (error) {
+//     console.error(error);
 
-    return res
-      .status(500)
-      .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
-  }
-});
+//     return res
+//       .status(500)
+//       .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
+//   }
+// });
 
 // 마이페이지 게시글 조회 API
 router.get(
@@ -568,7 +571,7 @@ router.get(
       // https://tonadus.shop/api/users/profile/:nickname/posts?lastPostId=5&pageSize=10
 
       // 유저 닉네임으로 해당 유저의 userId 가져오기
-      const user = await prisma.users.findFirst({
+      const findUser = await prisma.users.findFirst({
         where: {
           nickname: nickname,
         },
@@ -582,7 +585,7 @@ router.get(
         user.userId,
       );
 
-      if (!user) {
+      if (!findUser) {
         return res
           .status(404)
           .json({ errorMessage: "해당 사용자를 찾을 수 없습니다." });
@@ -712,6 +715,45 @@ router.get(
         .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
     }
   },
+);
+
+// ==============================================================================
+/** 마이페이지 회원정보 조회 */
+router.get("/users/self/profile", authMiddleware, profileController.getProfile);
+
+/** 마이페이지 게시글 목록 조회 */
+router.get(
+  "/users/self/profile/posts",
+  authMiddleware,
+  profileController.getMyPosts,
+);
+
+/** 마이페이지 북마크 목록 조회 */
+router.get(
+  "/users/self/profile/bookmark",
+  authMiddleware,
+  profileController.getMyBookmarks,
+);
+
+/** 마이페이지 내 정보 수정 */
+router.patch(
+  "/users/self/profile/edit",
+  upload.single("imgUrl"),
+  authMiddleware,
+  profileController.editMyInfo,
+);
+
+/** 다른 유저의 프로필 조회 */
+router.get(
+  "/users/profile/:nickname",
+  authMiddleware,
+  profileController.viewOtherProfile,
+);
+
+/** 다른 유저의 프로필에서 그 사람이 쓴 게시글 목록 조회 */
+router.get(
+  "/users/profile/:nickname/posts",
+  profileController.viewPostsFromOtherProfile,
 );
 
 export default router;
