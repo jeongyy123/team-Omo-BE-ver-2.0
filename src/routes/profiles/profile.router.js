@@ -43,48 +43,43 @@ const s3 = new S3Client({
 });
 
 // 마이페이지 회원정보 확인 API
-// router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
-//   try {
-//     const { userId } = req.user;
+router.get("/users/self/profile", authMiddleware, async (req, res, next) => {
+  try {
+    const { userId } = req.user;
 
-//     const userInfo = await prisma.users.findFirst({
-//       where: {
-//         userId: +userId,
-//       },
-//       select: {
-//         email: true,
-//         nickname: true,
-//         imgUrl: true,
-//       },
-//     });
+    const userInfo = await prisma.users.findFirst({
+      where: {
+        userId: +userId,
+      },
+      select: {
+        email: true,
+        nickname: true,
+        imgUrl: true,
+      },
+    });
 
-//     // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
-//     if (userInfo.imgUrl && userInfo.imgUrl.length === 64) {
-//       const getObjectParams = {
-//         Bucket: bucketName, // 버킷 이름
-//         Key: userInfo.imgUrl, // 이미지 키
-//       };
+    // 데이터베이스에 저장되어 있는 이미지 주소는 64자의 해시 또는 암호화된 값이기 때문
+    if (userInfo.imgUrl && userInfo.imgUrl.length === 64) {
+      const getObjectParams = {
+        Bucket: bucketName, // 버킷 이름
+        Key: userInfo.imgUrl, // 이미지 키
+      };
 
-//       // User GetObjectCommand to create the url
-//       const command = new GetObjectCommand(getObjectParams);
-//       const url = await getSignedUrl(s3, command);
-//       userInfo.imgUrl = url;
-//     } else {
-//       const defaultImageUrl =
-//         "https://play-lh.googleusercontent.com/38AGKCqmbjZ9OuWx4YjssAz3Y0DTWbiM5HB0ove1pNBq_o9mtWfGszjZNxZdwt_vgHo=w240-h480-rw";
+      // User GetObjectCommand to create the url
+      const command = new GetObjectCommand(getObjectParams);
+      const url = await getSignedUrl(s3, command);
+      userInfo.imgUrl = url;
+    }
 
-//       userInfo.imgUrl = defaultImageUrl;
-//     }
+    return res.status(200).json({ data: userInfo });
+  } catch (error) {
+    console.error(error);
 
-//     return res.status(200).json({ data: userInfo });
-//   } catch (error) {
-//     console.error(error);
-
-//     return res
-//       .status(500)
-//       .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
-//   }
-// });
+    return res
+      .status(500)
+      .json({ errorMessage: "서버에서 에러가 발생하였습니다." });
+  }
+});
 
 // 마이페이지 게시글 조회 API
 router.get(
