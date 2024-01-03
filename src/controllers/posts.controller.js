@@ -107,7 +107,7 @@ export class PostsController {
         categoryName,
       );
 
-      await this.postsService.findPostByPostIdAndUserId(userId, postId);
+      await this.postsService.findPostByPostId(postId);
 
       return res.status(201).json({ message: "게시물을 수정하였습니다." });
     } catch (error) {
@@ -121,7 +121,7 @@ export class PostsController {
       const { userId } = req.user;
       const { postId } = req.params;
 
-      await this.postsService.findPostByPostIdAndUserId(userId, postId);
+      await this.postsService.findPostByPostId(postId);
 
       await this.postsService.deletePost(userId, postId);
 

@@ -390,9 +390,9 @@ export class PostsRepository {
   };
 
   /* 게시글 찾기 by PostId, UserId */
-  findPostByPostIdAndUserId = async (userId, postId) => {
+  findPostByPostId = async (postId) => {
     return await prisma.posts.findFirst({
-      where: { postId: +postId, UserId: +userId },
+      where: { postId: +postId },
     });
   };
 

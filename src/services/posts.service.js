@@ -11,6 +11,8 @@ import {
   getSingleImageS3,
   getImageS3,
 } from "../utils/getImageS3.js";
+import { processPutImages } from '../utils/putImageS3.js';
+import { deleteImageS3 } from '../utils/deleteImageS3.js'
 import crypto from "crypto";
 import jimp from "jimp";
 import dotenv from "dotenv";
@@ -57,8 +59,8 @@ export class PostsService {
       throw err;
     }
 
-    await getRepliesImageS3(post.Comments); // 추가
-    await getProfileImageS3(post.Comments); // 추가
+    await getRepliesImageS3(post.Comments);
+    await getProfileImageS3(post.Comments);
     await getSingleImageS3(post.User);
     await getImageS3(post);
 
@@ -78,7 +80,7 @@ export class PostsService {
     placeInfoId,
     files,
   ) => {
-    const imgNames = await this.processPutImages(files);
+    const imgNames = await processPutImages(files);
 
     const category = await this.postsRepository.findCategory(categoryName);
 
@@ -114,60 +116,6 @@ export class PostsService {
     };
   };
 
-  /* 게시글 작성 중 이미지 등록 처리*/
-  processPutImages = async (files) => {
-    //이미지 이름 나눠서 저장
-    if (!files || files.length === 0) {
-      const err = new Error("사진을 등록해주세요.");
-      err.statusCode = 400;
-      throw err;
-    }
-
-    const imgPromises = files.map(async (file) => {
-      if (file.size > 6000000) {
-        const err = new Error("3MB이하의 이미지파일만 넣어주세요.");
-        err.statusCode = 400;
-        throw err;
-      }
-
-      const randomImgName = (bytes = 32) =>
-        crypto.randomBytes(bytes).toString("hex");
-      const imgName = randomImgName();
-
-      let params;
-      if (file.mimetype === "image/webp") {
-        params = {
-          Bucket: bucketName,
-          Key: imgName,
-          Body: file.buffer, //jimp 사용 시 buffer로 바꿔야함
-          ContentType: file.mimetype,
-        };
-      } else {
-        // 이미지 사이즈 조정
-        const buffer = await jimp
-          .read(file.buffer)
-          .then((image) =>
-            image
-              .resize(jimp.AUTO, 500)
-              .quality(70)
-              .getBufferAsync(jimp.MIME_JPEG),
-          );
-
-        params = {
-          Bucket: bucketName,
-          Key: imgName,
-          Body: buffer, //jimp 사용 시 buffer로 바꿔야함
-          ContentType: file.mimetype,
-        };
-      }
-      const command = new PutObjectCommand(params);
-      await s3.send(command);
-
-      return imgName;
-    });
-    return Promise.all(imgPromises);
-  };
-
   /* 게시글 수정 */
   updatePost = async (
     userId,
@@ -181,8 +129,7 @@ export class PostsService {
     longitude,
     categoryName,
   ) => {
-    const post = await this.postsRepository.findPostByPostIdAndUserId(
-      userId,
+    const post = await this.postsRepository.findPostByPostId(
       postId,
     );
 
@@ -217,9 +164,8 @@ export class PostsService {
   };
 
   /* 게시글 찾기 by PostId, UserId */
-  findPostByPostIdAndUserId = async (userId, postId) => {
-    const post = await this.postsRepository.findPostByPostIdAndUserId(
-      userId,
+  findPostByPostId = async (postId) => {
+    const post = await this.postsRepository.findPostByPostId(
       postId,
     );
 
@@ -233,8 +179,7 @@ export class PostsService {
 
   /* 게시글 삭제 */
   deletePost = async (userId, postId) => {
-    const post = await this.postsRepository.findPostByPostIdAndUserId(
-      userId,
+    const post = await this.postsRepository.findPostByPostId(
       postId,
     );
 
@@ -250,18 +195,7 @@ export class PostsService {
       throw err;
     }
 
-    const imgUrlsArray = post.imgUrl.split(",");
-
-    const params = imgUrlsArray.map((url) => {
-      return {
-        Bucket: bucketName,
-        Key: url,
-      };
-    });
-
-    params.map((bucket) => {
-      return s3.send(new DeleteObjectCommand(bucket));
-    });
+    await deleteImageS3(post);
 
     await this.postsRepository.deletePost(userId, postId);
 
