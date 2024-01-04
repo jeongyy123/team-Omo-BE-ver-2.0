@@ -23,15 +23,17 @@ const upload = multer({ storage: storage });
 
 //1개의 게시글 - 1개 이미지 조회
 export const getSingleImageS3 = async (post) => {
-  const param = {
-    Bucket: bucketName,
-    Key: post.imgUrl,
-  };
+  if (post.imgUrl && post.imgUrl.length === 64) {
+    const param = {
+      Bucket: bucketName,
+      Key: post.imgUrl,
+    };
 
-  const command = new GetObjectCommand(param);
-  const imgUrl = await getSignedUrl(s3, command);
+    const command = new GetObjectCommand(param);
+    const imgUrl = await getSignedUrl(s3, command);
 
-  return (post.imgUrl = imgUrl);
+    return (post.imgUrl = imgUrl);
+  }
 };
 
 // 1개의 게시글 - 여러 개 이미지 조회
@@ -83,28 +85,33 @@ export const getManyImagesS3 = async (posts) => {
 // 댓글 여러 유저들의 프로필 이미지
 export const getProfileImageS3 = async (posts) => {
   posts.map(async (post) => {
-    const params = {
-      Bucket: bucketName,
-      Key: post.User.imgUrl,
-    };
-    const command = new GetObjectCommand(params);
-    const imgUrl = await getSignedUrl(s3, command);
-    return (post.User.imgUrl = imgUrl);
-  });
+    if (post.User.imgUrl && post.User.imgUrl.length === 64) {
+      const params = {
+        Bucket: bucketName,
+        Key: post.User.imgUrl,
+      };
+      const command = new GetObjectCommand(params);
+      const imgUrl = await getSignedUrl(s3, command);
+      return (post.User.imgUrl = imgUrl);
+    }
+  }
+  );
 };
 
 // 대댓글 유저의 프로필 이미지
 export const getRepliesImageS3 = async (comments) => {
   for (const comment of comments) {
     for (const reply of comment.Replies) {
-      const params = {
-        Bucket: bucketName,
-        Key: reply.User.imgUrl,
-      };
-      const command = new GetObjectCommand(params);
-      const imgUrl = await getSignedUrl(s3, command);
+      if (reply.User.imgUrl && reply.User.imgUrl.length === 64) {
+        const params = {
+          Bucket: bucketName,
+          Key: reply.User.imgUrl,
+        };
+        const command = new GetObjectCommand(params);
+        const imgUrl = await getSignedUrl(s3, command);
 
-      reply.User.imgUrl = imgUrl;
+        reply.User.imgUrl = imgUrl;
+      }
     }
   }
 };

@@ -1,9 +1,5 @@
 import { PostsRepository } from "../repositories/posts.repository.js";
-import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 import {
   getRepliesImageS3,
   getProfileImageS3,
@@ -13,8 +9,6 @@ import {
 } from "../utils/getImageS3.js";
 import { processPutImages } from '../utils/putImageS3.js';
 import { deleteImageS3 } from '../utils/deleteImageS3.js'
-import crypto from "crypto";
-import jimp from "jimp";
 import dotenv from "dotenv";
 
 dotenv.config();
