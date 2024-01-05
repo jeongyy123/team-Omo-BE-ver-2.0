@@ -1,6 +1,6 @@
 import express from "express";
 import passport from "passport";
-import { prisma } from "../../utils/prisma/index.js";
+import { prisma } from "../utils/prisma/index.js";
 import jwt from "jsonwebtoken";
 
 const router = express.Router();

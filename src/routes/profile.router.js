@@ -1,8 +1,8 @@
 import express from "express";
-import authMiddleware from "../../middlewares/auth.middleware.js";
+import authMiddleware from "../middlewares/auth.middleware.js";
 import multer from "multer";
-import { fileFilter } from "../../utils/putImageS3.js";
-import { ProfileController } from "../../controllers/profile.controller.js";
+import { fileFilter } from "../utils/putImageS3.js";
+import { ProfileController } from "../controllers/profile.controller.js";
 
 // 매모리 저장 객체 생성
 const storage = multer.memoryStorage();
