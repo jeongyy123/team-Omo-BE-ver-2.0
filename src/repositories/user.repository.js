@@ -165,14 +165,16 @@ export class UserRepository {
     return result;
   };
 
-  deleteUserInfo = async (userId) => {
+  deleteUserData = async (userId) => {
     // 트랜젝션 시작
     const result = await prisma.$transaction([
+      // 유저의 리프레시 토큰들 삭제
       prisma.refreshTokens.deleteMany({
         where: {
           UserId: +userId,
         },
       }),
+      // 유저정보 삭제
       prisma.users.delete({
         where: {
           userId: +userId,
@@ -181,5 +183,72 @@ export class UserRepository {
     ]); // 트랜젝션 끝
 
     return result;
+  };
+
+  updateUserLikeCounts = async (userId) => {
+    // 사용자가 좋아요한 게시글
+    const userLikedPosts = await prisma.likes.findMany({
+      where: {
+        UserId: +userId,
+      },
+    });
+
+    for (const likedPost of userLikedPosts) {
+      // 각각의 좋아요한 게시물을 찾아 likeCount를 감소시킵니다.
+      await prisma.posts.update({
+        where: {
+          postId: likedPost.PostId, // 해당 게시물의 postId
+        },
+        data: {
+          likeCount: {
+            decrement: 1, // likeCount를 1 감소
+          },
+        },
+      });
+    }
+  };
+
+  updateUserCommentCounts = async (userId) => {
+    // 유저가 작성한 댓글
+    const userComments = await prisma.comments.findMany({
+      where: {
+        UserId: +userId,
+      },
+    });
+
+    for (const comment of userComments) {
+      await prisma.posts.update({
+        where: {
+          postId: comment.PostId,
+        },
+        data: {
+          commentCount: {
+            decrement: 1,
+          },
+        },
+      });
+    }
+  };
+
+  updateUserReplyCounts = async (userId) => {
+    // 유저가 작성한 대댓글
+    const userReplies = await prisma.replies.findMany({
+      where: {
+        UserId: +userId,
+      },
+    });
+
+    for (const reply of userReplies) {
+      await prisma.comments.update({
+        where: {
+          commentId: reply.CommentId,
+        },
+        data: {
+          replyCount: {
+            decrement: 1,
+          },
+        },
+      });
+    }
   };
 }

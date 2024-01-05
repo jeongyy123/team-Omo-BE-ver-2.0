@@ -1,12 +1,13 @@
 import express from "express";
 import passport from "passport";
-import { prisma } from "../utils/prisma/index.js";
-import jwt from "jsonwebtoken";
+import { AuthController } from "../controllers/auth.controller.js";
 
 const router = express.Router();
 
+const authController = new AuthController(); // AuthController를 인스턴스화 시킨다
+
 // 로그인 라우터
-router.get("/kakao", passport.authenticate("kakao", { session: false }));
+//router.get("/kakao", passport.authenticate("kakao", { session: false }));
 
 // 로그인 후 콜백 라우터
 router.get(
@@ -48,11 +49,6 @@ router.get(
           },
         });
 
-        // res.setHeader("Authorization", `Bearer ${accessToken}`);
-        // res.setHeader("RefreshToken", `Bearer ${refreshToken}`);
-
-        // 클라이언트는 새로운 페이지로 이동하면서 새로운 헤더를 받지 않는다.
-        // 리다이렉션 시에 토큰들과 함께 클라이언트에게 전달
         res.redirect(
           `https://omo-six.vercel.app/?accessToken=${accessToken}&refreshToken=${refreshToken}&userId=${userId}`,
         );
@@ -65,5 +61,11 @@ router.get(
     }
   },
 );
+
+// 로그인 라우터
+// router.get("/kakao", passport.authenticate("kakao", { session: false }));
+
+// 로그인 후 콜백 라우터
+// router.get("/kakao/callback", authController.kakaoCallback);
 
 export default router;

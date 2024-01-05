@@ -296,7 +296,14 @@ export class UserService {
 
   /** 회원탈퇴 */
   deleteAccount = async (userId) => {
-    await this.userRepository.deleteUserInfo(userId);
+    // 유저가 좋아요한 게시물의 likeCount를 업데이트
+    await this.userRepository.updateUserLikeCounts(userId);
+    // 유저가 작성한 댓글의 갯수 업데이트
+    await this.userRepository.updateUserCommentCounts(userId);
+    // 유저가 작성한 대댓글의 갯수 업데이트
+    await this.userRepository.updateUserReplyCounts(userId);
+    // 유저 정보와 관련된 데이터 삭제
+    await this.userRepository.deleteUserData(userId);
 
     return {
       message:
