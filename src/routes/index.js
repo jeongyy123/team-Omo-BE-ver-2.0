@@ -1,7 +1,8 @@
 import express from "express";
-import users from "./users/user.router.js";
-import profiles from "./profiles/profile.router.js";
-import main from "../swagger/main.js";
+import users from "../swagger/user.js";
+import profiles from "../swagger/profile.js";
+import kakao from "../swagger/kakao.js";
+import main from "../main.js";
 import bookmark from "../swagger/bookmark.js";
 import isLike from "../swagger/isLike.js";
 import posts from "../swagger/posts.js";
@@ -17,6 +18,13 @@ const router = express.Router();
  * tags:
  *   - name: Users
  *     description: 이메일 인증 요청/인증코드 확인/닉네임 중복확인/회원가입/로그인/로그아웃/회원탈퇴/엑세스 토큰 재발급/Kakao OAuth 로그인/Kakao OAuth 로그인 후 콜백 엔드포인트
+ */
+
+/**
+ * @swagger
+ * tags:
+ *   - name: OAuth
+ *     description: Kakao OAuth 로그인/Kakao OAuth 로그인 후 콜백 엔드포인트
  */
 
 /**
@@ -81,6 +89,7 @@ const router = express.Router();
  */
 
 router.use("/users", users);
+router.use("/kakao", kakao);
 router.use("/profiles", profiles);
 router.use("/main", main);
 router.use("/bookmark", bookmark);

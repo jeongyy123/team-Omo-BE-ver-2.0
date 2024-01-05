@@ -2,17 +2,12 @@ import express from "express";
 import UsersRouter from "./routes/users/user.router.js";
 import UserProfileRouter from "./routes/profiles/profile.router.js";
 import KakaoRouter from "./routes/OAuth/kakao.router.js";
-// import MainRouter from "./routes/main/main.router.js";
-import MainRouter from "./routes/main.router.js"
-// import PostsRouter from "./routes/posts/posts.router.js";
+import MainRouter from "./routes/main.router.js";
 import PostsRouter from "./routes/posts.router.js";
 import CommentsRouter from "./routes/comments/comments.router.js";
 import LocationRouter from "./routes/locations/location.router.js";
-// import LikeRouter from "./routes/isLike/isLike.router.js";
 import LikeRouter from "./routes/isLike.router.js";
-// import SearchingRouter from "./routes/searching/searching.router.js";
 import SearchingRouter from "./routes/searching.router.js";
-// import BookmarkRouter from "./routes/bookmark/bookmark.router.js";
 import BookmarkRouter from "./routes/bookmark.router.js";
 import RepliesRouter from "./routes/replies/replies.ruter.js";
 import cookieParser from "cookie-parser";
@@ -34,8 +29,8 @@ const PORT = 3003;
 app.use(morgan("dev"));
 
 // Passport 설정
-// configurePassport(); // passport 불러온다.
-// app.use(passport.initialize()); //  Passport를 초기화.
+configurePassport(); // passport 불러온다.
+app.use(passport.initialize()); //  Passport를 초기화.
 
 app.use(cors());
 
@@ -58,7 +53,6 @@ app.use("/api", [
   BookmarkRouter,
   RepliesRouter,
   SearchingRouter,
-
 ]);
 
 app.use("/auth", [KakaoRouter, UsersRouter]);
