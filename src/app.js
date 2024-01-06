@@ -1,8 +1,8 @@
 import express from "express";
-import UsersRouter from "./routes/users/user.router.js";
-import UserProfileRouter from "./routes/profiles/profile.router.js";
-import KakaoRouter from "./routes/OAuth/kakao.router.js";
-import MainRouter from "./routes/main.router.js"
+import UsersRouter from "./routes/user.router.js";
+import UserProfileRouter from "./routes/profile.router.js";
+import KakaoRouter from "./routes/kakao.router.js";
+import MainRouter from "./routes/main.router.js";
 import PostsRouter from "./routes/posts.router.js";
 import CommentsRouter from "./routes/comments/comments.router.js";
 import LocationRouter from "./routes/locations/location.router.js";
@@ -53,7 +53,6 @@ app.use("/api", [
   BookmarkRouter,
   RepliesRouter,
   SearchingRouter,
-
 ]);
 
 app.use("/auth", [KakaoRouter, UsersRouter]);
