@@ -1,6 +1,10 @@
 import { prisma } from "../utils/prisma/index.js";
 
 export class CommentsRepository {
+  // constructor (prisma) { // 추가
+  //   this.prisma = prisma; // 추가
+  // }
+ 
   //등록
   findPostById = async (postId) => {
     const post = await prisma.posts.findFirst({
@@ -39,6 +43,7 @@ export class CommentsRepository {
       select: {
         User: {
           select: {
+            userId: true,
             nickname: true,
             imgUrl: true,
           },
@@ -53,10 +58,10 @@ export class CommentsRepository {
         replyCount: true,
         createdAt: true,
       },
-      take : parsedPage,
+      orderBy: { createdAt: "desc" },
+      take: parsedPage,
       skip: lastSeenId ? 1 : 0,
       ...(+lastSeenId && { cursor: { commentId: +lastSeenId } }),
-
     });
 
     return comments;
@@ -79,7 +84,7 @@ export class CommentsRepository {
     return deleteComment;
   };
 
-  decrementCommentCount = async (postId) => {
+  decrementCommentCount = async (postId) => { 
     await prisma.posts.update({
       where: { postId: +postId },
       data: {

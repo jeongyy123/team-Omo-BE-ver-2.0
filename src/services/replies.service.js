@@ -10,7 +10,7 @@ dotenv.config();
 const randomImageName = (bytes = 32) =>
   crypto.randomBytes(bytes).toString("hex");
 
-const imageName = randomImageName(); // file name will be random
+const imageName = randomImageName();
 
 const bucketName = process.env.BUCKET_NAME;
 const bucketRegion = process.env.BUCKET_REGION;
@@ -29,15 +29,7 @@ export class RepliesService {
   repliesRepository = new RepliesRepository();
 
   createReply = async (userId, commentId, content) => {
-    // const post = await this.repliesRepository.findPostById(postId);
     const comment = await this.repliesRepository.findCommentById(commentId);
-
-    console.log("comment>>>>>.", comment);
-    // if (!post) {
-    //   const error = new Error("게시물을 찾을수 없습니다.");
-    //   error.statusCode = 404;
-    //   throw error;
-    // }
 
     if (!comment) {
       const error = new Error("댓글을 찾을수 없습니다.");
@@ -47,12 +39,9 @@ export class RepliesService {
 
     const reply = await this.repliesRepository.createReply(
       userId,
-      // postId,
       commentId,
       content,
     );
-    console.log("reply>>>>>>>", reply);
-
     return reply;
   };
 
@@ -67,7 +56,9 @@ export class RepliesService {
     }
 
     const replies = await this.repliesRepository.findAllReplies(
-      commentId, page, lastSeenId
+      commentId,
+      page,
+      lastSeenId,
     );
 
     if (!replies) {
@@ -75,25 +66,6 @@ export class RepliesService {
       error.statusCode = 404;
       throw error;
     }
-
-    // // 이미지 가져오기 로직을 서비스 내부로 이동
-    // const replysWithImages = await Promise.all(
-    //   replies.map(async (reply) => {
-    //     if (reply.User.imgUrl && reply.User.imgUrl.length === 64) {
-    //       const getObjectParams = {
-    //         Bucket: bucketName, // 버킷 이름
-    //         Key: reply.User.imgUrl, // 이미지 키
-    //       };
-
-    //       // GetObjectCommand를 사용하여 이미지 URL을 생성
-    //       const command = new GetObjectCommand(getObjectParams);
-    //       const url = await getSignedUrl(s3, command);
-
-    //       // 불러온 이미지 URL로 대체
-    //       reply.User.imgUrl = url;
-    //     }
-    //   }),
-    // );
 
     const replysWithImages = await this.getRepliesWithImagesFromS3(replies);
 
@@ -116,7 +88,7 @@ export class RepliesService {
         }
         return reply;
       }),
-    );
+    ); 
   };
 
   // 삭제
@@ -128,23 +100,22 @@ export class RepliesService {
       error.statusCode = 404;
       throw error;
     }
-    await prisma.$transaction(async (prisma) =>{
+
+    await prisma.$transaction(async (prisma) => {
       const deleteReply = await this.repliesRepository.deleteReply(
         userId,
         replyId,
-        commentId
+        commentId,
       );
-  
+
       if (!deleteReply) {
         const error = new Error("댓글을 삭제할 권한이 없습니다.");
         error.statusCode = 403;
         throw error;
       }
-  
-      await this.repliesRepository.decrementReplyCount(commentId);
 
-    }
-    )
-    return { message: "댓글이 삭제되었습니다." }
+      await this.repliesRepository.decrementReplyCount(commentId);
+    });
+    return { message: "댓글이 삭제되었습니다." };
   };
 }
