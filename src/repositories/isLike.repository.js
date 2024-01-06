@@ -60,6 +60,6 @@ export class IsLikeRepository {
       },
     });
 
-    return likedPosts
+    return likedPosts;
   }
 }

@@ -40,11 +40,14 @@
     "yarn": "^1.22.21"
   },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "cross-env": "^7.0.3",
     "eslint": "^8.55.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
     "eslint-plugin-promise": "^6.0.0",
+    "jest": "^29.7.0",
     "morgan": "^1.10.0",
     "nodemon": "^3.0.2"
   },
