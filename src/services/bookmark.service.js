@@ -88,8 +88,6 @@ export class BookmarkService {
       throw err;
     }
 
-    return {
-      userBookmark,
-    };
+    return userBookmark;
   };
 }

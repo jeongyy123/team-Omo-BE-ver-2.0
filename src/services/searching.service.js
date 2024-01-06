@@ -1,4 +1,5 @@
 import { SearchingRepository } from '../repositories/searching.repository.js';
+import { getSearchingProfile } from '../utils/getImageS3.js'
 
 export class SearchingService {
   searchingRepository = new SearchingRepository();
@@ -16,13 +17,8 @@ export class SearchingService {
         throw err;
       }
 
-      // const seachedDataByNickname = await this.searchingRepository.getSearchingByNickname(findUsers);
+      await getSearchingProfile(getSearchingByNickname);
 
-      // if (!seachedDataByNickname || seachedDataByNickname.length === 0) {
-      //   const err = new Error(`해당 ${nickname} 님(이) 작성한 게시글이 없어요.`);
-      //   err.statusCode = 404;
-      //   throw err;
-      // }
       searchedData = getSearchingByNickname;
     }
 
@@ -35,7 +31,6 @@ export class SearchingService {
         throw err;
       }
       searchedData = seachedDataByStoreName;
-
     }
 
     return searchedData;
