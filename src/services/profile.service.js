@@ -294,8 +294,10 @@ export class ProfileService {
       throw err;
     }
 
+    const foundUserId = findUserId.userId;
+
     const userPosts = await this.profileRepository.fetchOtherUserPostsList(
-      findUserId.userId,
+      foundUserId,
       pageSize,
       lastPostId,
     );
