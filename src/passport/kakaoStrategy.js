@@ -11,11 +11,13 @@ const kakaoAuthConfig = () => {
       {
         clientID: process.env.KAKAO_ID, // 카카오 로그인에서 발급받은 REST API 키
         clientSecret: process.env.SECRET_KEY, // 클라이언트 시크릿 설정
-        callbackURL: "https://tonadus.shop/auth/kakao/callback", // 카카오 로그인 후 카카오가 결과를 전송해줄 URL
+        callbackURL: "https://yoonyoung.site/auth/kakao/callback", // 카카오 로그인 후 카카오가 결과를 전송해줄 URL
         scope: ["profile_nickname", "profile_image", "account_email"],
       },
 
       async (accessToken, refreshToken, profile, done) => {
+        console.log("accessToken from Kakao", accessToken);
+        console.log("refreshToken from Kakao", refreshToken);
         // 카카오가 보내준 유저 정보. profile의 정보를 바탕으로 회원가입
         console.log("kakao profile", profile);
         try {

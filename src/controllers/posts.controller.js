@@ -1,11 +1,12 @@
-import { PostsService } from "../services/posts.service.js";
 import {
   createPostsSchema,
   editPostsSchema,
 } from "../validations/posts.validation.js";
 
 export class PostsController {
-  postsService = new PostsService();
+  constructor(postsService) {
+    this.postsService = postsService;
+  }
 
   /* 게시글 목록 조회 */
   getPosts = async (req, res, next) => {
@@ -107,7 +108,7 @@ export class PostsController {
         categoryName,
       );
 
-      await this.postsService.findPostByPostIdAndUserId(userId, postId);
+      await this.postsService.findPostByPostId(postId);
 
       return res.status(201).json({ message: "게시물을 수정하였습니다." });
     } catch (error) {
@@ -121,7 +122,7 @@ export class PostsController {
       const { userId } = req.user;
       const { postId } = req.params;
 
-      await this.postsService.findPostByPostIdAndUserId(userId, postId);
+      await this.postsService.findPostByPostId(postId);
 
       await this.postsService.deletePost(userId, postId);
 
