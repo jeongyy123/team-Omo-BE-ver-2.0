@@ -16,6 +16,8 @@ const kakaoAuthConfig = () => {
       },
 
       async (accessToken, refreshToken, profile, done) => {
+        console.log("accessToken from Kakao", accessToken);
+        console.log("refreshToken from Kakao", refreshToken);
         // 카카오가 보내준 유저 정보. profile의 정보를 바탕으로 회원가입
         console.log("kakao profile", profile);
         try {
