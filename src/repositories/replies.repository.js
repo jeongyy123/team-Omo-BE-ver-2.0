@@ -10,20 +10,10 @@ export class RepliesRepository {
     return comment;
   };
 
-  // findPostById = async (postId) => {
-  //   const post = await prisma.posts.findFirst({
-  //     where: { postId: +postId },
-  //   });
-
-  
-  //   return post;
-  // };
-
   createReply = async (userId, commentId, content) => {
     const reply = await prisma.replies.create({
       data: {
         UserId: userId,
-        // PostId: +postId,
         CommentId: +commentId,
         content: content,
       },
@@ -40,6 +30,7 @@ export class RepliesRepository {
 
     return reply;
   };
+
   // 전부조회
   findAllReplies = async (commentId, page, lastSeenId) => {
     const parsedPage = parseInt(page, 10) || 1;
@@ -49,6 +40,7 @@ export class RepliesRepository {
       select: {
         User: {
           select: {
+            userId: true,
             nickname: true,
             imgUrl: true,
           },
@@ -56,20 +48,17 @@ export class RepliesRepository {
         Comment: {
           select: {
             commentId: true,
-            // content: true,
             replyCount: true,
-            // createdAt: true,
           },
         },
         replyId: true,
         content: true,
         createdAt: true,
       },
-      take : parsedPage,
+      take: parsedPage,
       skip: lastSeenId ? 1 : 0,
       ...(+lastSeenId && { cursor: { replyId: +lastSeenId } }),
     });
-
     return replies;
   };
 
@@ -78,7 +67,6 @@ export class RepliesRepository {
     const reply = await prisma.replies.findFirst({
       where: { replyId: +replyId },
     });
-
     return reply;
   };
 
@@ -86,7 +74,6 @@ export class RepliesRepository {
     const deleteReply = await prisma.replies.delete({
       where: { UserId: userId, replyId: +replyId },
     });
-
     return deleteReply;
   };
 

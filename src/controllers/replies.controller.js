@@ -3,7 +3,7 @@ import { createRepliesSchema } from "../validations/replies.validation.js";
 
 export class RepliesController {
   repliesService = new RepliesService();
-    // 등록
+  // 등록
   createReply = async (req, res, next) => {
     try {
       const { userId } = req.user;
@@ -19,7 +19,6 @@ export class RepliesController {
       const reply = await this.repliesService.createReply(
         userId,
         commentId,
-        // postId,
         content,
       );
 
@@ -29,14 +28,17 @@ export class RepliesController {
     }
   };
 
-
-// 조회
-
-getReplies = async (req, res, next) => {
+  // 조회
+  getReplies = async (req, res, next) => {
     try {
       const { commentId } = req.params;
       const { page, lastSeenId } = req.query;
-      const replies = await this.repliesService.getReplies(commentId, page, lastSeenId);
+
+      const replies = await this.repliesService.getReplies(
+        commentId,
+        page,
+        lastSeenId,
+      );
 
       return res.status(200).json({ data: replies });
     } catch (error) {
@@ -44,9 +46,8 @@ getReplies = async (req, res, next) => {
     }
   };
 
-
-// 삭제
-deleteReply = async (req, res, next) => {
+  // 삭제
+  deleteReply = async (req, res, next) => {
     try {
       const { userId } = req.user;
       const { replyId, commentId } = req.params;

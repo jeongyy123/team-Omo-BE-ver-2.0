@@ -26,11 +26,13 @@ const s3 = new S3Client({
 
 export class CommentsService {
   commentsRepository = new CommentsRepository();
+  // constructor (commentsRepository) { // 추가
+  //   this.commentsRepository = commentsRepository;// 추가
+  // }
   // 등록
 
   createComment = async (userId, postId, content) => {
     const post = await this.commentsRepository.findPostById(postId);
-
 
     if (!post) {
       const error = new Error("게시물을 찾을수 없습니다.");
@@ -40,7 +42,7 @@ export class CommentsService {
 
     const comment = await this.commentsRepository.createComment(
       userId,
-      postId,
+      +postId,
       content,
     );
 
@@ -56,7 +58,11 @@ export class CommentsService {
       throw error;
     }
 
-    const comments = await this.commentsRepository.findAllComments(postId, page, lastSeenId);
+    const comments = await this.commentsRepository.findAllComments(
+      +postId,
+      page,
+      lastSeenId,
+    );
 
     // 이미지 가져오기 로직을 서비스 내부로 이동
     const commentsWithImages = await this.getCommentsWithImages(comments);
@@ -96,7 +102,7 @@ export class CommentsService {
 
     const deleteComment = await this.commentsRepository.deleteComment(
       userId,
-      commentId,
+      +commentId,
     );
 
     await this.commentsRepository.decrementCommentCount(postId);
