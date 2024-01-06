@@ -1,11 +1,12 @@
-import { PostsService } from "../services/posts.service.js";
 import {
   createPostsSchema,
   editPostsSchema,
 } from "../validations/posts.validation.js";
 
 export class PostsController {
-  postsService = new PostsService();
+  constructor(postsService) {
+    this.postsService = postsService;
+  }
 
   /* 게시글 목록 조회 */
   getPosts = async (req, res, next) => {

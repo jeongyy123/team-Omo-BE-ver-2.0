@@ -1,5 +1,3 @@
-import { PostsRepository } from "../repositories/posts.repository.js";
-import { S3Client } from "@aws-sdk/client-s3";
 import {
   getRepliesImageS3,
   getProfileImageS3,
@@ -13,22 +11,10 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const bucketName = process.env.BUCKET_NAME;
-const region = process.env.BUCKET_REGION;
-const accessKeyId = process.env.ACCESS_KEY;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY;
-
-const s3 = new S3Client({
-  credentials: {
-    accessKeyId,
-    secretAccessKey,
-  },
-  region,
-});
-
 export class PostsService {
-  postsRepository = new PostsRepository();
-
+  constructor(postsRepository) {
+    this.postsRepository = postsRepository;
+  }
   /* 게시글 목록 조회 */
   findAllPosts = async (page, lastSeenPage, categoryName, districtName) => {
     const posts = await this.postsRepository.findAllPosts(
