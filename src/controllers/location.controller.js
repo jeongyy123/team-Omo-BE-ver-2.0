@@ -1,16 +1,59 @@
-// import { LocationService } from "../services/location.service.js";
+import { LocationService } from "../services/location.service.js";
 
-// export class LocationController {
-//   locationservice = new LocationService();
-//   //둘러보기
-//   getSurroundLocation = async (req, res, next) => {
-//     try {
-//       const { categoryName, qa, pa, ha, oa } = req.query;
-//       const location = await this.locationService.getPostsLocation(categoryName, qa, pa, ha, oa );
+export class LocationController {
+  locationService = new LocationService();
+  //둘러보기
+  getSurroundLocation = async (req, res, next) => {
+    try {
+      const { categoryName, qa, pa, ha, oa } = req.query;
 
-//       return res.status(200).json({ daga: location })
-//     } catch (error) {
-//       next(error);
-//     }
-//   };
-// }
+      const location = await this.locationService.getSurroundLocation(
+        categoryName,
+        qa,
+        pa,
+        ha,
+        oa,
+      );
+
+      if (
+        !categoryName ||
+        !["음식점", "카페", "기타", "전체"].includes(categoryName)
+      ) {
+        throw new Error("올바른 카테고리를 입력하세요.");
+      }
+
+      return res.status(200).json({ data: location });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // 인기
+  getPopularLocation = async (req, res, next) => {
+    try {
+      const { latitude, longitude } = req.query;
+      const { locationId } = req.params;
+
+      const location = await this.locationService.getPopularLocation(
+        locationId,
+        latitude,
+        longitude,
+      );
+
+      if (!locationId) {
+        return res
+          .status(400)
+          .json({ message: "locationId 요청 송신에 오류가 있습니다." });
+      }
+       const posts = await this.locationService.getPopularPosts(
+        locationId
+       )
+
+        
+
+return res.status(200).json({ location, posts })
+    } catch (error) {
+      next(error);
+    }
+  };
+}

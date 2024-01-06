@@ -226,10 +226,10 @@ export class ProfileRepositoty {
     return userPostsCount;
   };
 
-  fetchOtherUserPostsList = async (findUserId, pageSize, lastPostId) => {
+  fetchOtherUserPostsList = async (foundUserId, pageSize, lastPostId) => {
     const userPosts = await prisma.posts.findMany({
       where: {
-        UserId: +user.userId,
+        UserId: +foundUserId,
         // 이전 페이지의 마지막 lastPostId보다 큰 값일 경우에만 추가 필터링
         postId: lastPostId ? { gt: +lastPostId } : undefined,
       },

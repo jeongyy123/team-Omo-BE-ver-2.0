@@ -6,6 +6,9 @@ const createRepliesSchema = joi.object({
         "string.max": "댓글작성은 1000자 이하로 작성해주세요.",
         "string.empty": "댓글을 작성해주세요."
     }),
+    PostId: joi.number(),
+    UserId: joi.number(),
+    createdAt: joi.string()
 })
 
 
