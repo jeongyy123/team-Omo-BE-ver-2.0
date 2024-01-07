@@ -2,15 +2,9 @@ import { RepliesRepository } from "../repositories/replies.repository.js";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { prisma } from "../utils/prisma/index.js";
-import crypto from "crypto";
 import dotenv from "dotenv";
 
 dotenv.config();
-
-const randomImageName = (bytes = 32) =>
-  crypto.randomBytes(bytes).toString("hex");
-
-const imageName = randomImageName();
 
 const bucketName = process.env.BUCKET_NAME;
 const bucketRegion = process.env.BUCKET_REGION;
@@ -19,8 +13,8 @@ const secretAccessKey = process.env.SECRET_ACCESS_KEY;
 
 const s3 = new S3Client({
   credentials: {
-    accessKeyId: process.env.ACCESS_KEY,
-    secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    accessKeyId: accessKey,
+    secretAccessKey
   },
   region: bucketRegion,
 });

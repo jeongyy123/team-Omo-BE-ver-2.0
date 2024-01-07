@@ -94,8 +94,7 @@ export const getProfileImageS3 = async (posts) => {
       const imgUrl = await getSignedUrl(s3, command);
       return (post.User.imgUrl = imgUrl);
     }
-  }
-  );
+  });
 };
 
 // 대댓글 유저의 프로필 이미지
@@ -135,4 +134,4 @@ export const getSearchingProfile = async (findUsers) => {
     user.imgUrl = imgUrls[index];
   });
   return findUsers;
-}
+};
