@@ -251,4 +251,32 @@ export class UserRepository {
       });
     }
   };
+
+  updateUserPostsCounts = async (userId) => {
+    // 유저가 작성한 게시글
+    const userPosts = await prisma.posts.findMany({
+      where: {
+        UserId: +userId,
+      },
+    });
+
+    for (const post of userPosts) {
+      const userLocation = await prisma.locations.update({
+        where: {
+          locationId: post.LocationId,
+        },
+        data: {
+          postCount: {
+            decrement: 1,
+          },
+        },
+      });
+
+      if (userLocation.postCount === 0) {
+        await prisma.locations.delete({
+          where: { locationId: userLocation.locationId }
+        })
+      }
+    }
+  };
 }
