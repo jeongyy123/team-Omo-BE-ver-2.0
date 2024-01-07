@@ -114,9 +114,6 @@ export const getRepliesImageS3 = async (comments) => {
       }
     }
   }
-<<<<<<< HEAD
-};
-=======
 };
 
 // searching 프로필
@@ -139,4 +136,3 @@ export const getSearchingProfile = async (findUsers) => {
   });
   return findUsers;
 }
->>>>>>> 58e7489f092df84aa558723877e5f8b11fe9eabc

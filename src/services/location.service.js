@@ -99,7 +99,7 @@ export class LocationService {
 
     if (!paramsArray || paramsArray.length === 0) {
       const error = new Error("아직 등록된 사진이 없거나, 없는가게 입니다.");
-      error.status = 401;
+      error.statusCode = 400;
       throw error;
     }
 
