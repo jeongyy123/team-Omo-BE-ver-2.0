@@ -2,16 +2,11 @@ import { LocationRepository } from "../repositories/location.repository.js";
 import haversine from "haversine";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import crypto from "crypto";
 import { getManyImagesS3 } from "../utils/getImageS3.js";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const randomImageName = (bytes = 32) =>
-  crypto.randomBytes(bytes).toString("hex");
-
-const imageName = randomImageName(); // file name will be random
 
 const bucketName = process.env.BUCKET_NAME;
 const bucketRegion = process.env.BUCKET_REGION;
@@ -97,11 +92,11 @@ export class LocationService {
       })),
     );
 
-    if (!paramsArray || paramsArray.length === 0) {
-      const error = new Error("아직 등록된 사진이 없거나, 없는가게 입니다.");
-      error.statusCode = 401;
-      throw error;
-    }
+    // if (!paramsArray || paramsArray.length === 0) {
+    //   const error = new Error("아직 등록된 사진이 없거나, 없는가게 입니다.");
+    //   error.statusCode = 400;
+    //   throw error;
+    // }
 
     // 이미지 URL 서명 및 반환
     const signedUrlsArray = await Promise.all(
