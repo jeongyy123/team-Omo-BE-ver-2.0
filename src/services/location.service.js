@@ -56,9 +56,9 @@ export class LocationService {
     return Promise.all(
       locations.map(async (loc) => {
         const distance = +haversine(
-            start,
-            { latitude: loc.latitude, longitude: loc.longitude },
-            { unit: "meter" },
+          start,
+          { latitude: loc.latitude, longitude: loc.longitude },
+          { unit: "meter" },
         )
         return {
           ...loc,
@@ -99,7 +99,7 @@ export class LocationService {
 
     if (!paramsArray || paramsArray.length === 0) {
       const error = new Error("아직 등록된 사진이 없거나, 없는가게 입니다.");
-      error.status = 401;
+      error.statusCode = 401;
       throw error;
     }
 
@@ -170,16 +170,16 @@ export class LocationService {
     await getManyImagesS3(sortedPosts);
 
     for (const post of sortedPosts) {
-        if (post.User.imgUrl && post.User.imgUrl.length === 64) {
-          const params = {
-            Bucket: bucketName,
-            Key: post.User.imgUrl
-          }
-          const command = new GetObjectCommand(params);
-          const imgUrl = await getSignedUrl(s3, command);
-          post.User.imgUrl = imgUrl
+      if (post.User.imgUrl && post.User.imgUrl.length === 64) {
+        const params = {
+          Bucket: bucketName,
+          Key: post.User.imgUrl
         }
+        const command = new GetObjectCommand(params);
+        const imgUrl = await getSignedUrl(s3, command);
+        post.User.imgUrl = imgUrl
       }
+    }
     return sortedPosts
   }
 

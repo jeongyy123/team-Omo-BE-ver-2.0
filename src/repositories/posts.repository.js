@@ -169,7 +169,7 @@ export class PostsRepository {
             placeInfoId,
             Category: { connect: { categoryId: +category.categoryId } },
             District: { connect: { districtId: +district.districtId } },
-            User: { connect: { userId: +userId } },
+            // User: { connect: { userId: +userId } },
           },
         });
 
@@ -342,7 +342,7 @@ export class PostsRepository {
             postCount: 1,
             Category: { connect: { categoryId: +category.categoryId } },
             District: { connect: { districtId: +district.districtId } },
-            User: { connect: { userId: +userId } },
+            // User: { connect: { userId: +userId } },
           },
         });
 
