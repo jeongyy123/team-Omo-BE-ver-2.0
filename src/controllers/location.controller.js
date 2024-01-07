@@ -6,7 +6,7 @@ export class LocationController {
   getSurroundLocation = async (req, res, next) => {
     try {
       const { categoryName, qa, pa, ha, oa } = req.query;
-
+      console.log("req.query>>>>>>>>", req.query)
       const location = await this.locationService.getSurroundLocation(
         categoryName,
         qa,
