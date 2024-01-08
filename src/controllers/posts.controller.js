@@ -95,7 +95,7 @@ export class PostsController {
         categoryName,
       } = validation;
 
-      await this.postsService.updatePost(
+      const a = await this.postsService.updatePost(
         userId,
         postId,
         address,
@@ -110,7 +110,9 @@ export class PostsController {
 
       await this.postsService.findPostByPostId(postId);
 
-      return res.status(201).json({ message: "게시물을 수정하였습니다." });
+      return res.status(201).json({
+        message: "게시물을 수정하였습니다.",
+      });
     } catch (error) {
       next(error);
     }
