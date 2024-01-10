@@ -1,13 +1,13 @@
-import { IsLikeRepository } from "../repositories/isLike.repository.js";
-
 export class IsLikeService {
-  isLikeRepository = new IsLikeRepository();
+  constructor(isLikeRepository) {
+    this.isLikeRepository = isLikeRepository;
+  };
 
   createLike = async (postId, userId) => {
     const post = await this.isLikeRepository.findPostByPostId(postId);
 
     if (!post) {
-      const err = new Error("해당 게시글이 존재하지 않습니다. ")
+      const err = new Error("해당 게시글이 존재하지 않습니다.")
       err.statusCode = 400;
       throw err;
     }
@@ -29,7 +29,7 @@ export class IsLikeService {
     const post = await this.isLikeRepository.findPostByPostId(postId);
 
     if (!post) {
-      const err = new Error("해당 게시글이 존재하지 않습니다. ")
+      const err = new Error("해당 게시글이 존재하지 않습니다.")
       err.statusCode = 400;
       throw err;
     }

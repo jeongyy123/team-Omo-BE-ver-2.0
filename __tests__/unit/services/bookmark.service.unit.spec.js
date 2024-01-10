@@ -146,24 +146,18 @@ describe('Bookmark Service Unit Test', () => {
       placeInfoId: 1,
     };
 
-    // bookmark.service.js 중 deleteBookmark 로직을 보면 
-    // findLocationByLocationId -> findBookmarkByLocationIdAndUserId 호출
     mockBookmarkRepository.findLocationByLocationId.mockReturnValue(sampleLocatoion);
     mockBookmarkRepository.findBookmarkByLocationIdAndUserId.mockReturnValue(sampleBookmark);
 
     try {
-      // 0. locationId, userId 넣은 서비스의 deleteBookmark 메소드 실행
-      // => 찾는 게시글이 없을 때, Error 발생
       await bookmarkService.deleteBookmark(1, 1);
-      // 1. locationId로 findLocationByLocationId 찾기
-      expect(mockBookmarkRepository.findLocationByLocationId).toHaveBeenCalledTimes(1);
-
     } catch (error) {
-      // 2. locationId, userId로 findBookmarkByLocationIdAndUserId 찾기
+      expect(mockBookmarkRepository.findLocationByLocationId).toHaveBeenCalledTimes(1);
+      expect(mockBookmarkRepository.findLocationByLocationId).toHaveBeenCalledWith(1);
+
       expect(mockBookmarkRepository.findBookmarkByLocationIdAndUserId).toHaveBeenCalledTimes(1);
       expect(mockBookmarkRepository.findBookmarkByLocationIdAndUserId).toHaveBeenCalledWith(1, 1);
 
-      // 3. 찾는 게시글이 없을 때, Error 발생 (이미 북마크 취소한 장소입니다.)
       expect(error.message).toEqual("이미 북마크 취소한 장소입니다.");
     }
   })

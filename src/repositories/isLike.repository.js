@@ -1,13 +1,15 @@
-import { prisma } from "../utils/prisma/index.js";
-
 export class IsLikeRepository {
+  constructor(prisma) {
+    this.prisma = prisma;
+  }
+
   createLike = async (postId, userId) => {
-    await prisma.posts.update({
+    await this.prisma.posts.update({
       where: { postId: +postId },
       data: { likeCount: { increment: 1 } },
     });
 
-    await prisma.likes.create({
+    await this.prisma.likes.create({
       data: { PostId: +postId, UserId: +userId },
     });
 
@@ -15,16 +17,16 @@ export class IsLikeRepository {
   }
 
   deleteLike = async (postId, userId) => {
-    const findLike = await prisma.likes.findFirst({
+    const findLike = await this.prisma.likes.findFirst({
       where: { PostId: +postId, UserId: +userId },
     });
 
-    await prisma.posts.update({
+    await this.prisma.posts.update({
       where: { postId: +postId },
       data: { likeCount: { decrement: 1 } },
     });
 
-    await prisma.likes.delete({
+    await this.prisma.likes.delete({
       where: { likeId: findLike.likeId },
     });
 
@@ -32,19 +34,19 @@ export class IsLikeRepository {
   }
 
   findPostByPostId = async (postId) => {
-    return await prisma.posts.findFirst({
+    return await this.prisma.posts.findFirst({
       where: { postId: +postId },
     });
   }
 
   findLikeByPostIdAndUserId = async (postId, userId) => {
-    return await prisma.likes.findFirst({
+    return await this.prisma.likes.findFirst({
       where: { PostId: +postId, UserId: +userId },
     });
   }
 
   getLikedPostsByUser = async (userId) => {
-    const likedPosts = await prisma.likes.findMany({
+    const likedPosts = await this.prisma.likes.findMany({
       where: { UserId: +userId },
       select: {
         likeId: true,
