@@ -1,7 +1,7 @@
-import { BookmarkRepository } from "../repositories/bookmark.repository.js";
-
 export class BookmarkService {
-  bookmarkRepository = new BookmarkRepository();
+  constructor(bookmarkRepository) {
+    this.bookmarkRepository = bookmarkRepository;
+  };
 
   createBookmark = async (locationId, userId) => {
     const findLocationByLocationId =
@@ -54,28 +54,11 @@ export class BookmarkService {
       throw err;
     }
 
-    await this.bookmarkRepository.deleteBookmark(locationId, userId);
+    await this.bookmarkRepository.deleteBookmark(findBookmarkByLocationIdAndUserId.bookmarkId);
 
     return {
       message: "북마크 취소",
     };
-  };
-
-  findLocationByLocationId = async (locationId) => {
-    const location =
-      await this.bookmarkRepository.findLocationByLocationId(locationId);
-
-    return location;
-  };
-
-  findBookmarkByLocationIdAndUserId = async (locationId, userId) => {
-    const bookmark =
-      await this.bookmarkRepository.findBookmarkByLocationIdAndUserId(
-        locationId,
-        userId,
-      );
-
-    return bookmark;
   };
 
   getUserMapBookmarks = async (userId) => {

@@ -1,4 +1,4 @@
-import { expect, jest } from "@jest/globals";
+import { jest } from "@jest/globals";
 import { PostsRepository } from "../../../src/repositories/posts.repository.js";
 
 //findAllPosts findPostById createPost findCategory findDistrict updatePost findPostByPostId deletePost
