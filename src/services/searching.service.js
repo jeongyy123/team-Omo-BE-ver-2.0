@@ -1,4 +1,4 @@
-import { getSearchingProfile } from '../utils/getImageS3.js'
+import { getSearchingProfile } from "../utils/getImageS3.js";
 
 export class SearchingService {
   constructor(searchingRepository) {
@@ -8,8 +8,8 @@ export class SearchingService {
   getSearching = async (nickname, storeName) => {
     let searchedData;
     if (nickname) {
-
-      const getSearchingByNickname = await this.searchingRepository.getSearchingByNickname(nickname);
+      const getSearchingByNickname =
+        await this.searchingRepository.getSearchingByNickname(nickname);
 
       if (!getSearchingByNickname || getSearchingByNickname.length === 0) {
         const err = new Error(`검색하신 ${nickname} 님의 정보가 없어요.`);
@@ -23,7 +23,8 @@ export class SearchingService {
     }
 
     if (storeName) {
-      const seachedDataByStoreName = await this.searchingRepository.getSearchingByStoreName(storeName);
+      const seachedDataByStoreName =
+        await this.searchingRepository.getSearchingByStoreName(storeName);
 
       if (!seachedDataByStoreName || seachedDataByStoreName.length === 0) {
         const err = new Error(`검색하신 ${storeName} 가게 정보가 없어요.`);
@@ -34,5 +35,5 @@ export class SearchingService {
     }
 
     return searchedData;
-  }
+  };
 }

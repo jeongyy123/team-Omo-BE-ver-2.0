@@ -32,10 +32,9 @@
 //     const comments = await commentsRepository.findAllComments();
 
 //     expect(commentsRepository.prisma.comments.findMany).toHaveBeenCalledTimes(1);
-    
+
 //     expect(comments).toBe(mockReturn);
 //   });
-
 
 //   test('createComments Method', async () => {
 //     const mockReturn = 'Create Comment Return String';

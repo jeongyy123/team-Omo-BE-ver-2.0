@@ -8,9 +8,9 @@ export class SearchingRepository {
       where: {
         Location: {
           storeName: {
-            contains: storeName
-          }
-        }
+            contains: storeName,
+          },
+        },
       },
       select: {
         postId: true,
@@ -29,12 +29,12 @@ export class SearchingRepository {
             starAvg: true,
             postCount: true,
             placeInfoId: true,
-          }
+          },
         },
         Category: {
           select: {
-            categoryName: true
-          }
+            categoryName: true,
+          },
         },
         User: {
           select: {
@@ -42,25 +42,25 @@ export class SearchingRepository {
             nickname: true,
           },
         },
-      }
-    })
+      },
+    });
     return findStores;
-  }
+  };
 
   getSearchingByNickname = async (nickname) => {
     const findUsers = await this.prisma.users.findMany({
       where: {
         nickname: {
           contains: nickname,
-        }
+        },
       },
       select: {
         userId: true,
         nickname: true,
         imgUrl: true,
-      }
-    })
+      },
+    });
 
     return findUsers;
-  }
+  };
 }

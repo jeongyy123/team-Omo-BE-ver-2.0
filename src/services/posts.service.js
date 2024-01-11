@@ -5,8 +5,8 @@ import {
   getSingleImageS3,
   getImageS3,
 } from "../utils/getImageS3.js";
-import { processPutImages } from '../utils/putImageS3.js';
-import { deleteImageS3 } from '../utils/deleteImageS3.js'
+import { processPutImages } from "../utils/putImageS3.js";
+import { deleteImageS3 } from "../utils/deleteImageS3.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -109,9 +109,7 @@ export class PostsService {
     longitude,
     categoryName,
   ) => {
-    const post = await this.postsRepository.findPostByPostId(
-      postId,
-    );
+    const post = await this.postsRepository.findPostByPostId(postId);
 
     if (!post) {
       const err = new Error("존재하지않는 게시글입니다.");
@@ -145,9 +143,7 @@ export class PostsService {
 
   /* 게시글 찾기 by PostId, UserId */
   findPostByPostId = async (postId) => {
-    const post = await this.postsRepository.findPostByPostId(
-      postId,
-    );
+    const post = await this.postsRepository.findPostByPostId(postId);
 
     if (!post) {
       const err = new Error("존재하지않는 게시글입니다.");
@@ -159,9 +155,7 @@ export class PostsService {
 
   /* 게시글 삭제 */
   deletePost = async (userId, postId) => {
-    const post = await this.postsRepository.findPostByPostId(
-      postId,
-    );
+    const post = await this.postsRepository.findPostByPostId(postId);
 
     if (!post) {
       const err = new Error("존재하지않는 게시글입니다.");

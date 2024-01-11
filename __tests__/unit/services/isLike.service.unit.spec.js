@@ -46,7 +46,6 @@
 //       UserId: 1
 //     }
 
-
 //     mockIsLikeRepository.findPostByPostId.mockReturnValue(findPostReturn)
 //     mockIsLikeRepository.findLikeByPostIdAndUserId.mockReturnValue(findLikeReturn)
 //     mockIsLikeRepository.createLike.mockReturnValue(createLikeReturn);
@@ -61,7 +60,6 @@
 
 //     expect(mockIsLikeRepository.findLikeByPostIdAndUserId).toHaveBeenCalledTimes(1);
 //     expect(mockIsLikeRepository.findLikeByPostIdAndUserId).toHaveBeenCalledWith(findLikeParams.PostId, findLikeParams.UserId);
-
 
 //     expect(createLike).toEqual(createLikeReturn);
 //     expect(mockIsLikeRepository.createLike).toHaveBeenCalledTimes(1);
@@ -172,7 +170,6 @@
 //     expect(mockIsLikeRepository.deleteLike).toHaveBeenCalledWith(deleteLikeParams.postId, deleteLikeParams.userId);
 
 //     expect(deleteLike).toEqual(deleteReturn)
-
 
 //   });
 

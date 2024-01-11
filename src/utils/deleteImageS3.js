@@ -1,9 +1,6 @@
-import {
-  S3Client,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
-import multer from 'multer';
+import multer from "multer";
 dotenv.config();
 
 const bucketName = process.env.BUCKET_NAME;
@@ -32,5 +29,4 @@ export const deleteImageS3 = async (post) => {
   params.map((bucket) => {
     return s3.send(new DeleteObjectCommand(bucket));
   });
-
-}
+};

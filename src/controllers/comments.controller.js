@@ -2,7 +2,8 @@ import { createCommentsSchema } from "../validations/comments.validation.js";
 
 export class CommentsController {
   // commentsService = new CommentsService();
-  constructor(commentsService) { // 추가
+  constructor(commentsService) {
+    // 추가
     this.commentsService = commentsService; // 추가
   }
 

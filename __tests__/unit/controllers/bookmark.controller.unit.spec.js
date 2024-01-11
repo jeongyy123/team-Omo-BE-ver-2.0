@@ -101,7 +101,6 @@
 //     expect(mockResponse.json).toHaveBeenCalledTimes(1);
 //     expect(mockResponse.json).toHaveBeenCalledWith({ message: "북마크 취소" });
 
-
 //   });
 
 //   test('getUserMapBookmarks Method', async () => {

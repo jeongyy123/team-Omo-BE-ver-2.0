@@ -28,7 +28,6 @@
 //     mockResponse.status.mockReturnValue(mockResponse);
 //   });
 
-
 //   test('createLike Method', async () => {
 //     const createParams = {
 //       postId: 1,

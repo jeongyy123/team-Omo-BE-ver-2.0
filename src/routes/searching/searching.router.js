@@ -47,11 +47,11 @@ router.get("/posts/main/searching", async (req, res, next) => {
         where: {
           nickname: {
             contains: nickname,
-          }
+          },
         },
         select: {
           userId: true,
-        }
+        },
       });
 
       if (!users || users.length === 0) {
@@ -60,68 +60,71 @@ router.get("/posts/main/searching", async (req, res, next) => {
           .json({ message: "검색하신 유저의 정보가 없어요." });
       }
 
-      const usersPosts = await Promise.all(users.map(async (user) => {
-        const posts = await prisma.posts.findMany({
-          where: { UserId: user.userId },
-          select: {
-            User: {
-              select: {
-                nickname: true,
+      const usersPosts = await Promise.all(
+        users.map(async (user) => {
+          const posts = await prisma.posts.findMany({
+            where: { UserId: user.userId },
+            select: {
+              User: {
+                select: {
+                  nickname: true,
+                },
               },
-            },
-            Category: {
-              select: {
-                categoryName: true,
+              Category: {
+                select: {
+                  categoryName: true,
+                },
               },
-            },
-            Location: {
-              select: {
-                locationId: true,
-                storeName: true,
-                address: true,
-                starAvg: true,
-                postCount: true,
+              Location: {
+                select: {
+                  locationId: true,
+                  storeName: true,
+                  address: true,
+                  starAvg: true,
+                  postCount: true,
+                },
               },
+              postId: true,
+              imgUrl: true,
+              content: true,
+              likeCount: true,
+              commentCount: true,
+              createdAt: true,
             },
-            postId: true,
-            imgUrl: true,
-            content: true,
-            likeCount: true,
-            commentCount: true,
-            createdAt: true,
-          },
-          orderBy: { postId: "desc" }
-        });
+            orderBy: { postId: "desc" },
+          });
 
-        const imgUrlsArray = posts.map((post) =>
-          post.imgUrl.split(",").map((url) => ({
-            Bucket: bucketName,
-            Key: url,
-          }))
-        );
+          const imgUrlsArray = posts.map((post) =>
+            post.imgUrl.split(",").map((url) => ({
+              Bucket: bucketName,
+              Key: url,
+            })),
+          );
 
-        const signedUrlsArray = await Promise.all(
-          imgUrlsArray.map(async (params) => {
-            const commands = params.map((param) =>
-              new GetObjectCommand(param)
-            );
-            const urls = await Promise.all(
-              commands.map((command) => getSignedUrl(s3, command))
-            );
-            return urls;
-          })
-        );
+          const signedUrlsArray = await Promise.all(
+            imgUrlsArray.map(async (params) => {
+              const commands = params.map(
+                (param) => new GetObjectCommand(param),
+              );
+              const urls = await Promise.all(
+                commands.map((command) => getSignedUrl(s3, command)),
+              );
+              return urls;
+            }),
+          );
 
-        return posts.map((post, i) => {
-          post.imgUrl = signedUrlsArray[i];
-          return post;
-        });
-      })
+          return posts.map((post, i) => {
+            post.imgUrl = signedUrlsArray[i];
+            return post;
+          });
+        }),
       );
       resultData = usersPosts.flat();
 
       if (!resultData || resultData.length === 0) {
-        return res.status(404).json({ message: "해당 유저가 작성한 게시글이 없어요." })
+        return res
+          .status(404)
+          .json({ message: "해당 유저가 작성한 게시글이 없어요." });
       }
     }
 
@@ -130,9 +133,9 @@ router.get("/posts/main/searching", async (req, res, next) => {
         where: {
           Location: {
             storeName: {
-              contains: storeName
-            }
-          }
+              contains: storeName,
+            },
+          },
         },
         select: {
           imgUrl: true,
@@ -152,20 +155,20 @@ router.get("/posts/main/searching", async (req, res, next) => {
               starAvg: true,
               postCount: true,
               placeInfoId: true,
-            }
+            },
           },
           Category: {
             select: {
-              categoryName: true
-            }
+              categoryName: true,
+            },
           },
           User: {
             select: {
               nickname: true,
             },
           },
-        }
-      })
+        },
+      });
 
       if (!stores || stores.length === 0) {
         return res
@@ -177,19 +180,17 @@ router.get("/posts/main/searching", async (req, res, next) => {
         store.imgUrl.split(",").map((url) => ({
           Bucket: bucketName,
           Key: url,
-        }))
+        })),
       );
 
       const signedUrlsArray = await Promise.all(
         imgUrlsArray.map(async (params) => {
-          const commands = params.map((param) =>
-            new GetObjectCommand(param)
-          );
+          const commands = params.map((param) => new GetObjectCommand(param));
           const urls = await Promise.all(
-            commands.map((command) => getSignedUrl(s3, command))
+            commands.map((command) => getSignedUrl(s3, command)),
           );
           return urls;
-        })
+        }),
       );
 
       resultData = stores.map((store, i) => {

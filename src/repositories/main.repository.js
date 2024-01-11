@@ -45,7 +45,7 @@ export class MainRepository {
     });
 
     return popularPosts;
-  }
+  };
 
   /* 최신글 조회 */
   getRecentPosts = async (districtName, limit, categoryName) => {
@@ -95,7 +95,7 @@ export class MainRepository {
     });
 
     return recentPosts;
-  }
+  };
 
   /* 댓글 조회 */
   getRecentComments = async (districtName, limit) => {
@@ -132,5 +132,5 @@ export class MainRepository {
     });
 
     return recentComments;
-  }
+  };
 }

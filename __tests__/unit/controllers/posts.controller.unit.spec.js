@@ -181,7 +181,6 @@
 //       getPostByIdRequestQueryParam.postId
 //     );
 
-
 //     expect(mockResponse.status).toHaveBeenCalledTimes(1);
 //     expect(mockResponse.status).toHaveBeenCalledWith(200);
 

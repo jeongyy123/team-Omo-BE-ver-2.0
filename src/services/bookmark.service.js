@@ -1,7 +1,7 @@
 export class BookmarkService {
   constructor(bookmarkRepository) {
     this.bookmarkRepository = bookmarkRepository;
-  };
+  }
 
   createBookmark = async (locationId, userId) => {
     const findLocationByLocationId =
@@ -54,7 +54,9 @@ export class BookmarkService {
       throw err;
     }
 
-    await this.bookmarkRepository.deleteBookmark(findBookmarkByLocationIdAndUserId.bookmarkId);
+    await this.bookmarkRepository.deleteBookmark(
+      findBookmarkByLocationIdAndUserId.bookmarkId,
+    );
 
     return {
       message: "북마크 취소",
