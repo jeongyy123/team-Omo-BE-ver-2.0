@@ -92,11 +92,11 @@ export class LocationService {
       })),
     );
 
-    // if (!paramsArray || paramsArray.length === 0) {
-    //   const error = new Error("아직 등록된 사진이 없거나, 없는가게 입니다.");
-    //   error.statusCode = 400;
-    //   throw error;
-    // }
+    if (!paramsArray || paramsArray.length === 0) {
+      const error = new Error("아직 등록된 사진이 없거나, 없는가게 입니다.");
+      error.statusCode = 400;
+      throw error;
+    }
 
     // 이미지 URL 서명 및 반환
     const signedUrlsArray = await Promise.all(

@@ -22,7 +22,7 @@ export class LocationController {
         throw new Error("올바른 카테고리를 입력하세요.");
       }
 
-      return res.status(200).json({ data: location });
+      return res.status(200).json(location);
     } catch (error) {
       next(error);
     }
