@@ -22,7 +22,7 @@ export class RepliesController {
         content,
       );
 
-      return res.status(200).json({ data: reply });
+      return res.status(200).json( reply );
     } catch (error) {
       next(error);
     }
@@ -40,7 +40,7 @@ export class RepliesController {
         lastSeenId,
       );
 
-      return res.status(200).json({ data: replies });
+      return res.status(200).json( replies );
     } catch (error) {
       next(error);
     }

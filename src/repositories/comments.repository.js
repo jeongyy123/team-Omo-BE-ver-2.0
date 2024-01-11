@@ -1,13 +1,13 @@
-import { prisma } from "../utils/prisma/index.js";
+
 
 export class CommentsRepository {
-  // constructor (prisma) { // 추가
-  //   this.prisma = prisma; // 추가
-  // }
+  constructor (prisma) { // 추가
+    this.prisma = prisma; // 추가
+  }
  
   //등록
   findPostById = async (postId) => {
-    const post = await prisma.posts.findFirst({
+    const post = await this.prisma.posts.findFirst({
       where: { postId: +postId },
     });
 
@@ -15,7 +15,7 @@ export class CommentsRepository {
   };
 
   createComment = async (userId, postId, content) => {
-    const comment = await prisma.comments.create({
+    const comment = await this.prisma.comments.create({
       data: {
         UserId: userId,
         PostId: +postId,
@@ -23,7 +23,7 @@ export class CommentsRepository {
       },
     });
 
-    await prisma.posts.update({
+    await this.prisma.posts.update({
       where: { postId: +postId },
       data: {
         commentCount: {
@@ -38,7 +38,7 @@ export class CommentsRepository {
   findAllComments = async (postId, page, lastSeenId) => {
     const parsedPage = parseInt(page, 10) || 1;
 
-    const comments = await prisma.comments.findMany({
+    const comments = await this.prisma.comments.findMany({
       where: { PostId: +postId },
       select: {
         User: {
@@ -69,7 +69,7 @@ export class CommentsRepository {
 
   // 삭제
   findCommentById = async (commentId) => {
-    const comment = await prisma.comments.findFirst({
+    const comment = await this.prisma.comments.findFirst({
       where: { commentId: +commentId },
     });
 
@@ -77,7 +77,7 @@ export class CommentsRepository {
   };
 
   deleteComment = async (userId, commentId) => {
-    const deleteComment = await prisma.comments.delete({
+    const deleteComment = await this.prisma.comments.delete({
       where: { UserId: userId, commentId: +commentId },
     });
 
@@ -85,7 +85,7 @@ export class CommentsRepository {
   };
 
   decrementCommentCount = async (postId) => { 
-    await prisma.posts.update({
+    await this.prisma.posts.update({
       where: { postId: +postId },
       data: {
         commentCount: {

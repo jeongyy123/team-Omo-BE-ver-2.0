@@ -1,4 +1,4 @@
-import { CommentsRepository } from "../repositories/comments.repository.js";
+
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
@@ -20,10 +20,10 @@ const s3 = new S3Client({
 });
 
 export class CommentsService {
-  commentsRepository = new CommentsRepository();
-  // constructor (commentsRepository) { // 추가
-  //   this.commentsRepository = commentsRepository;// 추가
-  // }
+  // commentsRepository = new CommentsRepository();
+  constructor (commentsRepository) { // 추가
+    this.commentsRepository = commentsRepository;// 추가
+  }
   // 등록
 
   createComment = async (userId, postId, content) => {
