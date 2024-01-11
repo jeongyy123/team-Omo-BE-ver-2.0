@@ -1,7 +1,6 @@
 import express from "express";
-import { RepliesController } from "../../controllers/replies.controller.js";
-import authMiddleware from "../../middlewares/auth.middleware.js";
-
+import { RepliesController } from "../controllers/replies.controller.js";
+import authMiddleware from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
@@ -14,7 +13,10 @@ router.post(
 );
 
 // 조회 api
-router.get("/posts/:postId/comments/:commentId/replies", repliesController.getReplies);
+router.get(
+  "/posts/:postId/comments/:commentId/replies",
+  repliesController.getReplies,
+);
 
 // 삭제 api
 router.delete(
@@ -22,6 +24,5 @@ router.delete(
   authMiddleware,
   repliesController.deleteReply,
 );
-
 
 export default router;

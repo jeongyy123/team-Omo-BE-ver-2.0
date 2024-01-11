@@ -10,11 +10,13 @@ const authController = new AuthController(); // AuthController를 인스턴스�
 router.get("/kakao", authController.kakaoLogin);
 
 // 로그인 후 콜백 라우터
-router.get("/kakao/callback", passport.authenticate(
-    "kakao",
-    {
-      session: false, // 세션 비활성화
-      failureRedirect: "https://omo-six.vercel.app/login",
-    }), authController.kakaoCallback);
+router.get(
+  "/kakao/callback",
+  passport.authenticate("kakao", {
+    session: false, // 세션 비활성화
+    failureRedirect: "https://omo-six.vercel.app/login",
+  }),
+  authController.kakaoCallback,
+);
 
 export default router;

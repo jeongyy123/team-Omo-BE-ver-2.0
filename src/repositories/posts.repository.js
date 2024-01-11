@@ -143,22 +143,22 @@ export class PostsRepository {
     placeInfoId,
     imgNames,
   ) => {
-    const category = await this.prisma.categories.findFirst({
-      where: { categoryName },
-    });
+    const category = await this.findCategory(categoryName);
 
-    const district = await this.prisma.districts.findFirst({
-      where: { districtName: address.split(" ")[1] },
-    });
+    // if (!category) {
+    //   const err = new Error("카테고리가 존재하지않습니다.");
+    //   err.statusCode = 404;
+    //   throw err;
+    // }
 
-    const location = await this.prisma.locations.findFirst({
-      where: { address },
-    });
+    const district = await this.findDistrict(address);
+
+    const location = await this.findLocation(address);
 
     //location 정보가 기존 X => location랑 posts 생성.
     if (!location) {
       await this.prisma.$transaction(async (prisma) => {
-        const createLocation = await this.prisma.locations.create({
+        const createLocation = await prisma.locations.create({
           data: {
             storeName,
             address,
@@ -173,16 +173,14 @@ export class PostsRepository {
           },
         });
 
-        await this.prisma.posts.create({
+        await prisma.posts.create({
           data: {
             content,
             star,
             likeCount: 0,
             User: { connect: { userId: +userId } },
             Category: { connect: { categoryId: +category.categoryId } },
-            Location: {
-              connect: { locationId: +createLocation.locationId },
-            },
+            Location: { connect: { locationId: +createLocation.locationId } },
             imgUrl: imgNames.join(","),
           },
         });
@@ -190,7 +188,7 @@ export class PostsRepository {
     } else {
       //location 정보가 기존 O => location 업데이트, posts 생성
       await this.prisma.$transaction(async (prisma) => {
-        await this.prisma.posts.create({
+        await prisma.posts.create({
           data: {
             content,
             star,
@@ -202,14 +200,14 @@ export class PostsRepository {
           },
         });
 
-        const starsAvg = await this.prisma.posts.aggregate({
+        const starsAvg = await prisma.posts.aggregate({
           where: { LocationId: location.locationId },
           _avg: {
             star: true,
           },
         });
 
-        await this.prisma.locations.update({
+        await prisma.locations.update({
           where: {
             locationId: location.locationId,
           },
@@ -239,6 +237,13 @@ export class PostsRepository {
     });
   };
 
+  /* 장소 찾기 */
+  findLocation = async (address) => {
+    return await await this.prisma.locations.findFirst({
+      where: { address },
+    });
+  };
+
   /* 게시글 수정 */
   updatePost = async (
     userId,
@@ -252,34 +257,22 @@ export class PostsRepository {
     longitude,
     categoryName,
   ) => {
-    const post = await this.prisma.posts.findFirst({
-      where: { postId: +postId },
-    });
+    const post = await this.findPostByPostId(postId);
 
     // 수정 후 category 정보
-    const category = await this.prisma.categories.findFirst({
-      where: { categoryName },
-    });
+    const category = await this.findCategory(categoryName);
 
     // 수정 후 district 정보
-    const district = await this.prisma.districts.findFirst({
-      where: { districtName: address.split(" ")[1] },
-    });
-
-    // if (!district) {
-    //   return res.status(400).json({ message: "지역이 존재하지 않습니다." });
-    // }
+    const district = await this.findDistrict(address);
 
     // 수정 후 location 정보
-    const afterEditPostLocation = await this.prisma.locations.findFirst({
-      where: { address },
-    });
+    const afterEditPostLocation = await this.findLocation(address);
 
     // 수정 후 location 정보가 있을 경우
     // -> post 수정( content, star ) & location 수정 ( starAvg, postCount )
     if (afterEditPostLocation) {
       await this.prisma.$transaction(async (prisma) => {
-        const createPost = await this.prisma.posts.update({
+        const createPost = await prisma.posts.update({
           where: { postId: +postId, UserId: +userId },
           data: {
             LocationId: afterEditPostLocation.locationId,
@@ -288,7 +281,7 @@ export class PostsRepository {
           },
         });
 
-        const starAvg = await this.prisma.posts.aggregate({
+        const starAvg = await prisma.posts.aggregate({
           where: { LocationId: createPost.LocationId },
           _avg: {
             star: true,
@@ -296,7 +289,7 @@ export class PostsRepository {
         });
 
         // 수정 후 location
-        await this.prisma.locations.update({
+        await prisma.locations.update({
           where: {
             locationId: afterEditPostLocation.locationId,
           },
@@ -309,7 +302,7 @@ export class PostsRepository {
         });
 
         // 수정 전 post의 location.postCount decrement
-        const beforeEditPostLocation = await this.prisma.locations.update({
+        const beforeEditPostLocation = await prisma.locations.update({
           where: { locationId: post.LocationId },
           data: {
             postCount: {
@@ -320,7 +313,7 @@ export class PostsRepository {
 
         // 만약 수정 후에 기존 location.postcount가 0이 된다면 삭제
         if (beforeEditPostLocation.postCount === 0) {
-          await this.prisma.locations.delete({
+          await prisma.locations.delete({
             where: { locationId: beforeEditPostLocation.locationId },
           });
         }
@@ -331,7 +324,7 @@ export class PostsRepository {
       // -> 수정 전 location 정보 수정
       await this.prisma.$transaction(async (prisma) => {
         // 수정 후의 location 정보 create
-        const location = await this.prisma.locations.create({
+        const location = await prisma.locations.create({
           data: {
             starAvg: 0,
             address,
@@ -346,7 +339,7 @@ export class PostsRepository {
           },
         });
 
-        const createPost = await this.prisma.posts.update({
+        const createPost = await prisma.posts.update({
           where: { postId: +postId, UserId: +userId },
           data: {
             LocationId: location.locationId,
@@ -355,7 +348,7 @@ export class PostsRepository {
           },
         });
 
-        const starAvg = await this.prisma.posts.aggregate({
+        const starAvg = await prisma.posts.aggregate({
           where: { LocationId: createPost.LocationId },
           _avg: {
             star: true,
@@ -363,7 +356,7 @@ export class PostsRepository {
         });
 
         //starAvg 갱신
-        await this.prisma.locations.update({
+        await prisma.locations.update({
           where: { locationId: location.locationId },
           data: {
             starAvg: starAvg._avg.star,
@@ -371,7 +364,7 @@ export class PostsRepository {
         });
 
         // 수정 전 post의 location decrement 하기
-        const beforeEditPostLocation = await this.prisma.locations.update({
+        const beforeEditPostLocation = await prisma.locations.update({
           where: { locationId: post.LocationId },
           data: {
             postCount: {
@@ -382,7 +375,7 @@ export class PostsRepository {
 
         // 수정 전 location.postcount가 0이 되면 지워
         if (beforeEditPostLocation.postCount === 0) {
-          await this.prisma.locations.delete({
+          await prisma.locations.delete({
             where: { locationId: beforeEditPostLocation.locationId },
           });
         }
@@ -400,11 +393,11 @@ export class PostsRepository {
   /* 게시글 삭제 */
   deletePost = async (userId, postId) => {
     await this.prisma.$transaction(async (prisma) => {
-      const post = await this.prisma.posts.delete({
+      const post = await prisma.posts.delete({
         where: { postId: +postId, UserId: +userId },
       });
 
-      await this.prisma.locations.update({
+      await prisma.locations.update({
         where: { locationId: post.LocationId },
         data: {
           postCount: {
@@ -413,12 +406,12 @@ export class PostsRepository {
         },
       });
 
-      const findLocation = await this.prisma.locations.findFirst({
+      const findLocation = await prisma.locations.findFirst({
         where: { locationId: post.LocationId },
       });
 
       if (findLocation.postCount === 0) {
-        await this.prisma.locations.delete({
+        await prisma.locations.delete({
           where: { locationId: post.LocationId },
         });
       }

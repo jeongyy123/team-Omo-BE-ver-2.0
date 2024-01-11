@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import jimp from 'jimp';
+import jimp from "jimp";
 import {
   S3Client,
   PutObjectCommand,

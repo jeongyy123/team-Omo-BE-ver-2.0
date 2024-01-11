@@ -6,7 +6,7 @@ export class LocationController {
   getSurroundLocation = async (req, res, next) => {
     try {
       const { categoryName, qa, pa, ha, oa } = req.query;
-      console.log("req.query>>>>>>>>", req.query)
+
       const location = await this.locationService.getSurroundLocation(
         categoryName,
         qa,
@@ -22,7 +22,7 @@ export class LocationController {
         throw new Error("올바른 카테고리를 입력하세요.");
       }
 
-      return res.status(200).json({ data: location });
+      return res.status(200).json(location);
     } catch (error) {
       next(error);
     }
@@ -34,24 +34,21 @@ export class LocationController {
       const { latitude, longitude } = req.query;
       const { locationId } = req.params;
 
+      if (!locationId) {
+        return res
+          .status(400)
+          .json({ message: "locationId 요청 송신에 오류가 있습니다." });
+      }
+
       const location = await this.locationService.getPopularLocation(
         locationId,
         latitude,
         longitude,
       );
 
-      if (!locationId) {
-        return res
-          .status(400)
-          .json({ message: "locationId 요청 송신에 오류가 있습니다." });
-      }
-       const posts = await this.locationService.getPopularPosts(
-        locationId
-       )
+      const posts = await this.locationService.getPopularPosts(locationId);
 
-        
-
-return res.status(200).json({ location, posts })
+      return res.status(200).json({ location, posts });
     } catch (error) {
       next(error);
     }

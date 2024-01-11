@@ -2,9 +2,9 @@ import express from "express";
 import multer from "multer";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import { fileFilter } from "../utils/putImageS3.js";
-import { prisma } from '../utils/prisma/index.js'
-import { PostsRepository } from '../repositories/posts.repository.js'
-import { PostsService } from '../services/posts.service.js'
+import { prisma } from "../utils/prisma/index.js";
+import { PostsRepository } from "../repositories/posts.repository.js";
+import { PostsService } from "../services/posts.service.js";
 import { PostsController } from "../controllers/posts.controller.js";
 
 const router = express.Router();

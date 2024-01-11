@@ -1,15 +1,16 @@
-import { prisma } from "../utils/prisma/index.js";
-
 export class SearchingRepository {
+  constructor(prisma) {
+    this.prisma = prisma;
+  }
 
   getSearchingByStoreName = async (storeName) => {
-    const findStores = await prisma.posts.findMany({
+    const findStores = await this.prisma.posts.findMany({
       where: {
         Location: {
           storeName: {
-            contains: storeName
-          }
-        }
+            contains: storeName,
+          },
+        },
       },
       select: {
         postId: true,
@@ -28,12 +29,12 @@ export class SearchingRepository {
             starAvg: true,
             postCount: true,
             placeInfoId: true,
-          }
+          },
         },
         Category: {
           select: {
-            categoryName: true
-          }
+            categoryName: true,
+          },
         },
         User: {
           select: {
@@ -41,25 +42,25 @@ export class SearchingRepository {
             nickname: true,
           },
         },
-      }
-    })
+      },
+    });
     return findStores;
-  }
+  };
 
   getSearchingByNickname = async (nickname) => {
-    const findUsers = await prisma.users.findMany({
+    const findUsers = await this.prisma.users.findMany({
       where: {
         nickname: {
           contains: nickname,
-        }
+        },
       },
       select: {
         userId: true,
         nickname: true,
         imgUrl: true,
-      }
-    })
+      },
+    });
 
     return findUsers;
-  }
+  };
 }

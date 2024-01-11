@@ -22,7 +22,7 @@
 
 //   // 각 test가 실행되기 전에 실행됩니다.
 //   beforeEach(() => {
-//     jest.resetAllMocks(); // 모든 Mock을 초기화합니다.
+//     jest.resetAllMocks();
 //   })
 
 //   test('findAllComments Method', async () => {
@@ -31,11 +31,10 @@
 
 //     const comments = await commentsRepository.findAllComments();
 
-//     expect(comments).toBe(mockReturn);
-
 //     expect(commentsRepository.prisma.comments.findMany).toHaveBeenCalledTimes(1);
-//   });
 
+//     expect(comments).toBe(mockReturn);
+//   });
 
 //   test('createComments Method', async () => {
 //     const mockReturn = 'Create Comment Return String';
@@ -49,11 +48,11 @@
 
 //     const createCommentData = await commentsRepository.createComment(
 //       createCommentParams.UserId,
-//       Number(createCommentParams.PostId),  
+//       Number(createCommentParams.PostId),
 //       createCommentParams.content
 //     );
 
-//     expect(createCommentData).toEqual(mockReturn);
+//     expect(createCommentData).toBe(mockReturn);
 
 //     expect(mockPrisma.comments.create).toHaveBeenCalledTimes(1);
 
@@ -65,5 +64,16 @@
 //       }
 //     })
 //   });
+
+//   test('deleteComment Method', async () => {
+//     const mockReturn = 'deletecomment';
+//     mockPrisma.comments.delete.mockReturnValue(mockReturn);
+
+//     const deleteComment = await commentsRepository.deleteComment();
+
+//     expect(commentsRepository.prisma.comments.delete).toHaveBeenCalledTimes(1);
+
+//     expect(deleteComment).toBe(mockReturn);
+//   })
 
 // });

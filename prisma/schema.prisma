@@ -153,13 +153,13 @@ model Districts {
   @@map("Districts")
 }
 
-// model TokenBlacklist {
-//   id            Int      @id @default(autoincrement()) @map("id")
-//   token         String   @map("token")
-//   invalidatedAt DateTime @default(now()) @map("invalidatedAt")
+model TokenBlacklist {
+  id            Int      @id @default(autoincrement()) @map("id")
+  token         String   @map("token")
+  invalidatedAt DateTime @default(now()) @map("invalidatedAt")
 
-//   @@map("TokenBlacklist")
-// }
+  @@map("TokenBlacklist")
+}
 
 model Replies {
   replyId   Int      @id @default(autoincrement()) @map("replyId")

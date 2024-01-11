@@ -1,8 +1,7 @@
-import { IsLikeService } from '../services/isLike.service.js'
-
 export class IsLikeController {
-  isLikeService = new IsLikeService();
-
+  constructor(isLikeService) {
+    this.isLikeService = isLikeService;
+  }
   /* 좋아요 */
   createLike = async (req, res, next) => {
     try {
@@ -15,7 +14,7 @@ export class IsLikeController {
     } catch (error) {
       next(error);
     }
-  }
+  };
 
   /* 좋아요 취소 */
   deleteLike = async (req, res, next) => {
@@ -29,7 +28,7 @@ export class IsLikeController {
     } catch (error) {
       next(error);
     }
-  }
+  };
 
   /* 유저별 좋아요한 게시글 조회 */
   getLikedPostsByUser = async (req, res, next) => {
@@ -42,5 +41,5 @@ export class IsLikeController {
     } catch (error) {
       next(error);
     }
-  }
+  };
 }

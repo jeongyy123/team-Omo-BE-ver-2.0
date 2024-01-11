@@ -1,9 +1,14 @@
 import express from "express";
-import { MainController } from '../controllers/main.controller.js'
+import { prisma } from "../utils/prisma/index.js";
+import { MainRepository } from "../repositories/main.repository.js";
+import { MainService } from "../services/main.service.js";
+import { MainController } from "../controllers/main.controller.js";
 
 const router = express.Router();
 
-const mainController = new MainController();
+const mainRepository = new MainRepository(prisma);
+const mainService = new MainService(mainRepository);
+const mainController = new MainController(mainService);
 /* 인기글 조회 */
 router.get("/main/popular", mainController.getPoplurPosts);
 /* 최신글 조회 */

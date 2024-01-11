@@ -1,11 +1,11 @@
-import { CommentsService } from "../services/comments.service.js";
 import { createCommentsSchema } from "../validations/comments.validation.js";
 
 export class CommentsController {
-  commentsService = new CommentsService();
-  // constructor (commentsController) { // 추가
-  //   this.commentsController = commentsController; // 추가
-  // }
+  // commentsService = new CommentsService();
+  constructor(commentsService) {
+    // 추가
+    this.commentsService = commentsService; // 추가
+  }
 
   // 등록 api
   createComment = async (req, res, next) => {
@@ -27,7 +27,7 @@ export class CommentsController {
         content,
       );
 
-      return res.status(200).json({ data: comment });
+      return res.status(200).json(comment);
     } catch (error) {
       next(error);
     }
@@ -44,7 +44,7 @@ export class CommentsController {
         lastSeenId,
       );
 
-      return res.status(200).json({ data: comments });
+      return res.status(200).json(comments);
     } catch (error) {
       next(error);
     }
