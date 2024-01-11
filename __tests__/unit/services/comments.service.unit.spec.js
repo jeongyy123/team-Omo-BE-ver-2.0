@@ -12,13 +12,13 @@ let mockCommentsRepository = {
   decrementCommentCount: jest.fn(),
 };
 
-// commentsService의 Repository를 Mock Repository로 의존성을 주입합니다.
+
 let commentsService = new CommentsService(mockCommentsRepository);
 
 describe("Posts Service Unit Test", () => {
   // 각 test가 실행되기 전에 실행됩니다.
   beforeEach(() => {
-    jest.resetAllMocks(); // 모든 Mock을 초기화합니다.
+    jest.resetAllMocks();
   });
 
   test("createComment Method", async () => {
@@ -77,10 +77,8 @@ describe("Posts Service Unit Test", () => {
   // 이미지 가져오는 로직의 결과를 모의 반환
   commentsService.getCommentsWithImages = jest.fn().mockReturnValue(commentsWithImagesMock);
 
-  // Act
   const result = await commentsService.getComments(postId, page, lastSeenId);
 
-  // Assert
   expect(result).toBe(commentsWithImagesMock);
   expect(mockCommentsRepository.findPostById).toHaveBeenCalledWith(postId);
   expect(mockCommentsRepository.findAllComments).toHaveBeenCalledWith(+postId, page, lastSeenId);
