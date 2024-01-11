@@ -1,13 +1,14 @@
-import { prisma } from "../utils/prisma/index.js";
-
 export class MainRepository {
+  constructor(prisma) {
+    this.prisma = prisma;
+  }
   /* 인기글 조회 */
   getPoplurPosts = async (districtName, limit) => {
-    const findDistrict = await prisma.districts.findFirst({
+    const findDistrict = await this.prisma.districts.findFirst({
       where: { districtName },
     });
 
-    const popularPosts = await prisma.posts.findMany({
+    const popularPosts = await this.prisma.posts.findMany({
       where: {
         Location: {
           ...(findDistrict?.districtId && {
@@ -48,19 +49,19 @@ export class MainRepository {
 
   /* 최신글 조회 */
   getRecentPosts = async (districtName, limit, categoryName) => {
-    const findDistrict = prisma.districts.findFirst({
+    const findDistrict = this.prisma.districts.findFirst({
       where: { districtName },
     });
 
-    const findLocations = prisma.locations.findMany({
+    const findLocations = this.prisma.locations.findMany({
       where: { DistrictId: findDistrict.districtId },
     });
 
-    const category = await prisma.categories.findFirst({
+    const category = await this.prisma.categories.findFirst({
       where: { categoryName },
     });
 
-    const recentPosts = await prisma.posts.findMany({
+    const recentPosts = await this.prisma.posts.findMany({
       where: {
         ...(findLocations?.locationId && {
           LocationId: findLocations.locationId,
@@ -98,11 +99,11 @@ export class MainRepository {
 
   /* 댓글 조회 */
   getRecentComments = async (districtName, limit) => {
-    const findDistrict = await prisma.districts.findFirst({
+    const findDistrict = await this.prisma.districts.findFirst({
       where: { districtName },
     });
 
-    const recentComments = await prisma.comments.findMany({
+    const recentComments = await this.prisma.comments.findMany({
       where: {
         ...(findDistrict?.districtId && {
           Post: {

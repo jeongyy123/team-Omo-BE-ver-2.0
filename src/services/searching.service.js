@@ -1,9 +1,9 @@
-import { SearchingRepository } from '../repositories/searching.repository.js';
 import { getSearchingProfile } from '../utils/getImageS3.js'
 
 export class SearchingService {
-  searchingRepository = new SearchingRepository();
-
+  constructor(searchingRepository) {
+    this.searchingRepository = searchingRepository;
+  }
   /* 검색 기능 (유저, 가게 이름) */
   getSearching = async (nickname, storeName) => {
     let searchedData;

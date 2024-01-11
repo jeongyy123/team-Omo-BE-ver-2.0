@@ -1,8 +1,7 @@
-import { BookmarkService } from "../services/bookmark.service.js";
-
 export class BookmarkController {
-  bookmarkService = new BookmarkService();
-
+  constructor(bookmarkService) {
+    this.bookmarkService = bookmarkService;
+  };
   /* 북마크 */
   createBookmark = async (req, res, next) => {
     try {
