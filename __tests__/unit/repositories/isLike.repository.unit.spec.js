@@ -18,7 +18,7 @@ let isLikeRepository = new IsLikeRepository(mockPrisma);
 
 describe('IsLike Repository Unit Test', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   test('createLike Method', async () => {

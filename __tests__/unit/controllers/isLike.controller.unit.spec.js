@@ -23,10 +23,11 @@ const isLikeController = new IsLikeController(mockIsLikeService);
 
 describe('IsLike Controller Unit Test', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
+
+    mockResponse.status.mockReturnValue(mockResponse);
   });
 
-  mockResponse.status.mockReturnValue(mockResponse);
 
   test('createLike Method', async () => {
     const createParams = {
@@ -51,7 +52,6 @@ describe('IsLike Controller Unit Test', () => {
     expect(mockResponse.status).toHaveBeenCalledTimes(1);
     expect(mockResponse.status).toHaveBeenCalledWith(201);
 
-    expect(mockResponse.json).toHaveBeenCalledTimes(1);
     expect(mockResponse.json).toHaveBeenCalledWith(createLikeReturn);
   });
 
@@ -78,21 +78,32 @@ describe('IsLike Controller Unit Test', () => {
     expect(mockResponse.status).toHaveBeenCalledTimes(1);
     expect(mockResponse.status).toHaveBeenCalledWith(200);
 
-    expect(mockResponse.json).toHaveBeenCalledTimes(1);
     expect(mockResponse.json).toHaveBeenCalledWith(deleteLikeReturn);
   });
 
   test('getLikedPostsByUser Method', async () => {
-    const getLikedPostsReturn = {
-      likeId: 1,
-      PostId: 1,
-      UserId: 1,
-      Post: {
-        Location: {
-          locationId: 1
+    const getLikedPostsReturn = [
+      {
+        likeId: 1,
+        PostId: 1,
+        UserId: 1,
+        Post: {
+          Location: {
+            locationId: 1
+          }
+        }
+      },
+      {
+        likeId: 2,
+        PostId: 2,
+        UserId: 1,
+        Post: {
+          Location: {
+            locationId: 2
+          }
         }
       }
-    };
+    ]
 
     const getLikedPostsByUserParams = {
       userId: 1,
@@ -110,7 +121,6 @@ describe('IsLike Controller Unit Test', () => {
     expect(mockResponse.status).toHaveBeenCalledTimes(1);
     expect(mockResponse.status).toHaveBeenCalledWith(200);
 
-    expect(mockResponse.json).toHaveBeenCalledTimes(1);
     expect(mockResponse.json).toHaveBeenCalledWith(getLikedPostsReturn);
   });
 

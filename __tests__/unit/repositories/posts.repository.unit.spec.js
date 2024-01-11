@@ -1,8 +1,8 @@
 import { jest } from "@jest/globals";
 import { PostsRepository } from "../../../src/repositories/posts.repository.js";
 
-//findAllPosts findPostById createPost findCategory findDistrict updatePost findPostByPostId deletePost
 let mockPrisma = {
+  $transaction: jest.fn(),
   posts: {
     findFirst: jest.fn(),
     findMany: jest.fn(),
@@ -34,16 +34,13 @@ describe("Posts Repository Unit Test", () => {
   });
 
   test("findAllPosts Method", async () => {
-    // 기대값
     const mockReturn = "findMany String";
     mockPrisma.posts.findMany.mockReturnValue(mockReturn);
 
-    // 검증값
     const posts = await postsRepository.findAllPosts();
 
-    // 검증값과 기대값 비교
     expect(posts).toBe(mockReturn);
-    expect(postsRepository.prisma.posts.findMany).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.posts.findMany).toHaveBeenCalledTimes(1);
   });
 
   test("findPostById Method", async () => {
@@ -53,7 +50,7 @@ describe("Posts Repository Unit Test", () => {
     const posts = await postsRepository.findPostById();
 
     expect(posts).toBe(mockReturn);
-    expect(postsRepository.prisma.posts.findFirst).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.posts.findFirst).toHaveBeenCalledTimes(1);
   });
 
   test("findCategory Method", async () => {
@@ -63,7 +60,7 @@ describe("Posts Repository Unit Test", () => {
     const category = await postsRepository.findCategory();
 
     expect(category).toBe(mockReturn);
-    expect(postsRepository.prisma.categories.findFirst).toHaveBeenCalledTimes(
+    expect(mockPrisma.categories.findFirst).toHaveBeenCalledTimes(
       1,
     );
   });
@@ -76,9 +73,8 @@ describe("Posts Repository Unit Test", () => {
     const category = await postsRepository.findDistrict(address);
 
     expect(category).toBe(mockReturn);
-    expect(postsRepository.prisma.districts.findFirst).toHaveBeenCalledTimes(1);
-    expect(postsRepository.prisma.districts.findFirst).toHaveBeenCalledWith({
-      // 따로 연산이 필요한것만 별도로 상수가 필요한가보다
+    expect(mockPrisma.districts.findFirst).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.districts.findFirst).toHaveBeenCalledWith({
       where: { districtName: address.split(" ")[1] },
     });
   });
@@ -91,7 +87,7 @@ describe("Posts Repository Unit Test", () => {
     const location = await postsRepository.findLocation(address);
 
     expect(location).toBe(mockReturn);
-    expect(postsRepository.prisma.locations.findFirst).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.locations.findFirst).toHaveBeenCalledTimes(1);
   });
 
   test("findPostByPostId Method", async () => {
@@ -101,14 +97,41 @@ describe("Posts Repository Unit Test", () => {
     const posts = await postsRepository.findPostByPostId();
 
     expect(posts).toBe(mockReturn);
-    expect(postsRepository.prisma.posts.findFirst).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.posts.findFirst).toHaveBeenCalledTimes(1);
   });
+  //   const deleteReturn = { message: "게시글을 삭제하였습니다." };
+  //   const updateReturn = {
+  //     postId: 1,
+  //     UserId: 1,
+  //     CategoryId: 1,
+  //     LocationId: 1,
+  //     content: "test Post Content",
+  //     imgUrl:
+  //       "35f3c58c10fe7974e0148d01155d988d1d037afec1c74a346bdc2b4ea076f54e",
+  //     likeCount: 0,
+  //     commentCount: 0,
+  //     star: 1,
+  //     createdAt: "2024-01-08T02:28:14.681Z",
+  //     updatedAt: "2024-01-08T13:54:03.671Z",
+  //     address: "test address",
+  //     storeName: "testStoreName1",
+  //     placeInfoId: "testPlaceInfoId1",
+  //     latitude: "37.1111",
+  //     longitude: "127.1111",
+  //     categoryName: "categoryName1",
+  //   };
 
-  /* create, update, delete 아직 안함 */
+  //   const findFirstReturn = {}
 
-  // test('deletePost Method', async () => {
-  //   const mockReturn = 'deletePost String';
-  //   mockPrisma.posts.findFirst.mockReturnValue(mockReturn);
+  //   const deletePostParams = {
+  //     postId: 1,
+  //     userId: 1,
+  //     placeInfoId: 1,
+  //   }
+
+  //   mockPrisma.posts.delete.mockReturnValue(deleteReturn)
+  //   mockPrisma.posts.update.mockReturnValue(updateReturn);
+  //   mockPrisma.posts.findFirst.mockReturnValue(findFirstReturn);
 
   //   const posts = await postsRepository.deletePost();
 

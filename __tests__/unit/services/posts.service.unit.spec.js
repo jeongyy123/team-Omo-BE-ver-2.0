@@ -20,96 +20,6 @@ describe("Posts Servcie Unit Test", () => {
     jest.resetAllMocks();
   });
 
-  // createPost 아직 안함
-
-  // test("createPost", async () => {
-  //   const samplePosts = {
-  //     userId: 1,
-  //     content: "test Post Content",
-  //     categoryName: "categoryName1",
-  //     storeName: "testStoreName1",
-  //     address: "test address",
-  //     latitude: "37.1111",
-  //     longitude: "127.1111",
-  //     star: 1,
-  //     placeInfoId: "testPlaceInfoId1",
-  //     files: [
-  //       {
-  //         "fieldname": 'imgUrl',
-  //         "originalname": 'image.png',
-  //         "encoding": '7bit',
-  //         "mimetype": 'image/png',
-  //         "buffer": Buffer.from('mocked image content'),
-  //         "size": 46165
-  //       }
-  //     ]
-  //   };
-
-  //   const sampleCategory = {
-  //     categoryId: 1,
-  //     categoryName: "음식점",
-  //   };
-
-  //   const sampleDistrict = {
-  //     districtId: 1,
-  //     districtName: "address",
-  //   };
-
-  //   const mockReturn = { message: "게시글 등록이 완료되었습니다." };
-
-  //   mockPostRepository.findCategory.mockReturnValue(sampleCategory.categoryName);
-  //   mockPostRepository.findDistrict.mockReturnValue(sampleDistrict.districtName);
-  //   mockPostRepository.updatePost.mockReturnValue(mockReturn);
-
-  //   const createdPost = await postsService.createPost(
-  //     1,
-  //     "test Post Content",
-  //     "categoryName1",
-  //     "testStoreName1",
-  //     "test address",
-  //     "37.1111",
-  //     "127.1111",
-  //     1,
-  //     "testPlaceInfoId1",
-  //     [
-  //       {
-  //         "fieldname": 'imgUrl',
-  //         "originalname": 'image.png',
-  //         "encoding": '7bit',
-  //         "mimetype": 'image/png',
-  //         "buffer": Buffer.from('mocked image content'),
-  //         "size": 46165
-  //       }
-  //     ]
-  //   );
-
-  //   expect(mockPostRepository.findCategory).toHaveBeenCalledTimes(1);
-  //   expect(mockPostRepository.findCategory).toHaveBeenCalledWith(
-  //     sampleCategory.categoryId,
-  //   );
-
-  //   expect(mockPostRepository.findDistrict).toHaveBeenCalledTimes(1);
-  //   expect(mockPostRepository.findDistrict).toHaveBeenCalledWith(
-  //     sampleDistrict.districtId,
-  //   );
-
-  //   expect(mockPostRepository.updatePost).toHaveBeenCalledTimes(1);
-  //   expect(mockPostRepository.updatePost).toHaveBeenCalledWith(
-  //     samplePosts.userId,
-  //     samplePosts.content,
-  //     samplePosts.categoryName,
-  //     samplePosts.storeName,
-  //     samplePosts.address,
-  //     samplePosts.latitude,
-  //     samplePosts.longitude,
-  //     samplePosts.star,
-  //     samplePosts.placeInfoId,
-  //     samplePosts.files,
-  //   );
-
-  //   expect(createdPost).toEqual(mockReturn);
-  // });
-
   test("updatePost Method", async () => {
     const samplePosts = {
       postId: 1,
@@ -136,7 +46,6 @@ describe("Posts Servcie Unit Test", () => {
     mockPostRepository.findPostByPostId.mockReturnValue(samplePosts);
     mockPostRepository.updatePost.mockReturnValue(mockReturn);
 
-    //Received
     const updatePost = await postsService.updatePost(
       1,
       1,
@@ -157,7 +66,6 @@ describe("Posts Servcie Unit Test", () => {
 
     expect(mockPostRepository.updatePost).toHaveBeenCalledTimes(1);
 
-    //Expected
     expect(mockPostRepository.updatePost).toHaveBeenCalledWith(
       samplePosts.postId,
       samplePosts.UserId,
@@ -192,7 +100,6 @@ describe("Posts Servcie Unit Test", () => {
   });
 
   test("updatePost Method By 수정할 권한이 존재하지 않습니다.", async () => {
-    // findPostByPostId 목업값
     const samplePosts = {
       postId: 1,
       UserId: 1,

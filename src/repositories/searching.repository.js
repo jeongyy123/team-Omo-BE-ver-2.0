@@ -1,9 +1,10 @@
-import { prisma } from "../utils/prisma/index.js";
-
 export class SearchingRepository {
+  constructor(prisma) {
+    this.prisma = prisma;
+  }
 
   getSearchingByStoreName = async (storeName) => {
-    const findStores = await prisma.posts.findMany({
+    const findStores = await this.prisma.posts.findMany({
       where: {
         Location: {
           storeName: {
@@ -47,7 +48,7 @@ export class SearchingRepository {
   }
 
   getSearchingByNickname = async (nickname) => {
-    const findUsers = await prisma.users.findMany({
+    const findUsers = await this.prisma.users.findMany({
       where: {
         nickname: {
           contains: nickname,

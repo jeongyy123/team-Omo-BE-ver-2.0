@@ -1,9 +1,7 @@
-import { MainService } from '../services/main.service.js';
-
 export class MainController {
-
-  mainService = new MainService();
-
+  constructor(mainService) {
+    this.mainService = mainService;
+  };
   /* 인기글 조회 */
   getPoplurPosts = async (req, res, next) => {
     try {
