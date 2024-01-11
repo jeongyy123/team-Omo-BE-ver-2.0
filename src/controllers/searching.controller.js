@@ -1,9 +1,9 @@
-import { SearchingService } from '../services/searching.service.js'
 import { searchingSchema } from '../validations/searching.validation.js'
 
 export class SearchingController {
-  searchingService = new SearchingService();
-
+  constructor(searchingService) {
+    this.searchingService = searchingService;
+  }
   getSearching = async (req, res, next) => {
     try {
       const validation = await searchingSchema.validateAsync(req.query);

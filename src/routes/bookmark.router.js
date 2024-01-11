@@ -1,10 +1,15 @@
 import express from "express";
 import authMiddleware from "../middlewares/auth.middleware.js";
+import { prisma } from '../utils/prisma/index.js';
+import { BookmarkRepository } from "../repositories/bookmark.repository.js";
+import { BookmarkService } from "../services/bookmark.service.js";
 import { BookmarkController } from "../controllers/bookmark.controller.js";
 
 const router = express.Router();
 
-const bookmarkController = new BookmarkController();
+const bookmarkRepository = new BookmarkRepository(prisma);
+const bookmarkService = new BookmarkService(bookmarkRepository);
+const bookmarkController = new BookmarkController(bookmarkService);
 
 /** 북마크 **/
 router.post(

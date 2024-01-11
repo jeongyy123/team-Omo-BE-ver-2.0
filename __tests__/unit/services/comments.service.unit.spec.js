@@ -102,7 +102,7 @@ test("deletePost Method By Success", async () => {
     createdAt: "2024-01-06T13:43:38.621Z",
   }
 
-  mockCommentsRepository.findCommentById = jest.fn(() => testComment);
+  mockCommentsRepository.findCommentById.mockReturnValue(testComment);  
 
   await commentsService.deleteComment(
     deleteParams.commentId,

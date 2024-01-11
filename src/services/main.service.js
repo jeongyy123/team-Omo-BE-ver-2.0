@@ -1,10 +1,9 @@
-import { MainRepository } from '../repositories/main.repository.js';
 import { getManyImagesS3 } from '../utils/getImageS3.js'
 
 export class MainService {
-
-  mainRepository = new MainRepository();
-
+  constructor(mainRepository) {
+    this.mainRepository = mainRepository;
+  };
   /* 인기글 조회 */
   getPoplurPosts = async (districtName, limit) => {
     const popularPosts = await this.mainRepository.getPoplurPosts(districtName, limit);

@@ -31,13 +31,14 @@ export class PostsController {
     try {
       const { postId } = req.params;
 
+      if (!postId) {
+        return res.status(400).json({ message: "잘못된 요청입니다." });
+      }
+
       const post = await this.postsService.findPostById(postId);
 
       return res.status(200).json(post);
     } catch (error) {
-      if (error.message) {
-        return res.status(404).json({ message: error.message });
-      }
       next(error);
     }
   };
@@ -108,9 +109,9 @@ export class PostsController {
         categoryName,
       );
 
-      await this.postsService.findPostByPostId(postId);
-
-      return res.status(201).json({ message: "게시물을 수정하였습니다." });
+      return res.status(201).json({
+        message: "게시물을 수정하였습니다.",
+      });
     } catch (error) {
       next(error);
     }
@@ -121,8 +122,6 @@ export class PostsController {
     try {
       const { userId } = req.user;
       const { postId } = req.params;
-
-      await this.postsService.findPostByPostId(postId);
 
       await this.postsService.deletePost(userId, postId);
 

@@ -1,8 +1,7 @@
-import { IsLikeService } from '../services/isLike.service.js'
-
 export class IsLikeController {
-  isLikeService = new IsLikeService();
-
+  constructor(isLikeService) {
+    this.isLikeService = isLikeService;
+  }
   /* 좋아요 */
   createLike = async (req, res, next) => {
     try {

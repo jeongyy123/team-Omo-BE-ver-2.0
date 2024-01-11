@@ -1,8 +1,9 @@
-import { prisma } from "../utils/prisma/index.js";
-
 export class BookmarkRepository {
+  constructor(prisma) {
+    this.prisma = prisma;
+  }
   createBookmark = async (locationId, userId) => {
-    await prisma.bookmark.create({
+    await this.prisma.bookmark.create({
       data: {
         LocationId: +locationId,
         UserId: +userId,
@@ -11,31 +12,27 @@ export class BookmarkRepository {
     return { message: "북마크" };
   };
 
-  deleteBookmark = async (locationId, userId) => {
-    const bookmark = await prisma.bookmark.findFirst({
-      where: { LocationId: +locationId, UserId: +userId },
-    });
-
-    await prisma.bookmark.delete({
-      where: { bookmarkId: bookmark.bookmarkId },
+  deleteBookmark = async (bookmarkId) => {
+    await this.prisma.bookmark.delete({
+      where: { bookmarkId: +bookmarkId },
     });
     return { message: "북마크 취소" };
   };
 
   findLocationByLocationId = async (locationId) => {
-    return await prisma.locations.findFirst({
+    return await this.prisma.locations.findFirst({
       where: { locationId: +locationId },
     });
   };
 
   findBookmarkByLocationIdAndUserId = async (locationId, userId) => {
-    return await prisma.bookmark.findFirst({
+    return await this.prisma.bookmark.findFirst({
       where: { LocationId: +locationId, UserId: +userId },
     });
   };
 
   getUserMapBookmarks = async (userId) => {
-    const userBookmark = await prisma.bookmark.findMany({
+    const userBookmark = await this.prisma.bookmark.findMany({
       where: { UserId: +userId },
       select: {
         Location: {
