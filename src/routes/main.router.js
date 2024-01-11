@@ -1,8 +1,8 @@
 import express from "express";
-import { prisma } from '../utils/prisma/index.js'
+import { prisma } from "../utils/prisma/index.js";
 import { MainRepository } from "../repositories/main.repository.js";
 import { MainService } from "../services/main.service.js";
-import { MainController } from '../controllers/main.controller.js'
+import { MainController } from "../controllers/main.controller.js";
 
 const router = express.Router();
 

@@ -1,10 +1,9 @@
-
-
 export class CommentsRepository {
-  constructor (prisma) { // 추가
+  constructor(prisma) {
+    // 추가
     this.prisma = prisma; // 추가
   }
- 
+
   //등록
   findPostById = async (postId) => {
     const post = await this.prisma.posts.findFirst({
@@ -84,9 +83,9 @@ export class CommentsRepository {
     return deleteComment;
   };
 
-  decrementCommentCount = async (postId) => { 
+  decrementCommentCount = async (postId) => {
     await this.prisma.posts.update({
-      where: { postId: +postId }, 
+      where: { postId: +postId },
       data: {
         commentCount: {
           decrement: 1,

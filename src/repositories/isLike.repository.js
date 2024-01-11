@@ -13,8 +13,8 @@ export class IsLikeRepository {
       data: { PostId: +postId, UserId: +userId },
     });
 
-    return { message: "좋아요" }
-  }
+    return { message: "좋아요" };
+  };
 
   deleteLike = async (postId, userId) => {
     const findLike = await this.prisma.likes.findFirst({
@@ -30,20 +30,20 @@ export class IsLikeRepository {
       where: { likeId: findLike.likeId },
     });
 
-    return { message: "좋아요 취소" }
-  }
+    return { message: "좋아요 취소" };
+  };
 
   findPostByPostId = async (postId) => {
     return await this.prisma.posts.findFirst({
       where: { postId: +postId },
     });
-  }
+  };
 
   findLikeByPostIdAndUserId = async (postId, userId) => {
     return await this.prisma.likes.findFirst({
       where: { PostId: +postId, UserId: +userId },
     });
-  }
+  };
 
   getLikedPostsByUser = async (userId) => {
     const likedPosts = await this.prisma.likes.findMany({
@@ -63,5 +63,5 @@ export class IsLikeRepository {
     });
 
     return likedPosts;
-  }
+  };
 }

@@ -7,7 +7,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-
 const bucketName = process.env.BUCKET_NAME;
 const bucketRegion = process.env.BUCKET_REGION;
 
@@ -33,7 +32,6 @@ export class LocationService {
       oa,
     );
 
-
     // 이미지 URL 서명 및 가공
     const locationsWithImages = await this.getLocationsWithImages(
       locations,
@@ -54,10 +52,10 @@ export class LocationService {
           start,
           { latitude: loc.latitude, longitude: loc.longitude },
           { unit: "meter" },
-        )
+        );
         return {
           ...loc,
-          distance: +distance.toFixed(10)
+          distance: +distance.toFixed(10),
         };
       }),
     );
@@ -72,7 +70,6 @@ export class LocationService {
       latitude: +latitude || qa,
       longitude: +longitude || ha,
     };
-
 
     // 거리 계산 및 정렬
     const locationsWithDistance = await this.calculateDistances(
@@ -94,7 +91,7 @@ export class LocationService {
 
     if (!paramsArray || paramsArray.length === 0) {
       const error = new Error("아직 등록된 사진이 없거나, 없는가게 입니다.");
-      error.statusCode = 400;
+      error.statusCode = 200;
       throw error;
     }
 
@@ -131,13 +128,19 @@ export class LocationService {
     const location =
       await this.locationRepository.findPopularLocation(locationId);
 
+    if (!location) {
+      const error = new Error("해당 장소가 없습니다.");
+      error.statusCode = 400;
+      throw error;
+    }
+
     // 16진수로 바꾼 imgUrl 을 , 기준으로 split 해주기
-    const locationImgUrlsArray = location.Posts[0].imgUrl.split(",")
+    const locationImgUrlsArray = location.Posts[0].imgUrl.split(",");
 
     const locationParamsArray = locationImgUrlsArray.map((imgUrl) => ({
       Bucket: bucketName,
-      Key: imgUrl
-    }))
+      Key: imgUrl,
+    }));
 
     const locationSignedUrlsArray = await Promise.all(
       locationParamsArray.map(async (params) => {
@@ -147,20 +150,22 @@ export class LocationService {
       }),
     );
 
-    location.Posts[0].imgUrl = locationSignedUrlsArray[0]
-
-
+    location.Posts[0].imgUrl = locationSignedUrlsArray[0];
 
     return location;
-  }
+  };
 
   getPopularPosts = async (locationId) => {
     const posts = await this.locationRepository.findPopularPosts(locationId);
 
+    if (!posts) {
+      const error = new Error("해당 게시글 없습니다.");
+      error.statusCode = 400;
+      throw error;
+    }
 
     // 좋아요 순서로 정렬
     const sortedPosts = posts.sort((a, b) => b.likeCount - a.likeCount);
-
 
     await getManyImagesS3(sortedPosts);
 
@@ -168,15 +173,13 @@ export class LocationService {
       if (post.User.imgUrl && post.User.imgUrl.length === 64) {
         const params = {
           Bucket: bucketName,
-          Key: post.User.imgUrl
-        }
+          Key: post.User.imgUrl,
+        };
         const command = new GetObjectCommand(params);
         const imgUrl = await getSignedUrl(s3, command);
-        post.User.imgUrl = imgUrl
+        post.User.imgUrl = imgUrl;
       }
     }
-    return sortedPosts
-  }
-
-
+    return sortedPosts;
+  };
 }

@@ -274,8 +274,8 @@ export class UserRepository {
 
       if (userLocation.postCount === 0) {
         await prisma.locations.delete({
-          where: { locationId: userLocation.locationId }
-        })
+          where: { locationId: userLocation.locationId },
+        });
       }
     }
   };

@@ -1,6 +1,6 @@
 import express from "express";
 import authMiddleware from "../middlewares/auth.middleware.js";
-import { prisma } from '../utils/prisma/index.js';
+import { prisma } from "../utils/prisma/index.js";
 import { BookmarkRepository } from "../repositories/bookmark.repository.js";
 import { BookmarkService } from "../services/bookmark.service.js";
 import { BookmarkController } from "../controllers/bookmark.controller.js";

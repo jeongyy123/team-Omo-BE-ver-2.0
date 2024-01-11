@@ -1,7 +1,7 @@
 export class BookmarkController {
   constructor(bookmarkService) {
     this.bookmarkService = bookmarkService;
-  };
+  }
   /* 북마크 */
   createBookmark = async (req, res, next) => {
     try {

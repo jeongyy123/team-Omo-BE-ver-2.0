@@ -14,7 +14,7 @@ const secretAccessKey = process.env.SECRET_ACCESS_KEY;
 const s3 = new S3Client({
   credentials: {
     accessKeyId: accessKey,
-    secretAccessKey
+    secretAccessKey,
   },
   region: bucketRegion,
 });
@@ -82,7 +82,7 @@ export class RepliesService {
         }
         return reply;
       }),
-    ); 
+    );
   };
 
   // 삭제

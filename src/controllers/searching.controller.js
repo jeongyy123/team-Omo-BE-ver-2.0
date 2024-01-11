@@ -1,4 +1,4 @@
-import { searchingSchema } from '../validations/searching.validation.js'
+import { searchingSchema } from "../validations/searching.validation.js";
 
 export class SearchingController {
   constructor(searchingService) {
@@ -21,11 +21,14 @@ export class SearchingController {
         });
       }
 
-      const seachedData = await this.searchingService.getSearching(nickname, storeName);
+      const seachedData = await this.searchingService.getSearching(
+        nickname,
+        storeName,
+      );
 
       return res.status(200).json(seachedData);
     } catch (error) {
-      next(error)
+      next(error);
     }
-  }
+  };
 }

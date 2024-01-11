@@ -1,10 +1,10 @@
-
 import { createCommentsSchema } from "../validations/comments.validation.js";
 
 export class CommentsController {
   // commentsService = new CommentsService();
-  constructor (commentsController) { // 추가
-    this.commentsController = commentsController; // 추가
+  constructor(commentsService) {
+    // 추가
+    this.commentsService = commentsService; // 추가
   }
 
   // 등록 api
@@ -27,7 +27,7 @@ export class CommentsController {
         content,
       );
 
-      return res.status(200).json( comment );
+      return res.status(200).json(comment);
     } catch (error) {
       next(error);
     }
@@ -44,7 +44,7 @@ export class CommentsController {
         lastSeenId,
       );
 
-      return res.status(200).json( comments );
+      return res.status(200).json(comments);
     } catch (error) {
       next(error);
     }

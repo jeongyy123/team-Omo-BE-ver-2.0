@@ -1,10 +1,8 @@
-
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 
 dotenv.config();
-
 
 const bucketName = process.env.BUCKET_NAME;
 const bucketRegion = process.env.BUCKET_REGION;
@@ -14,15 +12,16 @@ const secretAccessKey = process.env.SECRET_ACCESS_KEY;
 const s3 = new S3Client({
   credentials: {
     accessKeyId: accessKey,
-    secretAccessKey
+    secretAccessKey,
   },
   region: bucketRegion,
 });
 
 export class CommentsService {
   // commentsRepository = new CommentsRepository();
-  constructor (commentsRepository) { // 추가
-    this.commentsRepository = commentsRepository;// 추가
+  constructor(commentsRepository) {
+    // 추가
+    this.commentsRepository = commentsRepository; // 추가
   }
   // 등록
 
