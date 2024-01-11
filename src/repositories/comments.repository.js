@@ -86,7 +86,7 @@ export class CommentsRepository {
 
   decrementCommentCount = async (postId) => { 
     await this.prisma.posts.update({
-      where: { postId: +postId },
+      where: { postId: +postId }, 
       data: {
         commentCount: {
           decrement: 1,

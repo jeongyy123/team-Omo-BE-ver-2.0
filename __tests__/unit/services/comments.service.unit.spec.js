@@ -60,7 +60,7 @@ describe("Posts Service Unit Test", () => {
   const lastSeenId = null;
 
   const postMock = { postId: 1, };
-  const testComments = [ 
+  const testComments = [  
     {
           userId: 1,
           nickname: "대한사람",
