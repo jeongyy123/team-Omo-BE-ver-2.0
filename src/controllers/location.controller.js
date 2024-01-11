@@ -34,24 +34,23 @@ export class LocationController {
       const { latitude, longitude } = req.query;
       const { locationId } = req.params;
 
+      if (!locationId) {
+        return res
+          .status(400)
+          .json({ message: "locationId 요청 송신에 오류가 있습니다." });
+      }
+
       const location = await this.locationService.getPopularLocation(
         locationId,
         latitude,
         longitude,
       );
 
-      if (!locationId) {
-        return res
-          .status(400)
-          .json({ message: "locationId 요청 송신에 오류가 있습니다." });
-      }
-       const posts = await this.locationService.getPopularPosts(
+      const posts = await this.locationService.getPopularPosts(
         locationId
-       )
+      )
 
-        
-
-return res.status(200).json({ location, posts })
+      return res.status(200).json({ location, posts })
     } catch (error) {
       next(error);
     }

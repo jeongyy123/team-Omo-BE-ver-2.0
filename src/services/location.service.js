@@ -94,7 +94,7 @@ export class LocationService {
 
     if (!paramsArray || paramsArray.length === 0) {
       const error = new Error("아직 등록된 사진이 없거나, 없는가게 입니다.");
-      error.statusCode = 400;
+      error.statusCode = 200;
       throw error;
     }
 
@@ -131,6 +131,12 @@ export class LocationService {
     const location =
       await this.locationRepository.findPopularLocation(locationId);
 
+    if (!location) {
+      const error = new Error("해당 장소가 없습니다.");
+      error.statusCode = 400;
+      throw error;
+    }
+
     // 16진수로 바꾼 imgUrl 을 , 기준으로 split 해주기
     const locationImgUrlsArray = location.Posts[0].imgUrl.split(",")
 
@@ -157,6 +163,11 @@ export class LocationService {
   getPopularPosts = async (locationId) => {
     const posts = await this.locationRepository.findPopularPosts(locationId);
 
+    if (!posts) {
+      const error = new Error("해당 게시글 없습니다.");
+      error.statusCode = 400;
+      throw error;
+    }
 
     // 좋아요 순서로 정렬
     const sortedPosts = posts.sort((a, b) => b.likeCount - a.likeCount);

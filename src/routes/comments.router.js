@@ -6,9 +6,9 @@ import authMiddleware from "../middlewares/auth.middleware.js";
 import { prisma } from "../utils/prisma/index.js";
 
 const router = express.Router();
-const commentsController = new CommentsController(commentsService);
-const commentsService = new CommentsService(commentsRepository);
 const commentsRepository = new CommentsRepository(prisma)
+const commentsService = new CommentsService(commentsRepository);
+const commentsController = new CommentsController(commentsService);
 
 
 // 등록 api
