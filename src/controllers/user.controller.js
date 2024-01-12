@@ -18,15 +18,15 @@ export class UserController {
       const result = await this.userService.sendEmailVerification(email);
 
       result.transporter.sendMail(result.mailOptions, (err, info) => {
-        console.log("info", info);
+
         //첫번째 인자는 위에서 설정한 mailOption을 넣어주고 두번째 인자로는 콜백함수.
         if (err) {
-          console.error("메일 전송에 실패하였습니다:", err);
+
           res
             .status(500)
             .json({ ok: false, msg: "메일 전송에 실패하였습니다." });
         } else {
-          console.log("인증 이메일이 전송되었습니다.", info);
+
           res
             .status(200)
             .json({ ok: true, msg: "메일 전송에 성공하였습니다." });
