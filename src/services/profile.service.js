@@ -71,13 +71,13 @@ export class ProfileService {
 
     for (let i = 0; i < userPosts.length; i++) {
       const imgUrls = userPosts[i].imgUrl.split(",");
-      console.log("imgUrls >>>", imgUrls);
+
 
       const imgUrl = [];
 
       for (let j = 0; j < imgUrls.length; j++) {
         const currentImgUrl = imgUrls[j];
-        console.log("currentImgUrl >>>>", currentImgUrl);
+
 
         if (currentImgUrl.length === 64) {
           const getObjectParams = {
@@ -125,10 +125,7 @@ export class ProfileService {
       const firstPostImagesPerLocation =
         favouritePlaces[i].Location.Posts[0].imgUrl.split(",");
 
-      console.log(
-        "firstPostImagesPerLocation  >>>>>>>>>>>>",
-        firstPostImagesPerLocation,
-      );
+
 
       const imgUrl = [];
 
@@ -304,13 +301,12 @@ export class ProfileService {
 
     for (let i = 0; i < userPosts.length; i++) {
       const imgUrls = userPosts[i].imgUrl.split(",");
-      console.log("imgUrls >>>", imgUrls);
 
       const imgUrl = [];
 
       for (let j = 0; j < imgUrls.length; j++) {
         const currentImgUrl = imgUrls[j];
-        console.log("currentImgUrl >>>>", currentImgUrl);
+
 
         if (currentImgUrl.length === 64) {
           const getObjectParams = {
