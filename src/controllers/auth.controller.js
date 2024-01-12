@@ -15,7 +15,7 @@ export class AuthController {
   kakaoCallback = async (req, res, next) => {
     // Passport에서는 사용자 정보를 req.user에 저장
     try {
-      console.log("여기요!!");
+
       if (req.user) {
         // const userInfo = req.user;
         const result = await this.authService.handleKakaoCallback(req.user);
