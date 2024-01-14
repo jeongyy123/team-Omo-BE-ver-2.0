@@ -10,6 +10,7 @@ import LikeRouter from "./routes/isLike.router.js";
 import SearchingRouter from "./routes/searching.router.js";
 import BookmarkRouter from "./routes/bookmark.router.js";
 import RepliesRouter from "./routes/replies.ruter.js";
+import FollowingRouter from "./routes/following.router.js";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import ErrorMiddleware from "./middlewares/error.middleware.js";
@@ -53,6 +54,7 @@ app.use("/api", [
   BookmarkRouter,
   RepliesRouter,
   SearchingRouter,
+  FollowingRouter,
 ]);
 
 app.use("/auth", [KakaoRouter, UsersRouter]);

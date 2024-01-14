@@ -2,14 +2,15 @@ import express from "express";
 import users from "../swagger/user.js";
 import profiles from "../swagger/profile.js";
 import kakao from "../swagger/kakao.js";
-import main from "../main.js";
+import main from "../swagger/main.js";
 import bookmark from "../swagger/bookmark.js";
 import isLike from "../swagger/isLike.js";
 import posts from "../swagger/posts.js";
 import searching from "../swagger/searching.js";
-import location from "./locations/location.router.js";
-import comments from "./comments/comments.router.js";
-import replies from "./replies/replies.ruter.js";
+import location from "./swagger/location.js";
+import comment from "./swagger/comment.js";
+import replies from "./swagger/replies.js";
+import following from "./swagger/following.js";
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ const router = express.Router();
 /**
  * @swagger
  * tags:
- *   - name: OAuth
+ *   - name: OAuth (kakao)
  *     description: Kakao OAuth 로그인/Kakao OAuth 로그인 후 콜백 엔드포인트
  */
 
@@ -78,7 +79,7 @@ const router = express.Router();
 /**
  * @swagger
  * tags:
- *   - name: Comments
+ *   - name: Comment
  *     description: 댓글 등록/조회/삭제
  */
 /**
@@ -86,6 +87,12 @@ const router = express.Router();
  * tags:
  *   - name: replies
  *     description: 대댓글 등록/조회/삭제
+ */
+/**
+ * @swagger
+ * tags:
+ *   - name: following
+ *     description: 팔로우 하기/팔로우 취소/팔로워 목록 조회/팔로잉 목록 조회
  */
 
 router.use("/users", users);
@@ -97,7 +104,8 @@ router.use("/isLike", isLike);
 router.use("/posts", posts);
 router.use("/searching", searching);
 router.use("/location", location);
-router.use("/comments", comments);
+router.use("/comment", comment);
 router.use("/replies", replies);
+router.use("/following", following);
 
 export default router;
