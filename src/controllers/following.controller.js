@@ -6,7 +6,7 @@ export class FollowingController {
   followUser = async (req, res, next) => {
     try {
 
-      const userFromId = req.user.userId; // 구독자
+      const userFromId = req.user.userId; // 구독자 
 
       const userToId = req.params.userId; // 구독받는 사람
 
