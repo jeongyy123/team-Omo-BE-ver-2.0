@@ -12,7 +12,8 @@ const options = {
     },
     servers: [
       {
-        url: "https://tonadus.shop",
+        // url: "https://tonadus.shop",
+        url: "http://localhost:3003",
       },
     ],
   },
@@ -22,12 +23,13 @@ const options = {
     "./src/swagger/profile.js",
     "./src/swagger/main.js",
     "./src/swagger/posts.js",
-    "./src/routes/comments/*.js",
-    "./src/routes/replies/*.js",
-    "./src/routes/locations/*.js",
+    "./src/swagger/comment.js",
+    "./src/swagger/replies.js",
+    "./src/swagger/location.js",
     "./src/swagger/isLike.js",
     "./src/swagger/bookmark.js",
     "./src/swagger/searching.js",
+    "./src/swagger/following.js",
   ],
 };
 

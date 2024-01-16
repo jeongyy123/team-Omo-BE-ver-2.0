@@ -173,3 +173,11 @@ model Replies {
 
   @@map("Replies")
 }
+
+model Follows {
+  followsId   Int  @id @default(autoincrement()) @map("followsId")
+  userFromId  Int  @map("userFromId")
+  userToId    Int  @map("userToId")
+
+  @@map("Follows")
+}

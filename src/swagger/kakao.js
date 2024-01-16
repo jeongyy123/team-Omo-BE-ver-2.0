@@ -6,7 +6,7 @@
  *     summary: Kakao OAuth 로그인
  *     description: Kakao OAuth를 통한 로그인을 처리한다
  *     tags:
- *       - Users
+ *       - OAuth (kakao)
  *     responses:
  *       '302':
  *         description: 카카오 로그인 페이지로 리다이렉트한다.
@@ -20,7 +20,7 @@
  *     summary: Kakao OAuth 로그인 후 콜백 엔드포인트
  *     description: Kakao OAuth 로그인 후 콜백을 처리하고 토큰을 전달한다.
  *     tags:
- *       - Users
+ *       - OAuth (kakao)
  *     parameters:
  *       - name: accessToken
  *         in: query
