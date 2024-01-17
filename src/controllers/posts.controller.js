@@ -56,6 +56,7 @@ export class PostsController {
         longitude,
         star,
         placeInfoId,
+        // hashtagName,
       } = validation;
       const { userId } = req.user;
       const files = req.files;
@@ -71,6 +72,7 @@ export class PostsController {
         star,
         placeInfoId,
         files,
+        // hashtagName,
       );
 
       return res.status(201).json({ message: "게시글 등록이 완료되었습니다." });

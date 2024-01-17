@@ -12,8 +12,8 @@ const options = {
     },
     servers: [
       {
-        // url: "https://tonadus.shop",
-        url: "http://localhost:3003",
+        url: "https://mohaji.site",
+        // url: "http://localhost:3003",
       },
     ],
   },

@@ -44,8 +44,18 @@ export class LocationRepository {
             postId: true,
             star: true,
             imgUrl: true,
+            PostHashtags: {
+              select: {
+                Hashtag: {
+                  select: {
+                    hashtagName: true
+                  }
+                }
+              }
+            },
           },
           take: 1,
+
         },
       },
     });
@@ -64,6 +74,15 @@ export class LocationRepository {
             nickname: true,
             imgUrl: true,
           },
+        },
+        PostHashtags: {
+          select: {
+            Hashtag: {
+              select: {
+                hashtagName: true
+              }
+            }
+          }
         },
         postId: true,
         imgUrl: true,
