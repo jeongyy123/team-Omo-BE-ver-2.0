@@ -68,6 +68,7 @@ model Posts {
   Location Locations  @relation(fields: [LocationId], references: [locationId], onDelete: Cascade)
   Comments Comments[]
   Likes    Likes[]
+  PostHashtags PostHashtags[]
 
   @@map("Posts")
 }
@@ -180,4 +181,24 @@ model Follows {
   userToId    Int  @map("userToId")
 
   @@map("Follows")
+}
+
+model Hashtags {
+  hashtagId     Int     @id @default(autoincrement()) @map("hashtagId")
+  hashtagName   String  @map("hashtagName")
+
+  PostHashtags PostHashtags[]
+
+  @@map("Hashtags")
+}
+
+model PostHashtags {
+  postHashtagId  Int  @id @default(autoincrement()) @map("postHashtagId")
+  PostId         Int  @map("PostId")
+  HashtagId      Int  @map("HashtagId")
+
+  Post    Posts    @relation(fields: [PostId], references: [postId], onDelete: Cascade)
+  Hashtag Hashtags @relation(fields: [HashtagId], references: [hashtagId], onDelete: Cascade)
+
+  @@map("PostHashtags")
 }
