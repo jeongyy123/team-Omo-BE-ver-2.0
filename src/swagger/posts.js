@@ -75,6 +75,17 @@
  *                        postCount:
  *                          type: number
  *                          description: 게시물이 연결된 장소의 게시물 수
+ *                    PostHashtags:
+ *                      type: array
+ *                      items:
+ *                        type: object
+ *                        properties:
+ *                          Hashtag:
+ *                            type: object
+ *                            properties:
+ *                              hashtagName:
+ *                                type: string
+ *                                description: 해시태그 이름
  *                    postId:
  *                      type: number
  *                      description: 게시물 postId
@@ -209,6 +220,17 @@
  *                          categoryName:
  *                            type: string
  *                            description: 게시글이 속한 카테고리의 이름
+ *                  PostHashtags:
+ *                    type: array
+ *                    items:
+ *                      type: object
+ *                      properties:
+ *                        Hashtag:
+ *                          type: object
+ *                          properties:
+ *                            hashtagName:
+ *                              type: string
+ *                              description: 해시태그 이름
  *                  Comments:
  *                    type: array
  *                    items:

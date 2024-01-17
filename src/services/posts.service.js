@@ -59,6 +59,7 @@ export class PostsService {
     star,
     placeInfoId,
     files,
+    // hashtagName,
   ) => {
     const imgNames = await processPutImages(files);
 
@@ -78,6 +79,9 @@ export class PostsService {
       throw err;
     }
 
+    // 정규표현식 -> content에서 해시태그 추출
+    const hashtagNames = content.match(/(#[a-z|A-Z|0-9ㄱ-ㅎ|ㅏ-ㅣ|가-힣][^\s#]+)/g);
+
     await this.postsRepository.createPost(
       userId,
       content,
@@ -89,6 +93,7 @@ export class PostsService {
       star,
       placeInfoId,
       imgNames,
+      hashtagNames,
     );
 
     return {
@@ -123,6 +128,9 @@ export class PostsService {
       throw err;
     }
 
+    // 정규표현식 -> content에서 해시태그 추출
+    const hashtagNames = content.match(/(#[a-z|A-Z|0-9ㄱ-ㅎ|ㅏ-ㅣ|가-힣][^\s#]+)/g);
+
     await this.postsRepository.updatePost(
       userId,
       postId,
@@ -134,6 +142,7 @@ export class PostsService {
       latitude,
       longitude,
       categoryName,
+      hashtagNames
     );
 
     return {

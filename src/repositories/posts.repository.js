@@ -34,6 +34,15 @@ export class PostsRepository {
             postCount: true,
           },
         },
+        PostHashtags: {
+          select: {
+            Hashtag: {
+              select: {
+                hashtagName: true
+              }
+            }
+          }
+        },
         postId: true,
         imgUrl: true,
         content: true,
@@ -96,6 +105,15 @@ export class PostsRepository {
             },
           },
         },
+        PostHashtags: {
+          select: {
+            Hashtag: {
+              select: {
+                hashtagName: true
+              }
+            }
+          }
+        },
         Comments: {
           select: {
             commentId: true,
@@ -129,6 +147,35 @@ export class PostsRepository {
 
     return post;
   };
+  // 해시태그 찾아서 없으면 생성, 있으면 가지고오기
+  findOrCreateHashtag = async (hashtagNames, post) => {
+    // hashtagNames = ["#해시태그1", "#해시태그2", "#해시태그3"]
+    hashtagNames.map(async (hashtagName) => {
+      const findHashtag = await this.prisma.hashtags.findFirst({
+        where: { hashtagName },
+      });
+
+      if (findHashtag) {
+        await this.prisma.PostHashtags.create({
+          data: {
+            PostId: +post.postId,
+            HashtagId: +findHashtag.hashtagId
+          }
+        });
+      } else {
+        const createdHashtag = await this.prisma.hashtags.create({
+          data: { hashtagName }
+        });
+
+        await this.prisma.PostHashtags.create({
+          data: {
+            PostId: +post.postId,
+            HashtagId: +createdHashtag.hashtagId
+          }
+        });
+      }
+    });
+  }
 
   /* 게시글 작성 */
   createPost = async (
@@ -142,14 +189,9 @@ export class PostsRepository {
     star,
     placeInfoId,
     imgNames,
+    hashtagNames,
   ) => {
     const category = await this.findCategory(categoryName);
-
-    // if (!category) {
-    //   const err = new Error("카테고리가 존재하지않습니다.");
-    //   err.statusCode = 404;
-    //   throw err;
-    // }
 
     const district = await this.findDistrict(address);
 
@@ -169,11 +211,10 @@ export class PostsRepository {
             placeInfoId,
             Category: { connect: { categoryId: +category.categoryId } },
             District: { connect: { districtId: +district.districtId } },
-            // User: { connect: { userId: +userId } },
           },
         });
 
-        await prisma.posts.create({
+        const post = await prisma.posts.create({
           data: {
             content,
             star,
@@ -185,10 +226,13 @@ export class PostsRepository {
           },
         });
       });
+
+      this.findOrCreateHashtag(hashtagNames, post);
+
     } else {
       //location 정보가 기존 O => location 업데이트, posts 생성
       await this.prisma.$transaction(async (prisma) => {
-        await prisma.posts.create({
+        const post = await prisma.posts.create({
           data: {
             content,
             star,
@@ -218,10 +262,12 @@ export class PostsRepository {
             },
           },
         });
+        await this.findOrCreateHashtag(hashtagNames, post);
       });
     }
     return { message: "게시글 등록이 완료되었습니다." };
   };
+
 
   /* 카테고리 찾기 */
   findCategory = async (categoryName) => {
@@ -256,6 +302,7 @@ export class PostsRepository {
     latitude,
     longitude,
     categoryName,
+    hashtagNames
   ) => {
     const post = await this.findPostByPostId(postId);
 
@@ -317,6 +364,8 @@ export class PostsRepository {
             where: { locationId: beforeEditPostLocation.locationId },
           });
         }
+        await this.deleteHashtags(postId);
+        await this.findOrCreateHashtag(hashtagNames, createPost);
       });
     } else {
       // 수정 후 location 정보가 없는경우
@@ -335,7 +384,6 @@ export class PostsRepository {
             postCount: 1,
             Category: { connect: { categoryId: +category.categoryId } },
             District: { connect: { districtId: +district.districtId } },
-            // User: { connect: { userId: +userId } },
           },
         });
 
@@ -380,6 +428,8 @@ export class PostsRepository {
           });
         }
       });
+      await this.deleteHashtags(postId);
+      await this.findOrCreateHashtag(hashtagNames, createPost);
     }
   };
 
@@ -421,4 +471,14 @@ export class PostsRepository {
       message: "게시글을 삭제하였습니다.",
     };
   };
+
+
+  // (게시글 수정) 해시태그 기존꺼 삭제, 다시 새로 생성
+  deleteHashtags = async (postId) => {
+    await this.prisma.PostHashtags.deleteMany({
+      where: {
+        PostId: +postId,
+      }
+    })
+  }
 }

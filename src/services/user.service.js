@@ -130,7 +130,7 @@ export class UserService {
     const encryptPassword = await bcrypt.hash(password, saltRound);
 
     const defaultImageUrl =
-      "0b2f746651bb7e903bd2c985714170b8746f0fc6d9a966ba31476e515495ebd1";
+      "bba2e4a426dc5d2e3045454ee6d53743e45a4c5eacb1c4f18c10f5d2cfde1808";
 
     await this.userRepository.createUser(
       email,

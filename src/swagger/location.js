@@ -80,6 +80,23 @@
  *                             type: string
  *                             format: date-time
  *                             description: 게시글이 업데이트 된 날짜
+ *                           Category:
+ *                             type: object
+ *                             properties:
+ *                               categoryName:
+ *                                 type: string
+ *                                 description: 가게의 카테고리
+ *                           PostHashtags:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 Hashtag:
+ *                                   type: object
+ *                                   properties:
+ *                                     hashtagName:
+ *                                       type: string
+ *                                       description: 해시태그 이름
  *                           Comments:
  *                             type: array
  *                             items:
@@ -176,6 +193,7 @@
  *                         imgUrl:
  *                           type: string
  *                           description: 위치에 속한 게시글의 이미지 URL (첫 번째 이미지만 사용)
+ * 
  *                 posts:
  *                   type: array
  *                   items:
@@ -212,6 +230,17 @@
  *                         type: string
  *                         format: date-time
  *                         description: 게시글 작성 날짜
+ *                       PostHashtags:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             Hashtag:
+ *                               type: object
+ *                               properties:
+ *                                 hashtagName:
+ *                                   type: string
+ *                                   description: 해시태그 이름
  *       400:
  *         description: 요청이 잘못된 경우
  *         content:

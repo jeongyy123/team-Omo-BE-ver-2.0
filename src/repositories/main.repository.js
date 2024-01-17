@@ -22,6 +22,15 @@ export class MainRepository {
       select: {
         imgUrl: true,
         content: true,
+        PostHashtags: {
+          select: {
+            Hashtag: {
+              select: {
+                hashtagName: true
+              }
+            }
+          }
+        },
         Location: {
           select: {
             locationId: true,
@@ -85,6 +94,15 @@ export class MainRepository {
         User: {
           select: {
             nickname: true,
+          },
+        },
+        PostHashtags: {
+          select: {
+            Hashtag: {
+              select: {
+                hashtagName: true,
+              },
+            },
           },
         },
       },

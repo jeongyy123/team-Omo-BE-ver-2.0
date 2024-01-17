@@ -5,15 +5,15 @@ const options = {
   swaggerDefinition: {
     openapi: "3.0.0",
     info: {
-      version: "1.0.0",
+      version: "2.0.0",
       title: "OMO",
       description:
         "Node.js Swagger using swagger-jsdoc for Restful APIs with UI",
     },
     servers: [
       {
-        // url: "https://tonadus.shop",
-        url: "http://localhost:3003",
+        url: "https://mohaji.site",
+        // url: "http://localhost:3003",
       },
     ],
   },
@@ -37,4 +37,5 @@ const specs = swaggerJsdoc(options);
 
 export default { swaggerUi, specs };
 
-// https://tonadus.shop/api-docs/
+// https://mohaji.site/api-docs/
+// http://localhost:3003/api-docs/
