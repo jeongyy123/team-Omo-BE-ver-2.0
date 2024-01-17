@@ -1,3 +1,5 @@
+import { getSearchingProfile } from '../utils/getImageS3.js';
+
 export class FollowingService {
   constructor(followingRepository) {
     this.followingRepository = followingRepository;
@@ -58,6 +60,8 @@ export class FollowingService {
       err.statusCode = 404;
       throw err;
     }
+
+    await getSearchingProfile(followingList);
     return followingList;
   }
 
@@ -70,6 +74,9 @@ export class FollowingService {
       err.statusCode = 404;
       throw err;
     }
+
+    await getSearchingProfile(followersList);
+
     return followersList;
   }
 
@@ -84,6 +91,8 @@ export class FollowingService {
       err.statusCode = 404;
       throw err;
     }
+    await getSearchingProfile(OtherFollowingList);
+
     return OtherFollowingList;
   }
 
@@ -98,6 +107,9 @@ export class FollowingService {
       err.statusCode = 404;
       throw err;
     }
+
+    await getSearchingProfile(OtherFollowersList);
+
     return OtherFollowersList;
   }
 }
