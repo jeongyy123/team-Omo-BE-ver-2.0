@@ -84,6 +84,12 @@ export class FollowingService {
   getOtherFollowingList = async (userToId) => {
     const user = await this.followingRepository.findUserByUserFromId(userToId);
 
+    if (!user) {
+      const err = new Error("존재하지 않는 유저입니다.");
+      err.statusCode = 404;
+      throw err;
+    }
+
     const OtherFollowingList = await this.followingRepository.getFollowingList(userToId);
 
     if (!OtherFollowingList || OtherFollowingList.length === 0) {
@@ -99,6 +105,12 @@ export class FollowingService {
   // !다른 사람이! !나를! 팔로우한 사람 보기
   getOtherFollowersList = async (userToId) => {
     const user = await this.followingRepository.findUserByUserFromId(userToId);
+
+    if (!user) {
+      const err = new Error("존재하지 않는 유저입니다.");
+      err.statusCode = 404;
+      throw err;
+    }
 
     const OtherFollowersList = await this.followingRepository.getFollowersList(userToId);
 

@@ -84,7 +84,7 @@ export const getManyImagesS3 = async (posts) => {
 
 // 댓글 여러 유저들의 프로필 이미지
 export const getProfileImageS3 = async (posts) => {
-  posts.map(async (post) => {
+  await Promise.all(posts.map(async (post) => {
     if (post.User.imgUrl && post.User.imgUrl.length === 64) {
       const params = {
         Bucket: bucketName,
@@ -94,7 +94,7 @@ export const getProfileImageS3 = async (posts) => {
       const imgUrl = await getSignedUrl(s3, command);
       return (post.User.imgUrl = imgUrl);
     }
-  });
+  }));
 };
 
 // 대댓글 유저의 프로필 이미지
@@ -115,23 +115,44 @@ export const getRepliesImageS3 = async (comments) => {
   }
 };
 
+// // searching 프로필
+// export const getSearchingProfile = async (findUsers) => {
+//   const imgUrlPromises = findUsers.map(async (user) => {
+//     // if (user.imgUrl && user.imgUrl.length !== 64) {
+//     //   return user.imgUrl;
+//     // }
+//     const params = {
+//       Bucket: bucketName,
+//       Key: user.imgUrl,
+//     };
+
+//     const command = new GetObjectCommand(params);
+//     const imgUrl = await getSignedUrl(s3, command);
+//     return imgUrl;
+//   });
+
+//   const imgUrls = await Promise.all(imgUrlPromises);
+
+//   findUsers.forEach((user, index) => {
+//     user.imgUrl = imgUrls[index];
+//   });
+//   return findUsers;
+// };
+
 // searching 프로필
 export const getSearchingProfile = async (findUsers) => {
-  const imgUrlPromises = findUsers.map(async (user) => {
-    const params = {
-      Bucket: bucketName,
-      Key: user.imgUrl,
-    };
+  await Promise.all(findUsers.map(async (user) => {
+    if (user.imgUrl && user.imgUrl.length === 64) {
+      const params = {
+        Bucket: bucketName,
+        Key: user.imgUrl,
+      };
 
-    const command = new GetObjectCommand(params);
-    const imgUrl = await getSignedUrl(s3, command);
-    return imgUrl;
-  });
-
-  const imgUrls = await Promise.all(imgUrlPromises);
-
-  findUsers.forEach((user, index) => {
-    user.imgUrl = imgUrls[index];
-  });
-  return findUsers;
+      const command = new GetObjectCommand(params);
+      const imgUrl = await getSignedUrl(s3, command);
+      user.imgUrl = imgUrl;
+      return user;
+    }
+  }));
 };
+

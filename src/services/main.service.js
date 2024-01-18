@@ -1,4 +1,4 @@
-import { getManyImagesS3 } from "../utils/getImageS3.js";
+import { getManyImagesS3, getProfileImageS3 } from "../utils/getImageS3.js";
 
 export class MainService {
   constructor(mainRepository) {
@@ -55,6 +55,8 @@ export class MainService {
       districtName,
       limit,
     );
+
+    await getProfileImageS3(recentComments);
 
     if (!recentComments) {
       const err = new Error("해당 댓글이 없어요.");
