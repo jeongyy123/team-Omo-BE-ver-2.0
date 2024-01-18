@@ -135,11 +135,20 @@ export class MainRepository {
         content: true,
         createdAt: true,
         PostId: true,
+        User: {
+          select: {
+            userId: true,
+            imgUrl: true,
+            email: true,
+            nickname: true,
+          },
+        },
         Post: {
           select: {
             Location: {
               select: {
                 address: true,
+                storeName: true,
               },
             },
           },
