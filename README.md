@@ -1,4 +1,6 @@
-** 프로젝트 완료 후 기능을 추가하기 위해 fork한 repository **
+<p align="center">
+프로젝트 완료 후 기능을 추가하기 위해 fork한 repository
+</p>
 
 <p align="center">
 <img src="https://velog.velcdn.com/images/dbsdud143/post/9a342f35-eb94-413f-8c57-7cd09015bd3a/image.png"  width="800" />
